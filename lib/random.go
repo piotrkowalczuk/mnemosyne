@@ -7,7 +7,7 @@ import (
 
 // RandomBytesGenerator ...
 type RandomBytesGenerator interface {
-	GenerateRandomBytes(int) []byte
+	GenerateRandomBytes(int) ([]byte, error)
 }
 
 // SystemRandomBytesGenerator ...
@@ -15,10 +15,10 @@ type SystemRandomBytesGenerator struct {
 }
 
 // SystemRandomBytesGenerator creates a random key with the given length in bytes.
-func (srbg *SystemRandomBytesGenerator) GenerateRandomBytes(length int) []byte {
+func (srbg *SystemRandomBytesGenerator) GenerateRandomBytes(length int) ([]byte, error) {
 	k := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, k); err != nil {
-		return nil
+		return nil, err
 	}
-	return k
+	return k, nil
 }

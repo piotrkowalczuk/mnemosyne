@@ -18,8 +18,8 @@ SET default_with_oids = false;
 -- Mnemosyne Session
 --
 CREATE TABLE mnemosyne_session (
-    id character varying(64) NOT NULL,
-    data character varying(75) NOT NULL,
+    id character varying(128) NOT NULL,
+    data json NOT NULL,
     expire_at timestamp with time zone NOT NULL
 );
 
@@ -28,8 +28,3 @@ ALTER TABLE ONLY mnemosyne_session
 
 ALTER TABLE ONLY mnemosyne_session
     ADD CONSTRAINT mnemosyne_session_id_key UNIQUE (id);
-
-REVOKE ALL ON SCHEMA public FROM PUBLIC;
-REVOKE ALL ON SCHEMA public FROM postgres;
-GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO PUBLIC;

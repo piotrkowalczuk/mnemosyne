@@ -1,10 +1,18 @@
 package lib
 
-import "database/sql"
+import (
+	"database/sql"
+	"time"
+
+	"encoding/hex"
+
+	"golang.org/x/crypto/sha3"
+)
 
 type PostgresStorage struct {
 	db        *sql.DB
 	tableName string
+	generator RandomBytesGenerator
 }
 
 // NewPostgresStorage ...
@@ -12,6 +20,7 @@ func NewPostgresStorage(db *sql.DB, tableName string) *PostgresStorage {
 	return &PostgresStorage{
 		db:        db,
 		tableName: tableName,
+		generator: &SystemRandomBytesGenerator{},
 	}
 }
 
@@ -67,9 +76,23 @@ func (ps *PostgresStorage) Exists(id SessionID) (bool, error) {
 
 // Session ...
 func (ps *PostgresStorage) New(data SessionData) (*Session, error) {
-	session := &Session{
-		Data: data,
+	buf, err := ps.generator.GenerateRandomBytes(128)
+	if err != nil {
+		return nil, err
 	}
+
+	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
+	id := make([]byte, 64)
+	// Compute a 64-byte hash of buf and put it in h.
+	sha3.ShakeSum256(id, buf)
+
+	expire_at := time.Now().Add(30 * time.Minute)
+	session := &Session{
+		ID:       SessionID(hex.EncodeToString(id)),
+		Data:     data,
+		ExpireAt: &expire_at,
+	}
+
 	if err := ps.save(session); err != nil {
 		return nil, err
 	}
@@ -80,8 +103,8 @@ func (ps *PostgresStorage) New(data SessionData) (*Session, error) {
 // Session ...
 func (ps *PostgresStorage) save(session *Session) error {
 	query := `
-		INSERT INTO ` + ps.tableName + ` (key, data, expire_at)
-		VALUES $1, $2, $3
+		INSERT INTO ` + ps.tableName + ` (id, data, expire_at)
+		VALUES ($1, $2, $3)
 	`
 
 	encodedData, err := session.Data.EncodeToJSON()
@@ -91,7 +114,7 @@ func (ps *PostgresStorage) save(session *Session) error {
 
 	_, err = ps.db.Exec(
 		query,
-		session.ID,
+		session.ID.String(),
 		encodedData,
 		session.ExpireAt,
 	)

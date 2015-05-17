@@ -1,4 +1,4 @@
-Mnemosyne [![Build Status](https://travis-ci.org/go-soa/mnemosyne)](https://travis-ci.org/go-soa/mnemosyne)
+Mnemosyne [![Build Status](https://travis-ci.org/go-soa/mnemosyne.svg)](https://travis-ci.org/go-soa/mnemosyne)
 =============
 Installation
 ------------

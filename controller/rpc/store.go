@@ -53,6 +53,7 @@ func (s *Store) Exists(id lib.SessionID, exists *bool) error {
 	return err
 }
 
+// Abandon ...
 func (s *Store) Abandon(id lib.SessionID, ok *bool) error {
 	err := s.Storage.Abandon(id)
 	if err != nil {

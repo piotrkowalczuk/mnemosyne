@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<config>
+    <server>
+        <host>0.0.0.0</host>
+        <port>9001</port>
+    </server>
+    <storage>
+        <engine>postgres</engine>
+        <postgres>
+            <table-name>mnemosyne_session</table-name>
+            <connection-string>postgres://postgres:postgres.123@localhost/mnemosyne?sslmode=disable</connection-string>
+        </postgres>
+    </storage>
+    <logger>
+        <adapter>console</adapter>
+        <level>5</level>
+    </logger>
+</config>

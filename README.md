@@ -42,7 +42,7 @@ TODO
 		- [x] New(SessionData) (*Session, error)
 		- [x] Abandon(SessionID) error
 		- [x] SetData(SessionDataEntry) (*Session, error)
-		- [ ] Cleanup(*time.Time) error
+		- [x] Cleanup(*time.Time) error
 	- [ ] RAM
 	- [ ] Redis
 	- [ ] MySQL

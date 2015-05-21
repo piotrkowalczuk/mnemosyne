@@ -12,5 +12,5 @@ install:
 script:
   - go build
   - cp conf/travis_postgres.xml conf/testing.xml
-  - go init
-  - go test -tags postgres
+  - ./mnemosyne init
+  - cd test/lib && go test -tags postgres

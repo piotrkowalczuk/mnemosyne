@@ -1,6 +1,7 @@
 language: go
 addons:
   postgresql: "9.3"
+env: MNEMOSYNE_ENV=testing
 go:
   - 1.4
   - tip

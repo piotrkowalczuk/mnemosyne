@@ -20,8 +20,8 @@ type AppConfig struct {
 }
 
 // InitConfig ...
-func InitConfig(environment string) {
-	file, err := os.Open("conf/" + environment + ".xml")
+func InitConfig(path, environment string) {
+	file, err := os.Open(path + "/" + environment + ".xml")
 	if err != nil {
 		log.Fatalf("Cannot open configuration file: %v\n", err)
 	}

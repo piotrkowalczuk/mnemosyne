@@ -32,3 +32,8 @@ func (sd SessionData) EncodeToJSON() ([]byte, error) {
 func (sd *SessionData) Set(key, value string) {
 	(*sd)[key] = value
 }
+
+// Get ...
+func (sd *SessionData) Get(key string) string {
+	return (*sd)[key]
+}

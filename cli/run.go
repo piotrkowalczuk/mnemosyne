@@ -19,10 +19,10 @@ var (
 )
 
 func runCommandAction(context *cli.Context) {
-	service.InitConfig(context.GlobalString("environment"))
+	service.InitConfig("conf", context.GlobalString("environment"))
 	service.InitLogger(service.Config.Logger)
-	service.InitPostgres(service.Config.SessionStorage.Postgres)
-	service.InitSessionStorage(service.Config.SessionStorage)
+	service.InitPostgres(service.Config.SessionStorage.Postgres, service.Logger)
+	service.InitSessionStorage(service.Config.SessionStorage, service.Logger)
 
 	server := rpc.NewServer()
 	server.Register(&mnemosynerpc.Store{

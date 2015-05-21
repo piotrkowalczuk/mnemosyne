@@ -2,6 +2,7 @@
 .idea
 mnemosyne
 conf/development.xml
+conf/testing.xml
 *.o
 *.a
 *.so

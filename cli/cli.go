@@ -20,7 +20,7 @@ func init() {
 	}
 	app.Commands = []cli.Command{
 		runCommand,
-		initPostgresCommand,
+		initCommand,
 	}
 
 	app.Run(os.Args)

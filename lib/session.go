@@ -1,14 +1,6 @@
 package lib
 
-import (
-	"errors"
-	"time"
-)
-
-var (
-	// ErrSessionDoesNotExists ...
-	ErrSessionDoesNotExists = errors.New("session: session does not exists")
-)
+import "time"
 
 // Session ...
 type Session struct {

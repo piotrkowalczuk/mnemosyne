@@ -2,11 +2,30 @@ package lib
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"encoding/hex"
 
 	"golang.org/x/crypto/sha3"
+)
+
+const (
+	PostgresEngine               = "postgres"
+	PostgresTableNamePlaceholder = "%%TABLE_NAME%%"
+	PostgresSchema               = `
+		CREATE TABLE %%TABLE_NAME%% (
+			id character varying(128) NOT NULL,
+			data json NOT NULL,
+			expire_at timestamp with time zone NOT NULL
+		);
+
+		ALTER TABLE ONLY %%TABLE_NAME%%
+			ADD CONSTRAINT mnemosyne_session_pkey PRIMARY KEY (id);
+
+		ALTER TABLE ONLY %%TABLE_NAME%%
+			ADD CONSTRAINT mnemosyne_session_id_key UNIQUE (id);
+    `
 )
 
 type PostgresStorage struct {
@@ -22,6 +41,63 @@ func NewPostgresStorage(db *sql.DB, tableName string) *PostgresStorage {
 		tableName: tableName,
 		generator: &SystemRandomBytesGenerator{},
 	}
+}
+
+func (ps *PostgresStorage) Init() (err error) {
+	sql := strings.Replace(PostgresSchema, PostgresTableNamePlaceholder, ps.tableName, -1)
+
+	_, err = ps.db.Exec(sql)
+
+	return
+}
+
+// Session ...
+func (ps *PostgresStorage) New(data SessionData) (*Session, error) {
+	buf, err := ps.generator.GenerateRandomBytes(128)
+	if err != nil {
+		return nil, err
+	}
+
+	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
+	id := make([]byte, 64)
+	// Compute a 64-byte hash of buf and put it in h.
+	sha3.ShakeSum256(id, buf)
+
+	session := &Session{
+		ID:   SessionID(hex.EncodeToString(id)),
+		Data: data,
+	}
+
+	if err := ps.save(session); err != nil {
+		return nil, err
+	}
+
+	return session, nil
+}
+
+// Session ...
+func (ps *PostgresStorage) save(session *Session) error {
+	query := `
+		INSERT INTO ` + ps.tableName + ` (id, data, expire_at)
+		VALUES ($1, $2, NOW() + '30 minutes'::interval)
+		RETURNING expire_at
+
+	`
+
+	encodedData, err := session.Data.EncodeToJSON()
+	if err != nil {
+		return err
+	}
+
+	err = ps.db.QueryRow(
+		query,
+		session.ID.String(),
+		encodedData,
+	).Scan(
+		&session.ExpireAt,
+	)
+
+	return err
 }
 
 // Session ...
@@ -40,6 +116,9 @@ func (ps *PostgresStorage) Get(id SessionID) (*Session, error) {
 		&session.ExpireAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrSessionNotFound
+		}
 		return nil, err
 	}
 
@@ -74,54 +153,6 @@ func (ps *PostgresStorage) Exists(id SessionID) (bool, error) {
 	return exists, nil
 }
 
-// Session ...
-func (ps *PostgresStorage) New(data SessionData) (*Session, error) {
-	buf, err := ps.generator.GenerateRandomBytes(128)
-	if err != nil {
-		return nil, err
-	}
-
-	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
-	id := make([]byte, 64)
-	// Compute a 64-byte hash of buf and put it in h.
-	sha3.ShakeSum256(id, buf)
-
-	expire_at := time.Now().Add(30 * time.Minute)
-	session := &Session{
-		ID:       SessionID(hex.EncodeToString(id)),
-		Data:     data,
-		ExpireAt: &expire_at,
-	}
-
-	if err := ps.save(session); err != nil {
-		return nil, err
-	}
-
-	return session, nil
-}
-
-// Session ...
-func (ps *PostgresStorage) save(session *Session) error {
-	query := `
-		INSERT INTO ` + ps.tableName + ` (id, data, expire_at)
-		VALUES ($1, $2, $3)
-	`
-
-	encodedData, err := session.Data.EncodeToJSON()
-	if err != nil {
-		return err
-	}
-
-	_, err = ps.db.Exec(
-		query,
-		session.ID.String(),
-		encodedData,
-		session.ExpireAt,
-	)
-
-	return err
-}
-
 // Abandon ...
 func (ps *PostgresStorage) Abandon(id SessionID) error {
 	query := `
@@ -129,9 +160,18 @@ func (ps *PostgresStorage) Abandon(id SessionID) error {
 		WHERE id = $1
 	`
 
-	_, err := ps.db.Exec(query, id.String())
+	result, err := ps.db.Exec(query, id.String())
 	if err != nil {
 		return err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return ErrSessionNotFound
 	}
 
 	return nil
@@ -162,12 +202,15 @@ func (ps *PostgresStorage) SetData(entry SessionDataEntry) (*Session, error) {
 		return nil, err
 	}
 
-	err = ps.db.QueryRow(selectQuery, session.ID.String()).Scan(
+	err = tx.QueryRow(selectQuery, session.ID.String()).Scan(
 		&data,
 		&session.ExpireAt,
 	)
 	if err != nil {
 		tx.Rollback()
+		if err == sql.ErrNoRows {
+			return nil, ErrSessionNotFound
+		}
 		return nil, err
 	}
 
@@ -185,7 +228,7 @@ func (ps *PostgresStorage) SetData(entry SessionDataEntry) (*Session, error) {
 		return nil, err
 	}
 
-	_, err = ps.db.Exec(
+	_, err = tx.Exec(
 		updateQuery,
 		session.ID.String(),
 		encodedData,
@@ -198,4 +241,26 @@ func (ps *PostgresStorage) SetData(entry SessionDataEntry) (*Session, error) {
 	tx.Commit()
 
 	return session, nil
+}
+
+// Cleanup
+func (ps *PostgresStorage) Cleanup(until *time.Time) (int64, error) {
+	var err error
+	var result sql.Result
+	delUntil := `
+		DELETE FROM ` + ps.tableName + `
+		WHERE expire_at < $1
+	`
+	delAll := `TRUNCATE TABLE ` + ps.tableName
+
+	if until == nil {
+		result, err = ps.db.Exec(delAll)
+	} else {
+		result, err = ps.db.Exec(delUntil, until)
+	}
+
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }

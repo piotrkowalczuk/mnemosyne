@@ -7,9 +7,9 @@
     <storage>
         <engine>postgres</engine>
         <postgres>
-            <retry>true</retry>
+            <retry>false</retry>
             <table-name>mnemosyne_session</table-name>
-            <connection-string>postgres://postgres:postgres.123@localhost/mnemosyne?sslmode=disable</connection-string>
+            <connection-string>postgres://postgres:@localhost/travis_ci_test?sslmode=disable</connection-string>
         </postgres>
     </storage>
     <logger>

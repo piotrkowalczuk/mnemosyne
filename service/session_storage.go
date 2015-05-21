@@ -20,7 +20,7 @@ type SessionStorageConfig struct {
 }
 
 // InitSessionStorage ...
-func InitSessionStorage(config SessionStorageConfig) {
+func InitSessionStorage(config SessionStorageConfig, logger lib.StdLogger) {
 	switch config.Engine {
 	case lib.SessionStorageEngineInMemory:
 		//		SessionStorage = lib.NewInMemorySessionStorage()
@@ -28,6 +28,6 @@ func InitSessionStorage(config SessionStorageConfig) {
 		SessionStorage = lib.NewPostgresStorage(Postgres, config.Postgres.TableName)
 	case lib.SessionStorageEngineRedis:
 	default:
-		Logger.Fatal(ErrSessionStorageEngineNotSupported)
+		logger.Fatal(ErrSessionStorageEngineNotSupported)
 	}
 }

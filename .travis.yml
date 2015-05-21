@@ -2,13 +2,12 @@ language: go
 addons:
   postgresql: "9.3"
 go:
-  - 1.1
-  - 1.2
-  - 1.3
   - 1.4
   - tip
 install:
   - go get .
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
 script:
   - go build
   - cp conf/travis_postgres.xml conf/testing.xml

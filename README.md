@@ -18,7 +18,7 @@ go build
 
 #### Service
 ```bash
-./mnemosyne initpostgres - execute data/sql/schema_postgres.sql against configured database.
+./mnemosyne init - execute data/sql/schema_postgres.sql against configured database.
 ./mnemosyne run - starts server.
 ./mnemosyne help [command] - display help message about available commands
 ```

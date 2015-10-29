@@ -1,6 +1,6 @@
 PROTOC=/usr/local/bin/protoc
 SERVICE=mnemosyne
-PACKAGE=github.com/go-soa/mnemosyne
+PACKAGE=github.com/piotrkowalczuk/mnemosyne
 PACKAGE_SHARED=$(PACKAGE)/shared
 PACKAGE_CLIENT=$(PACKAGE)/$(SERVICE)
 PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d

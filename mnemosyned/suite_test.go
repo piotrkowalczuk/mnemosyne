@@ -5,7 +5,7 @@ import (
 
 	"sync"
 
-	"github.com/go-soa/mnemosyne/shared"
+	"github.com/piotrkowalczuk/mnemosyne/shared"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

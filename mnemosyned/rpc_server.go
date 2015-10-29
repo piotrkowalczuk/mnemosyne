@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/go-kit/kit/log"
-	"github.com/go-soa/mnemosyne/shared"
+	"github.com/piotrkowalczuk/mnemosyne/shared"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 )

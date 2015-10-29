@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/go-soa/mnemosyne/shared"
+	"github.com/piotrkowalczuk/mnemosyne/shared"
 )
 
 const (

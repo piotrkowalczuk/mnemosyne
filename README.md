@@ -3,7 +3,7 @@
 ## Installation
 
 1. Set you GOPATH properly (http://golang.org/doc/code.html#GOPATH)
-2. `go get github.com/go-soa/mnemosyne`
+2. `go get github.com/piotrkowalczuk/mnemosyne`
 3. `go get` if some dependencies are missing
 4. Set environmental variables
 

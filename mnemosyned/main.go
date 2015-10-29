@@ -5,7 +5,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/go-soa/mnemosyne/shared"
+	"github.com/piotrkowalczuk/mnemosyne/shared"
 	"github.com/piotrkowalczuk/sklog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"

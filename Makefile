@@ -2,6 +2,7 @@ PROTOC=/usr/local/bin/protoc
 SERVICE=mnemosyne
 PACKAGE=github.com/go-soa/mnemosyne
 PACKAGE_SHARED=$(PACKAGE)/shared
+PACKAGE_CLIENT=$(PACKAGE)/$(SERVICE)
 PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
 
 FLAGS=-h=$(MNEMOSYNE_HOST) \
@@ -39,3 +40,7 @@ test-unit:
 
 test-postgres:
 	@go test -tags postgres -v ${PACKAGE_DAEMON} ${FLAGS}
+
+get:
+	@go get ${PACKAGE_DAEMON}
+	@go get ${PACKAGE_SHARED}

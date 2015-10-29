@@ -2,20 +2,27 @@ language: go
 addons:
   postgresql: '9.3'
 env:
+  MNEMOSYNE_HOST: localhost
+  MNEMOSYNE_PORT: 9001
+  MNEMOSYNE_SUBSYSTEM: mnemosyne-travis
   MNEMOSYNE_LOGGER_FORMAT: humane
   MNEMOSYNE_LOGGER_ADAPTER: stdout
   MNEMOSYNE_LOGGER_LEVEL: 6
+  MNEMOSYNE_STORAGE_ENGINE: postgres
   MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING: postgres://postgres:@localhost/travis_ci_test?sslmode=disable
+  MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME: mnemosyne_session
+  MNEMOSYNE_STORAGE_POSTGRES_RETRY: 10
 go:
 - tip
 install:
-- go get .
+- go get github.com/stretchr/testify/...
+- make get
 before_script:
 - psql -c 'create database travis_ci_test;' -U postgres
 script:
 - make build
-- make test-unit -s=mnemosyne-travis-unit
-- make test-postgres -s=mnemosyne-travis-postgres
+- make test-unit
+- make test-postgres
 notifications:
   slack:
     secure: $SLACK_SECURE

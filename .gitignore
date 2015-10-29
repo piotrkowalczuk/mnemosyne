@@ -1,8 +1,10 @@
-# Compiled Object files, Static and Dynamic libs (Shared Objects)
+# Project
 .idea
-mnemosyne
-conf/development.xml
-conf/testing.xml
+mnemosyne.iml
+mnemosyned/mnemosyned
+run.sh
+
+# Golang
 *.o
 *.a
 *.so

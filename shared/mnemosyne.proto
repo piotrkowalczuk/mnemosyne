@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package shared;
+
+service Mnemosyne {
+    rpc Get(GetRequest) returns (GetResponse) {};
+    rpc List(ListRequest) returns (ListResponse) {};
+    rpc Exists(ExistsRequest) returns (ExistsResponse) {};
+    rpc Create(CreateRequest) returns (CreateResponse) {};
+    rpc Abandon(AbandonRequest) returns (AbandonResponse) {};
+    rpc SetData(SetDataRequest) returns (SetDataResponse) {};
+    rpc Delete(DeleteRequest) returns (DeleteResponse) {};
+}
+
+message ID {
+    string key = 1;
+    string hash = 2;
+}
+
+message Session {
+    ID id = 1;
+    map<string, string> data = 2;
+    string expire_at = 3;
+}
+
+message GetRequest {
+    ID id = 1;
+}
+
+message GetResponse {
+    Session session = 1;
+}
+
+message ListRequest {
+    int64 offset = 1;
+    int64 limit = 2;
+    string expire_at_from = 3;
+    string expire_at_to = 4;
+}
+
+message ListResponse {
+    repeated Session sessions = 1;
+}
+
+message ExistsRequest {
+    ID id = 1;
+}
+
+message ExistsResponse {
+    bool exists = 1;
+}
+
+message CreateRequest {
+    map<string, string> data = 1;
+}
+
+message CreateResponse {
+    Session session = 1;
+}
+
+message AbandonRequest {
+    ID id = 1;
+}
+
+message AbandonResponse {
+    bool abandoned = 1;
+}
+
+message SetDataRequest {
+    ID id = 1;
+    string key = 2;
+    string value = 3;
+}
+
+message SetDataResponse {
+    Session session = 1;
+}
+
+message DeleteRequest {
+    ID id = 1;
+    string expire_at_from = 2;
+    string expire_at_to = 3;
+}
+
+
+message DeleteResponse {
+    int64 count = 1;
+}

@@ -1,5 +1,2 @@
-/*
-Package mnemosyned is server implementation of Mnemosyne session store.
-*/
-
+// Package main is server implementation of Mnemosyne session store.
 package main

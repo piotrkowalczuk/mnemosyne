@@ -1,40 +1,14 @@
-# Mnemosyne [![Build Status](https://travis-ci.org/piotrkowalczuk/mnemosyne.svg)](https://travis-ci.org/piotrkowalczuk/mnemosyne)
+# Mnemosyne [![Build Status](https://travis-ci.org/piotrkowalczuk/mnemosyne.svg)](https://travis-ci.org/piotrkowalczuk/mnemosyne)&nbsp;[![Code Climate](https://codeclimate.com/github/piotrkowalczuk/mnemosyne/badges/gpa.svg)](https://codeclimate.com/github/piotrkowalczuk/mnemosyne)
 
-## Installation
+## Documentation
+Documentation is available on [mnemosyne.readme.io](http://mnemosyne.readme.io).
 
-1. Set you GOPATH properly (http://golang.org/doc/code.html#GOPATH)
-2. `go get github.com/piotrkowalczuk/mnemosyne`
-3. `go get` if some dependencies are missing
-4. Set environmental variables
+## Contribution
 
-
-## Environment Variables 
-
-* MNEMOSYNE_HOST
-* MNEMOSYNE_PORT
-* MNEMOSYNE_SUBSYSTEM
-* MNEMOSYNE_LOGGER_FORMAT
-* MNEMOSYNE_LOGGER_ADAPTER
-* MNEMOSYNE_LOGGER_LEVEL
-* MNEMOSYNE_STORAGE_ENGINE
-* MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING
-* MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME
-* MNEMOSYNE_STORAGE_POSTGRES_RETRY
-
-## Commands
-
-* `make build` - builds daemon application
-* `make test` - starts all possible tests
-*
-
-## Dependencies
-
-- PostgreSQL
-
-##TODO
+## TODO
 
 - [ ] Client library
-    - [ ] Go
+    - [x] Go
     - [ ] Python
 - [ ] Engines
 	- [x] PostgreSQL

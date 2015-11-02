@@ -19,5 +19,7 @@ Documentation is available on [mnemosyne.readme.io](http://mnemosyne.readme.io).
 		- [x] Abandon
 		- [x] SetData
 		- [x] Delete
+		- [x] Setup
+		- [x] TearDown
 	- [ ] RAM
 	- [ ] Redis

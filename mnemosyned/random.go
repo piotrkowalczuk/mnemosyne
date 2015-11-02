@@ -14,7 +14,7 @@ type RandomBytesGenerator interface {
 type SystemRandomBytesGenerator struct {
 }
 
-// SystemRandomBytesGenerator creates a random key with the given length in bytes.
+// GenerateRandomBytes creates a random key with the given length in bytes.
 func (srbg *SystemRandomBytesGenerator) GenerateRandomBytes(length int) ([]byte, error) {
 	k := make([]byte, length)
 	if _, err := io.ReadFull(rand.Reader, k); err != nil {

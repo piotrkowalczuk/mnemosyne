@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package shared;
+package mnemosyne;
 
-service Mnemosyne {
+service RPC {
     rpc Get(GetRequest) returns (GetResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
     rpc Exists(ExistsRequest) returns (ExistsResponse) {};

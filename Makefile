@@ -1,9 +1,8 @@
 PROTOC=/usr/local/bin/protoc
 SERVICE=mnemosyne
 PACKAGE=github.com/piotrkowalczuk/mnemosyne
-PACKAGE_SHARED=$(PACKAGE)/shared
-PACKAGE_CLIENT=$(PACKAGE)/$(SERVICE)
 PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
+BINARY=${SERVICE}d/${SERVICE}d
 
 FLAGS=-h=$(MNEMOSYNE_HOST) \
       	    -p=$(MNEMOSYNE_PORT) \
@@ -21,16 +20,16 @@ FLAGS=-h=$(MNEMOSYNE_HOST) \
 all: proto build test run
 
 proto:
-	@${PROTOC} --proto_path=./shared --go_out=plugins=grpc:shared ./shared/${SERVICE}.proto
-	@ls -al ./shared
+	@${PROTOC} --go_out=plugins=grpc:. ${SERVICE}.proto
+	@ls -al
 
 build: build-daemon
 
 build-daemon:
-	@go build -o mnemosyned/mnemosyned ${PACKAGE_DAEMON}
+	@go build -o ${BINARY} ${PACKAGE_DAEMON}
 
 run:
-	@./mnemosyned/mnemosyned ${FLAGS}
+	@{BINARY} ${FLAGS}
 
 test: test-unit test-postgres
 

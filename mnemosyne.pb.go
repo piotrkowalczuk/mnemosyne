@@ -3,7 +3,7 @@
 // DO NOT EDIT!
 
 /*
-Package shared is a generated protocol buffer package.
+Package mnemosyne is a generated protocol buffer package.
 
 It is generated from these files:
 	mnemosyne.proto
@@ -26,7 +26,7 @@ It has these top-level messages:
 	DeleteRequest
 	DeleteResponse
 */
-package shared
+package mnemosyne
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
@@ -268,9 +268,9 @@ func (*DeleteResponse) ProtoMessage()    {}
 var _ context.Context
 var _ grpc.ClientConn
 
-// Client API for Mnemosyne service
+// Client API for RPC service
 
-type MnemosyneClient interface {
+type RPCClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 	Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error)
@@ -280,80 +280,80 @@ type MnemosyneClient interface {
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 }
 
-type mnemosyneClient struct {
+type rPCClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewMnemosyneClient(cc *grpc.ClientConn) MnemosyneClient {
-	return &mnemosyneClient{cc}
+func NewRPCClient(cc *grpc.ClientConn) RPCClient {
+	return &rPCClient{cc}
 }
 
-func (c *mnemosyneClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+func (c *rPCClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
-	err := grpc.Invoke(ctx, "/shared.Mnemosyne/Get", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Get", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *mnemosyneClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+func (c *rPCClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
 	out := new(ListResponse)
-	err := grpc.Invoke(ctx, "/shared.Mnemosyne/List", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/List", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *mnemosyneClient) Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error) {
+func (c *rPCClient) Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error) {
 	out := new(ExistsResponse)
-	err := grpc.Invoke(ctx, "/shared.Mnemosyne/Exists", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Exists", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *mnemosyneClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+func (c *rPCClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
 	out := new(CreateResponse)
-	err := grpc.Invoke(ctx, "/shared.Mnemosyne/Create", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Create", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *mnemosyneClient) Abandon(ctx context.Context, in *AbandonRequest, opts ...grpc.CallOption) (*AbandonResponse, error) {
+func (c *rPCClient) Abandon(ctx context.Context, in *AbandonRequest, opts ...grpc.CallOption) (*AbandonResponse, error) {
 	out := new(AbandonResponse)
-	err := grpc.Invoke(ctx, "/shared.Mnemosyne/Abandon", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Abandon", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *mnemosyneClient) SetData(ctx context.Context, in *SetDataRequest, opts ...grpc.CallOption) (*SetDataResponse, error) {
+func (c *rPCClient) SetData(ctx context.Context, in *SetDataRequest, opts ...grpc.CallOption) (*SetDataResponse, error) {
 	out := new(SetDataResponse)
-	err := grpc.Invoke(ctx, "/shared.Mnemosyne/SetData", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/SetData", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *mnemosyneClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+func (c *rPCClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
 	out := new(DeleteResponse)
-	err := grpc.Invoke(ctx, "/shared.Mnemosyne/Delete", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for Mnemosyne service
+// Server API for RPC service
 
-type MnemosyneServer interface {
+type RPCServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	List(context.Context, *ListRequest) (*ListResponse, error)
 	Exists(context.Context, *ExistsRequest) (*ExistsResponse, error)
@@ -363,125 +363,125 @@ type MnemosyneServer interface {
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
 }
 
-func RegisterMnemosyneServer(s *grpc.Server, srv MnemosyneServer) {
-	s.RegisterService(&_Mnemosyne_serviceDesc, srv)
+func RegisterRPCServer(s *grpc.Server, srv RPCServer) {
+	s.RegisterService(&_RPC_serviceDesc, srv)
 }
 
-func _Mnemosyne_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _RPC_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MnemosyneServer).Get(ctx, in)
+	out, err := srv.(RPCServer).Get(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _Mnemosyne_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _RPC_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(ListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MnemosyneServer).List(ctx, in)
+	out, err := srv.(RPCServer).List(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _Mnemosyne_Exists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _RPC_Exists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(ExistsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MnemosyneServer).Exists(ctx, in)
+	out, err := srv.(RPCServer).Exists(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _Mnemosyne_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _RPC_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(CreateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MnemosyneServer).Create(ctx, in)
+	out, err := srv.(RPCServer).Create(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _Mnemosyne_Abandon_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _RPC_Abandon_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(AbandonRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MnemosyneServer).Abandon(ctx, in)
+	out, err := srv.(RPCServer).Abandon(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _Mnemosyne_SetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _RPC_SetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(SetDataRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MnemosyneServer).SetData(ctx, in)
+	out, err := srv.(RPCServer).SetData(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func _Mnemosyne_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+func _RPC_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
 	in := new(DeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(MnemosyneServer).Delete(ctx, in)
+	out, err := srv.(RPCServer).Delete(ctx, in)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-var _Mnemosyne_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "shared.Mnemosyne",
-	HandlerType: (*MnemosyneServer)(nil),
+var _RPC_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "mnemosyne.RPC",
+	HandlerType: (*RPCServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Get",
-			Handler:    _Mnemosyne_Get_Handler,
+			Handler:    _RPC_Get_Handler,
 		},
 		{
 			MethodName: "List",
-			Handler:    _Mnemosyne_List_Handler,
+			Handler:    _RPC_List_Handler,
 		},
 		{
 			MethodName: "Exists",
-			Handler:    _Mnemosyne_Exists_Handler,
+			Handler:    _RPC_Exists_Handler,
 		},
 		{
 			MethodName: "Create",
-			Handler:    _Mnemosyne_Create_Handler,
+			Handler:    _RPC_Create_Handler,
 		},
 		{
 			MethodName: "Abandon",
-			Handler:    _Mnemosyne_Abandon_Handler,
+			Handler:    _RPC_Abandon_Handler,
 		},
 		{
 			MethodName: "SetData",
-			Handler:    _Mnemosyne_SetData_Handler,
+			Handler:    _RPC_SetData_Handler,
 		},
 		{
 			MethodName: "Delete",
-			Handler:    _Mnemosyne_Delete_Handler,
+			Handler:    _RPC_Delete_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{},

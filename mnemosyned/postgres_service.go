@@ -11,15 +11,7 @@ import (
 	"github.com/piotrkowalczuk/sklog"
 )
 
-// postgres ...
 var postgres *sql.DB
-
-// PostgresConfig ...
-type PostgresConfig struct {
-	Retry            bool   `xml:"retry"`
-	TableName        string `xml:"table-name"`
-	ConnectionString string `xml:"connection-string"`
-}
 
 func initPostgres(connectionString string, retry int, logger log.Logger) {
 	var err error

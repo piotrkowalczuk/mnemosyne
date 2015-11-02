@@ -2,18 +2,15 @@ package main
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"strings"
 	"time"
 
-	"github.com/piotrkowalczuk/mnemosyne/shared"
-
-	"encoding/hex"
-
+	"github.com/piotrkowalczuk/mnemosyne"
 	"golang.org/x/crypto/sha3"
 )
 
 const (
-	postgresEngine               = "postgres"
 	postgresTableNamePlaceholder = "%%TABLE_NAME%%"
 )
 
@@ -32,7 +29,7 @@ func newPostgresStorage(db *sql.DB, tableName string) Storage {
 }
 
 // Create ...
-func (ps *postgresStorage) Create(data map[string]string) (*shared.Session, error) {
+func (ps *postgresStorage) Create(data map[string]string) (*mnemosyne.Session, error) {
 	buf, err := ps.generator.GenerateRandomBytes(128)
 	if err != nil {
 		return nil, err
@@ -44,7 +41,7 @@ func (ps *postgresStorage) Create(data map[string]string) (*shared.Session, erro
 	sha3.ShakeSum256(id, buf)
 
 	entity := &SessionEntity{
-		ID: &shared.ID{
+		ID: &mnemosyne.ID{
 			Key:  "1", // TODO: implement partitioning
 			Hash: hex.EncodeToString(id),
 		},
@@ -83,7 +80,7 @@ func (ps *postgresStorage) save(entity *SessionEntity) error {
 }
 
 // Get ...
-func (ps *postgresStorage) Get(id *shared.ID) (*shared.Session, error) {
+func (ps *postgresStorage) Get(id *mnemosyne.ID) (*mnemosyne.Session, error) {
 	var data Data
 	var expireAt time.Time
 	query := `
@@ -104,7 +101,7 @@ func (ps *postgresStorage) Get(id *shared.ID) (*shared.Session, error) {
 		return nil, err
 	}
 
-	return &shared.Session{
+	return &mnemosyne.Session{
 		Id:       id,
 		Data:     data,
 		ExpireAt: expireAt.Format(time.RFC3339),
@@ -112,12 +109,12 @@ func (ps *postgresStorage) Get(id *shared.ID) (*shared.Session, error) {
 }
 
 // List ...
-func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) (*shared.Session, error) {
+func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) (*mnemosyne.Session, error) {
 	return nil, nil
 }
 
 // Exists ...
-func (ps *postgresStorage) Exists(id *shared.ID) (exists bool, err error) {
+func (ps *postgresStorage) Exists(id *mnemosyne.ID) (exists bool, err error) {
 	query := `SELECT EXISTS(SELECT 1 FROM ` + ps.tableName + ` WHERE id = $1)`
 
 	err = ps.db.QueryRow(query, id.Hash).Scan(
@@ -128,7 +125,7 @@ func (ps *postgresStorage) Exists(id *shared.ID) (exists bool, err error) {
 }
 
 // Abandon ...
-func (ps *postgresStorage) Abandon(id *shared.ID) (bool, error) {
+func (ps *postgresStorage) Abandon(id *mnemosyne.ID) (bool, error) {
 	query := `DELETE FROM ` + ps.tableName + ` WHERE id = $1`
 
 	result, err := ps.db.Exec(query, id.Hash)
@@ -149,7 +146,7 @@ func (ps *postgresStorage) Abandon(id *shared.ID) (bool, error) {
 }
 
 // SetData ...
-func (ps *postgresStorage) SetData(id *shared.ID, key, value string) (*shared.Session, error) {
+func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemosyne.Session, error) {
 	var dataEncoded []byte
 	var err error
 
@@ -218,7 +215,7 @@ func (ps *postgresStorage) SetData(id *shared.ID, key, value string) (*shared.Se
 
 // Delete
 // TODO: implement properly, works partially
-func (ps *postgresStorage) Delete(id *shared.ID, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+func (ps *postgresStorage) Delete(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	var err error
 	var result sql.Result
 	delUntil := `

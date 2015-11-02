@@ -5,13 +5,13 @@ import (
 
 	"sync"
 
-	"github.com/piotrkowalczuk/mnemosyne/shared"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	notExistsID = &shared.ID{
+	notExistsID = &mnemosyne.ID{
 		Hash: "NOT EXISTS",
 	}
 )

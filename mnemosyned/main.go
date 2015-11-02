@@ -5,7 +5,7 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/piotrkowalczuk/mnemosyne/shared"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
@@ -61,7 +61,7 @@ func main() {
 		logger:  logger,
 		storage: storage,
 	}
-	shared.RegisterMnemosyneServer(gRPCServer, mnemosyneServer)
+	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
 
 	gRPCServer.Serve(listen)
 }

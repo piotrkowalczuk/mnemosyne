@@ -65,7 +65,7 @@ func (s *Session) SetValue(key, value string) {
 	s.Data[key] = value
 }
 
-// GetDataForKey...
+// Value ...
 func (s *Session) Value(key string) string {
 	if s.Data == nil {
 		s.Data = make(map[string]string)

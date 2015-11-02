@@ -12,6 +12,7 @@ service RPC {
     rpc Delete(DeleteRequest) returns (DeleteResponse) {};
 }
 
+// ID represents identifier of single session. It consist of partition key and a hash.
 message ID {
     string key = 1;
     string hash = 2;

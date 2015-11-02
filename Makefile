@@ -35,11 +35,9 @@ test: test-unit test-postgres
 
 test-unit:
 	@go test -v ${PACKAGE_DAEMON} ${FLAGS}
-	@go test -v ${PACKAGE_SHARED} ${FLAGS}
 
 test-postgres:
 	@go test -tags postgres -v ${PACKAGE_DAEMON} ${FLAGS}
 
 get:
 	@go get ${PACKAGE_DAEMON}
-	@go get ${PACKAGE_SHARED}

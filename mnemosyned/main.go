@@ -37,6 +37,8 @@ func main() {
 	}
 
 	switch config.monitoring.engine {
+	case "":
+		sklog.Fatal(logger, errors.New("mnemosyned: monitoring is mandatory, at least for now..."))
 	case monitoringEnginePrometheus:
 		initMonitoring(initPrometheus(config.namespace, config.subsystem, prometheus.Labels{"server": hostname}), logger)
 	default:

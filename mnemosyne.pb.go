@@ -42,6 +42,7 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// ID represents identifier of single session. It consist of partition key and a hash.
 type ID struct {
 	Key  string `protobuf:"bytes,1,opt,name=key" json:"key,omitempty"`
 	Hash string `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`

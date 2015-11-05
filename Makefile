@@ -7,9 +7,11 @@ BINARY=${SERVICE}d/${SERVICE}d
 FLAGS=-h=$(MNEMOSYNE_HOST) \
       	    -p=$(MNEMOSYNE_PORT) \
       	    -s=$(MNEMOSYNE_SUBSYSTEM) \
+      	    -s=$(MNEMOSYNE_NAMESPACE) \
       	    -lf=$(MNEMOSYNE_LOGGER_FORMAT) \
       	    -la=$(MNEMOSYNE_LOGGER_ADAPTER) \
       	    -ll=$(MNEMOSYNE_LOGGER_LEVEL) \
+      	    -me=$(MNEMOSYNE_MONITORING_ENGINE) \
       	    -se=$(MNEMOSYNE_STORAGE_ENGINE) \
       	    -spcs=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
       	    -sptn=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME) \

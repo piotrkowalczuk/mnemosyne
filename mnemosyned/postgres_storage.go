@@ -2,12 +2,12 @@ package main
 
 import (
 	"database/sql"
-	"encoding/hex"
+	"errors"
 	"strings"
 	"time"
 
+	"github.com/go-kit/kit/metrics"
 	"github.com/piotrkowalczuk/mnemosyne"
-	"golang.org/x/crypto/sha3"
 )
 
 const (
@@ -17,34 +17,34 @@ const (
 type postgresStorage struct {
 	db        *sql.DB
 	tableName string
-	generator RandomBytesGenerator
+	generator mnemosyne.RandomBytesGenerator
+	monitor   *monitoring
 }
 
-func newPostgresStorage(db *sql.DB, tableName string) Storage {
+func newPostgresStorage(tn string, db *sql.DB, m *monitoring) Storage {
 	return &postgresStorage{
 		db:        db,
-		tableName: tableName,
-		generator: &SystemRandomBytesGenerator{},
+		tableName: tn,
+		generator: &mnemosyne.SystemRandomBytesGenerator{},
+		monitor:   m,
+	}
+}
+
+func initPostgresStorage(tn string, db *sql.DB, m *monitoring) func() (Storage, error) {
+	return func() (Storage, error) {
+		return newPostgresStorage(tn, db, m), nil
 	}
 }
 
 // Create ...
 func (ps *postgresStorage) Create(data map[string]string) (*mnemosyne.Session, error) {
-	buf, err := ps.generator.GenerateRandomBytes(128)
+	id, err := mnemosyne.NewIDRandom(ps.generator, "1")
 	if err != nil {
 		return nil, err
 	}
 
-	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
-	id := make([]byte, 64)
-	// Compute a 64-byte hash of buf and put it in h.
-	sha3.ShakeSum256(id, buf)
-
 	entity := &SessionEntity{
-		ID: &mnemosyne.ID{
-			Key:  "1", // TODO: implement partitioning
-			Hash: hex.EncodeToString(id),
-		},
+		ID:   id,
 		Data: Data(data),
 	}
 
@@ -62,19 +62,22 @@ func (ps *postgresStorage) save(entity *SessionEntity) error {
 		RETURNING expire_at
 
 	`
+	field := metrics.Field{Key: "query", Value: query}
 
 	encodedData, err := entity.Data.EncodeToJSON()
 	if err != nil {
+		ps.monitor.postgres.errors.With(field).Add(1)
 		return err
 	}
 
 	err = ps.db.QueryRow(
 		query,
-		entity.ID.Hash,
+		entity.ID,
 		encodedData,
 	).Scan(
 		&entity.ExpireAt,
 	)
+	ps.monitor.postgres.queries.With(field).Add(1)
 
 	return err
 }
@@ -89,12 +92,14 @@ func (ps *postgresStorage) Get(id *mnemosyne.ID) (*mnemosyne.Session, error) {
 		WHERE id = $1
 		LIMIT 1
 	`
+	field := metrics.Field{Key: "query", Value: query}
 
-	err := ps.db.QueryRow(query, id.Hash).Scan(
+	err := ps.db.QueryRow(query, id).Scan(
 		&data,
 		&expireAt,
 	)
 	if err != nil {
+		ps.monitor.postgres.errors.With(field).Add(1)
 		if err == sql.ErrNoRows {
 			return nil, errSessionNotFound
 		}
@@ -109,6 +114,7 @@ func (ps *postgresStorage) Get(id *mnemosyne.ID) (*mnemosyne.Session, error) {
 }
 
 // List ...
+// TODO: implement
 func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) (*mnemosyne.Session, error) {
 	return nil, nil
 }
@@ -116,10 +122,15 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 // Exists ...
 func (ps *postgresStorage) Exists(id *mnemosyne.ID) (exists bool, err error) {
 	query := `SELECT EXISTS(SELECT 1 FROM ` + ps.tableName + ` WHERE id = $1)`
+	field := metrics.Field{Key: "query", Value: query}
 
-	err = ps.db.QueryRow(query, id.Hash).Scan(
+	err = ps.db.QueryRow(query, id).Scan(
 		&exists,
 	)
+	if err != nil {
+		ps.monitor.postgres.errors.With(field).Add(1)
+	}
+	ps.monitor.postgres.queries.With(field).Add(1)
 
 	return
 }
@@ -127,11 +138,15 @@ func (ps *postgresStorage) Exists(id *mnemosyne.ID) (exists bool, err error) {
 // Abandon ...
 func (ps *postgresStorage) Abandon(id *mnemosyne.ID) (bool, error) {
 	query := `DELETE FROM ` + ps.tableName + ` WHERE id = $1`
+	field := metrics.Field{Key: "query", Value: query}
 
-	result, err := ps.db.Exec(query, id.Hash)
+	result, err := ps.db.Exec(query, id)
 	if err != nil {
+		ps.monitor.postgres.errors.With(field).Add(1)
 		return false, err
 	}
+
+	ps.monitor.postgres.queries.With(field).Add(1)
 
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -172,17 +187,19 @@ func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemos
 		return nil, err
 	}
 
-	err = tx.QueryRow(selectQuery, id.Hash).Scan(
+	err = tx.QueryRow(selectQuery, id).Scan(
 		&dataEncoded,
 		&entity.ExpireAt,
 	)
 	if err != nil {
+		ps.monitor.postgres.errors.With(metrics.Field{Key: "query", Value: selectQuery}).Add(1)
 		tx.Rollback()
 		if err == sql.ErrNoRows {
 			return nil, errSessionNotFound
 		}
 		return nil, err
 	}
+	ps.monitor.postgres.queries.With(metrics.Field{Key: "query", Value: selectQuery}).Add(1)
 
 	entity.Data, err = DecodeSessionDataFromJSON(dataEncoded)
 	if err != nil {
@@ -198,15 +215,13 @@ func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemos
 		return nil, err
 	}
 
-	_, err = tx.Exec(
-		updateQuery,
-		id.Hash,
-		dataEncoded,
-	)
+	_, err = tx.Exec(updateQuery, id, dataEncoded)
 	if err != nil {
+		ps.monitor.postgres.errors.With(metrics.Field{Key: "query", Value: updateQuery}).Add(1)
 		tx.Rollback()
 		return nil, err
 	}
+	ps.monitor.postgres.queries.With(metrics.Field{Key: "query", Value: updateQuery}).Add(1)
 
 	tx.Commit()
 
@@ -218,21 +233,42 @@ func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemos
 func (ps *postgresStorage) Delete(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	var err error
 	var result sql.Result
-	delUntil := `
-		DELETE FROM ` + ps.tableName + `
-		WHERE expire_at < $1
-	`
-	delAll := `TRUNCATE TABLE ` + ps.tableName
+	var query string
+	var args []interface{}
 
-	if expiredAtFrom == nil {
-		result, err = ps.db.Exec(delAll)
-	} else {
-		result, err = ps.db.Exec(delUntil, expiredAtFrom)
+	switch {
+	case id == nil && expiredAtFrom == nil && expiredAtTo == nil:
+		return 0, errors.New("mnemosyned: session cannot be deleted, no where parameter provided")
+	case id != nil && expiredAtFrom == nil && expiredAtTo == nil:
+		query = "DELETE FROM " + ps.tableName + " WHERE id = $1"
+		args = []interface{}{id}
+	case id == nil && expiredAtFrom != nil && expiredAtTo == nil:
+		query = "DELETE FROM " + ps.tableName + " WHERE expire_at > $1"
+		args = []interface{}{expiredAtFrom}
+	case id == nil && expiredAtFrom == nil && expiredAtTo != nil:
+		query = "DELETE FROM " + ps.tableName + " WHERE expire_at < $1"
+		args = []interface{}{expiredAtTo}
+	case id != nil && expiredAtFrom != nil && expiredAtTo == nil:
+		query = "DELETE FROM " + ps.tableName + " WHERE id = $1 AND expire_at > $2"
+		args = []interface{}{id, expiredAtFrom}
+	case id != nil && expiredAtFrom == nil && expiredAtTo != nil:
+		query = "DELETE FROM " + ps.tableName + " WHERE id = $1 AND expire_at < $2"
+		args = []interface{}{id, expiredAtTo}
+	case id == nil && expiredAtFrom != nil && expiredAtTo != nil:
+		query = "DELETE FROM " + ps.tableName + " WHERE expire_at > $1 AND expire_at < $2"
+		args = []interface{}{expiredAtFrom, expiredAtTo}
+	default:
+		query = "DELETE FROM " + ps.tableName + " WHERE id = $1 AND expire_at > $2 AND expire_at < $3"
+		args = []interface{}{id, expiredAtFrom, expiredAtTo}
 	}
-
+	field := metrics.Field{Key: "query", Value: query}
+	result, err = ps.db.Exec(query, args...)
 	if err != nil {
+		ps.monitor.postgres.errors.With(field).Add(1)
 		return 0, err
 	}
+	ps.monitor.postgres.queries.With(field).Add(1)
+
 	return result.RowsAffected()
 }
 
@@ -240,7 +276,7 @@ func (ps *postgresStorage) Delete(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *
 func (ps *postgresStorage) Setup() error {
 	sql := strings.Replace(`
 		CREATE TABLE IF NOT EXISTS %%TABLE_NAME%% (
-			id character varying(128) PRIMARY KEY,
+			id character varying(255) PRIMARY KEY,
 			data json NOT NULL,
 			expire_at timestamp with time zone NOT NULL
 		)

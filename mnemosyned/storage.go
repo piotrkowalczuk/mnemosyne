@@ -4,7 +4,9 @@ import (
 	"errors"
 	"time"
 
+	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/sklog"
 )
 
 const (
@@ -14,6 +16,7 @@ const (
 )
 
 var (
+	storage            Storage
 	errSessionNotFound = errors.New("mnemosyne: session not found")
 )
 
@@ -28,4 +31,18 @@ type Storage interface {
 	Abandon(*mnemosyne.ID) (bool, error)
 	SetData(*mnemosyne.ID, string, string) (*mnemosyne.Session, error)
 	Delete(*mnemosyne.ID, *time.Time, *time.Time) (int64, error)
+}
+
+func initStorage(fn func() (Storage, error), logger log.Logger) {
+	s, err := fn()
+	if err != nil {
+		sklog.Fatal(logger, err)
+	}
+
+	err = s.Setup()
+	if err != nil {
+		sklog.Fatal(logger, err)
+	}
+
+	storage = s
 }

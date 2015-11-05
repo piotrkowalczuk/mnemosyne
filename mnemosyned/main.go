@@ -3,10 +3,12 @@ package main
 import (
 	"errors"
 	"net"
+	"os"
 	"strconv"
 
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
 )
@@ -29,11 +31,23 @@ func main() {
 		logger,
 	)
 
+	hostname, err := os.Hostname()
+	if err != nil {
+		sklog.Fatal(logger, errors.New("mnemosyned: getting hostname failed"))
+	}
+
+	switch config.monitoring.engine {
+	case monitoringEnginePrometheus:
+		initMonitoring(initPrometheus(config.namespace, config.subsystem, prometheus.Labels{"server": hostname}), logger)
+	default:
+		sklog.Fatal(logger, errors.New("mnemosyned: unknown monitoring engine"))
+	}
+
 	switch config.storage.engine {
 	case storageEngineInMemory:
 		sklog.Fatal(logger, errors.New("mnemosyned: in memory storage is not implemented yet"))
 	case storageEnginePostgres:
-		initStorage(initPostgresStorage(config.storage.postgres.tableName, postgres), logger)
+		initStorage(initPostgresStorage(config.storage.postgres.tableName, postgres, monitor), logger)
 	case storageEngineRedis:
 		sklog.Fatal(logger, errors.New("mnemosyned: redis storage is not implemented yet"))
 	default:

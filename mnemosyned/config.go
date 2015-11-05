@@ -6,11 +6,15 @@ import "flag"
 type configuration struct {
 	host      string
 	port      int
+	namespace string
 	subsystem string
 	logger    struct {
 		adapter string
 		format  string
 		level   int
+	}
+	monitoring struct {
+		engine string
 	}
 	storage struct {
 		engine   string
@@ -30,10 +34,12 @@ func (c *configuration) Init() {
 
 	flag.StringVar(&c.host, "h", "127.0.0.1", "host")
 	flag.IntVar(&c.port, "p", 8080, "port")
+	flag.StringVar(&c.namespace, "n", "", "namespace")
 	flag.StringVar(&c.subsystem, "s", "mnemosyne", "subsystem")
 	flag.StringVar(&c.logger.adapter, "la", loggerAdapterStdOut, "logger adapter")
 	flag.StringVar(&c.logger.format, "lf", loggerFormatJSON, "logger format")
 	flag.IntVar(&c.logger.level, "ll", 6, "logger level")
+	flag.StringVar(&c.monitoring.engine, "me", monitoringEnginePrometheus, "monitoring engine")
 	flag.StringVar(&c.storage.engine, "se", storageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.storage.postgres.connectionString, "spcs", "postgres://localhost:5432?sslmode=disable", "storage postgres connection string")
 	flag.StringVar(&c.storage.postgres.tableName, "sptn", "mnemosyne_session", "storage postgres table name")

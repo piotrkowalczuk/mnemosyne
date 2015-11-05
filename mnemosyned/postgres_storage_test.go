@@ -17,7 +17,8 @@ func TestMain(m *testing.M) {
 
 	initLogger(configLogger.adapter, configLogger.format, configLogger.level, sklog.KeySubsystem, "mnemosyne")
 	initPostgres(configPostgres.connectionString, configPostgres.retry, logger)
-	initStorage(initPostgresStorage(configPostgres.tableName, postgres), logger)
+	initMonitoring(initPrometheus(config.namespace, config.subsystem, nil), logger)
+	initStorage(initPostgresStorage(configPostgres.tableName, postgres, monitor), logger)
 
 	code := m.Run()
 

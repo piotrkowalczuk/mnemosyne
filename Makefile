@@ -29,7 +29,7 @@ build-daemon:
 	@go build -o ${BINARY} ${PACKAGE_DAEMON}
 
 run:
-	@{BINARY} ${FLAGS}
+	@${BINARY} ${FLAGS}
 
 test: test-unit test-postgres
 

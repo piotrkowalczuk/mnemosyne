@@ -2,6 +2,7 @@ package main
 
 import (
 	"testing"
+	"time"
 
 	"sync"
 
@@ -165,11 +166,27 @@ func testStorage_SetData(t *testing.T, s Storage) {
 }
 
 func testStorage_Delete(t *testing.T, s Storage) {
-	t.SkipNow()
-	//	till := time.Now().Add(35 * time.Minute)
-	//
-	//	affected, err := s.Delete(&till)
-	//	if assert.NoError(t, err) {
-	//		assert.Equal(t, int64(4), affected)
-	//	}
+	expiredAtTo := time.Now().Add(35 * time.Minute)
+
+	affected, err := s.Delete(nil, nil, &expiredAtTo)
+	if assert.NoError(t, err) {
+		assert.Equal(t, int64(4), affected)
+	}
+
+	new, err := s.Create(Data{
+		"username": "test1",
+	})
+	require.NoError(t, err)
+
+	affected, err = s.Delete(new.Id, nil, nil)
+	if assert.NoError(t, err) {
+		assert.Equal(t, int64(1), affected)
+	}
+
+	affected, err = s.Delete(new.Id, nil, nil)
+	if assert.NoError(t, err) {
+		assert.Equal(t, int64(0), affected)
+	}
 }
+
+

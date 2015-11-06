@@ -129,6 +129,14 @@ func NewIDFromString(s string) (*ID, error) {
 	}, nil
 }
 
+// NewID ...
+func NewID(key, hash string) *ID {
+	return &ID{
+		Key:  key,
+		Hash: hash,
+	}
+}
+
 // NewIDFromBytes ...
 func NewIDFromBytes(b []byte) (*ID, error) {
 	parts := bytes.Split(b, []byte{':'})

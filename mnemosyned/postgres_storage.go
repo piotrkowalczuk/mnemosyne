@@ -113,10 +113,66 @@ func (ps *postgresStorage) Get(id *mnemosyne.ID) (*mnemosyne.Session, error) {
 	}, nil
 }
 
-// List ...
-// TODO: implement
-func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) (*mnemosyne.Session, error) {
-	return nil, nil
+// List satisfy Storage interface.
+func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosyne.Session, error) {
+	if limit == 0 {
+		return nil, errors.New("mnemosyned: cannot retrieve list of sessions, limit needs to be higher than 0")
+	}
+
+	args := []interface{}{offset, limit}
+	query := "SELECT id, data, expire_at FROM " + ps.tableName
+
+	switch {
+	case expiredAtFrom != nil && expiredAtTo == nil:
+		query += "expire_at > $3"
+		args = append(args, expiredAtFrom)
+	case expiredAtFrom == nil && expiredAtTo != nil:
+		query += "expire_at < $3"
+		args = append(args, expiredAtTo)
+	case expiredAtFrom != nil && expiredAtTo != nil:
+		query += "expire_at > $4 AND expire_at < $5"
+		args = append(args, expiredAtFrom, expiredAtTo)
+	}
+
+	query += " OFFSET $1 LIMIT $2"
+
+	field := metrics.Field{Key: "query", Value: query}
+
+	rows, err := ps.db.Query(query, args...)
+	if err != nil {
+		ps.monitor.postgres.errors.With(field).Add(1)
+		return nil, err
+	}
+	ps.monitor.postgres.queries.With(field).Add(1)
+
+	sessions := make([]*mnemosyne.Session, 0, limit)
+	for rows.Next() {
+		var id mnemosyne.ID
+		var data Data
+		var expireAt time.Time
+
+		err = rows.Scan(
+			&id,
+			&data,
+			&expireAt,
+		)
+		if err != nil {
+			ps.monitor.postgres.errors.With(field).Add(1)
+			return nil, err
+		}
+
+		sessions = append(sessions, &mnemosyne.Session{
+			Id:       &id,
+			Data:     data,
+			ExpireAt: expireAt.Format(time.RFC3339),
+		})
+	}
+	if rows.Err() != nil {
+		ps.monitor.postgres.errors.With(field).Add(1)
+		return nil, rows.Err()
+	}
+
+	return sessions, nil
 }
 
 // Exists ...
@@ -229,40 +285,16 @@ func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemos
 }
 
 // Delete
-// TODO: implement properly, works partially
 func (ps *postgresStorage) Delete(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
-	var err error
-	var result sql.Result
-	var query string
-	var args []interface{}
-
-	switch {
-	case id == nil && expiredAtFrom == nil && expiredAtTo == nil:
+	if id == nil && expiredAtFrom == nil && expiredAtTo == nil {
 		return 0, errors.New("mnemosyned: session cannot be deleted, no where parameter provided")
-	case id != nil && expiredAtFrom == nil && expiredAtTo == nil:
-		query = "DELETE FROM " + ps.tableName + " WHERE id = $1"
-		args = []interface{}{id}
-	case id == nil && expiredAtFrom != nil && expiredAtTo == nil:
-		query = "DELETE FROM " + ps.tableName + " WHERE expire_at > $1"
-		args = []interface{}{expiredAtFrom}
-	case id == nil && expiredAtFrom == nil && expiredAtTo != nil:
-		query = "DELETE FROM " + ps.tableName + " WHERE expire_at < $1"
-		args = []interface{}{expiredAtTo}
-	case id != nil && expiredAtFrom != nil && expiredAtTo == nil:
-		query = "DELETE FROM " + ps.tableName + " WHERE id = $1 AND expire_at > $2"
-		args = []interface{}{id, expiredAtFrom}
-	case id != nil && expiredAtFrom == nil && expiredAtTo != nil:
-		query = "DELETE FROM " + ps.tableName + " WHERE id = $1 AND expire_at < $2"
-		args = []interface{}{id, expiredAtTo}
-	case id == nil && expiredAtFrom != nil && expiredAtTo != nil:
-		query = "DELETE FROM " + ps.tableName + " WHERE expire_at > $1 AND expire_at < $2"
-		args = []interface{}{expiredAtFrom, expiredAtTo}
-	default:
-		query = "DELETE FROM " + ps.tableName + " WHERE id = $1 AND expire_at > $2 AND expire_at < $3"
-		args = []interface{}{id, expiredAtFrom, expiredAtTo}
 	}
+
+	where, args := ps.where(id, expiredAtFrom, expiredAtTo)
+	query := "DELETE FROM " + ps.tableName + " WHERE " + where
 	field := metrics.Field{Key: "query", Value: query}
-	result, err = ps.db.Exec(query, args...)
+
+	result, err := ps.db.Exec(query, args...)
 	if err != nil {
 		ps.monitor.postgres.errors.With(field).Add(1)
 		return 0, err
@@ -294,4 +326,25 @@ func (ps *postgresStorage) TearDown() error {
 	_, err := ps.db.Exec(sql)
 
 	return err
+}
+
+func (ps *postgresStorage) where(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
+	switch {
+	case id != nil && expiredAtFrom == nil && expiredAtTo == nil:
+		return "id = $1", []interface{}{id}
+	case id == nil && expiredAtFrom != nil && expiredAtTo == nil:
+		return "expire_at > $1", []interface{}{expiredAtFrom}
+	case id == nil && expiredAtFrom == nil && expiredAtTo != nil:
+		return "expire_at < $1", []interface{}{expiredAtTo}
+	case id != nil && expiredAtFrom != nil && expiredAtTo == nil:
+		return "id = $1 AND expire_at > $2", []interface{}{id, expiredAtFrom}
+	case id != nil && expiredAtFrom == nil && expiredAtTo != nil:
+		return "id = $1 AND expire_at < $2", []interface{}{id, expiredAtTo}
+	case id == nil && expiredAtFrom != nil && expiredAtTo != nil:
+		return "expire_at > $1 AND expire_at < $2", []interface{}{expiredAtFrom, expiredAtTo}
+	case id != nil && expiredAtFrom != nil && expiredAtTo != nil:
+		return "id = $1 AND expire_at > $2 AND expire_at < $3", []interface{}{id, expiredAtFrom, expiredAtTo}
+	default:
+		return "", nil
+	}
 }

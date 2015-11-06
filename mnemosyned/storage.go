@@ -25,7 +25,7 @@ type Storage interface {
 	Setup() error
 	TearDown() error
 	Get(*mnemosyne.ID) (*mnemosyne.Session, error)
-	List(int64, int64, *time.Time, *time.Time) (*mnemosyne.Session, error)
+	List(int64, int64, *time.Time, *time.Time) ([]*mnemosyne.Session, error)
 	Exists(*mnemosyne.ID) (bool, error)
 	Create(map[string]string) (*mnemosyne.Session, error)
 	Abandon(*mnemosyne.ID) (bool, error)

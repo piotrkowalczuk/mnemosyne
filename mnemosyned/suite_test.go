@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"strconv"
 	"sync"
 
 	"github.com/piotrkowalczuk/mnemosyne"
@@ -51,7 +52,23 @@ func testStorage_Get(t *testing.T, s Storage) {
 }
 
 func testStorage_List(t *testing.T, s Storage) {
-	t.SkipNow()
+	nb := 10
+	key := "index"
+
+	for i := 1; i <= nb; i++ {
+		_, err := s.Create(Data{key: strconv.FormatInt(int64(i), 10)})
+		require.NoError(t, err)
+	}
+
+	sessions, err := s.List(2, int64(nb), nil, nil)
+	if assert.NoError(t, err) {
+		assert.Len(t, sessions, nb)
+		for i, s := range sessions {
+			assert.NotEmpty(t, s.Id)
+			assert.NotEmpty(t, s.ExpireAt)
+			assert.Equal(t, s.Value(key), strconv.FormatInt(int64(i+1), 10))
+		}
+	}
 }
 
 func testStorage_Exists(t *testing.T, s Storage) {
@@ -170,23 +187,88 @@ func testStorage_Delete(t *testing.T, s Storage) {
 
 	affected, err := s.Delete(nil, nil, &expiredAtTo)
 	if assert.NoError(t, err) {
-		assert.Equal(t, int64(4), affected)
+		assert.Equal(t, int64(14), affected)
 	}
 
-	new, err := s.Create(Data{
-		"username": "test1",
-	})
-	require.NoError(t, err)
-
-	affected, err = s.Delete(new.Id, nil, nil)
-	if assert.NoError(t, err) {
-		assert.Equal(t, int64(1), affected)
+	data := []struct {
+		id            bool
+		expiredAtFrom bool
+		expiredAtTo   bool
+	}{
+		{
+			id: true,
+		},
+		{
+			expiredAtFrom: true,
+		},
+		{
+			expiredAtTo: true,
+		},
+		{
+			id:            true,
+			expiredAtFrom: true,
+		},
+		{
+			id:            true,
+			expiredAtFrom: true,
+			expiredAtTo:   true,
+		},
+		{
+			expiredAtFrom: true,
+			expiredAtTo:   true,
+		},
+		{
+			id:          true,
+			expiredAtTo: true,
+		},
 	}
 
-	affected, err = s.Delete(new.Id, nil, nil)
-	if assert.NoError(t, err) {
-		assert.Equal(t, int64(0), affected)
+DataLoop:
+	for _, args := range data {
+		new, err := s.Create(nil)
+		require.NoError(t, err)
+
+		if !assert.NoError(t, err) {
+			continue DataLoop
+		}
+
+		var id *mnemosyne.ID
+		var expiredAtTo *time.Time
+		var expiredAtFrom *time.Time
+
+		if args.id {
+			id = new.Id
+		}
+
+		if args.expiredAtFrom {
+			eaf, err := mnemosyne.ParseTime(new.ExpireAt)
+			if !assert.NoError(t, err) {
+				continue DataLoop
+			}
+
+			eaf = eaf.Add(-29 * time.Minute)
+			expiredAtFrom = &eaf
+		}
+		if args.expiredAtTo {
+			eat, err := mnemosyne.ParseTime(new.ExpireAt)
+			if !assert.NoError(t, err) {
+				continue DataLoop
+			}
+
+			eat = eat.Add(29 * time.Minute)
+			expiredAtTo = &eat
+		}
+
+		affected, err = s.Delete(id, expiredAtFrom, expiredAtTo)
+		if assert.NoError(t, err) {
+			if assert.Equal(t, int64(1), affected) {
+				t.Logf("as expected session can be deleted with arguments id: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.id, args.expiredAtFrom, args.expiredAtTo)
+			}
+		}
+
+		affected, err = s.Delete(id, expiredAtFrom, expiredAtTo)
+		if assert.NoError(t, err) {
+			assert.Equal(t, int64(0), affected)
+		}
 	}
 }
-
-

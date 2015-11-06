@@ -13,7 +13,7 @@ Documentation is available on [mnemosyne.readme.io](http://mnemosyne.readme.io).
 - [ ] Engines
 	- [x] PostgreSQL
 		- [x] Get
-		- [ ] List
+		- [x] List
 		- [x] Exists
 		- [x] Create
 		- [x] Abandon

@@ -241,27 +241,17 @@ DataLoop:
 		}
 
 		if args.expiredAtFrom {
-			eaf, err := mnemosyne.ParseTime(new.ExpireAt)
-			if !assert.NoError(t, err) {
-				continue DataLoop
-			}
-
-			eaf = eaf.Add(-29 * time.Minute)
+			eaf := new.ExpireAtTime().Add(-29 * time.Minute)
 			expiredAtFrom = &eaf
 		}
 		if args.expiredAtTo {
-			eat, err := mnemosyne.ParseTime(new.ExpireAt)
-			if !assert.NoError(t, err) {
-				continue DataLoop
-			}
-
-			eat = eat.Add(29 * time.Minute)
+			eat := new.ExpireAtTime().Add(29 * time.Minute)
 			expiredAtTo = &eat
 		}
 
 		affected, err = s.Delete(id, expiredAtFrom, expiredAtTo)
 		if assert.NoError(t, err) {
-			if assert.Equal(t, int64(1), affected) {
+			if assert.Equal(t, int64(1), affected, "one session should be removed for id: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.id, args.expiredAtFrom, args.expiredAtTo) {
 				t.Logf("as expected session can be deleted with arguments id: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.id, args.expiredAtFrom, args.expiredAtTo)
 			}
 		}

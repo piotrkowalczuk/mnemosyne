@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package mnemosyne;
 
+import public "timestamp.proto";
+
 service RPC {
     rpc Get(GetRequest) returns (GetResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
@@ -21,7 +23,7 @@ message ID {
 message Session {
     ID id = 1;
     map<string, string> data = 2;
-    string expire_at = 3;
+    Timestamp expire_at = 3;
 }
 
 message GetRequest {
@@ -35,8 +37,8 @@ message GetResponse {
 message ListRequest {
     int64 offset = 1;
     int64 limit = 2;
-    string expire_at_from = 3;
-    string expire_at_to = 4;
+    Timestamp expire_at_from = 3;
+    Timestamp expire_at_to = 4;
 }
 
 message ListResponse {
@@ -79,8 +81,8 @@ message SetDataResponse {
 
 message DeleteRequest {
     ID id = 1;
-    string expire_at_from = 2;
-    string expire_at_to = 3;
+    Timestamp expire_at_from = 2;
+    Timestamp expire_at_to = 3;
 }
 
 

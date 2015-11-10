@@ -13,23 +13,26 @@ type SessionEntity struct {
 	ExpireAt *time.Time    `json:"expireAt"`
 }
 
+func (se *SessionEntity) ExpireAtTimestamp() *mnemosyne.Timestamp {
+	return mnemosyne.TimeToTimestamp(*se.ExpireAt)
+}
+
 func newSessionEntityFromSession(session *mnemosyne.Session) (*SessionEntity, error) {
-	et, err := time.Parse(time.RFC3339, session.ExpireAt)
-	if err != nil {
-		return nil, err
-	}
+	expireAtTime := session.ExpireAtTime()
 
 	return &SessionEntity{
 		ID:       session.Id,
 		Data:     session.Data,
-		ExpireAt: &et,
+		ExpireAt: &expireAtTime,
 	}, nil
 }
 
 func newSessionFromSessionEntity(entity *SessionEntity) *mnemosyne.Session {
+	expireAtTimestamp := entity.ExpireAtTimestamp()
+
 	return &mnemosyne.Session{
 		Id:       entity.ID,
 		Data:     entity.Data,
-		ExpireAt: entity.ExpireAt.Format(time.RFC3339),
+		ExpireAt: expireAtTimestamp,
 	}
 }

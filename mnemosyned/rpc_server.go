@@ -134,14 +134,8 @@ func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	expireAtFrom, err := mnemosyne.ParseTime(req.ExpireAtFrom)
-	if err != nil {
-		return nil, rs.error(err, field, req)
-	}
-	expireAtTo, err := mnemosyne.ParseTime(req.ExpireAtTo)
-	if err != nil {
-		return nil, rs.error(err, field, req)
-	}
+	expireAtFrom := req.ExpireAtFromTime()
+	expireAtTo := req.ExpireAtToTime()
 
 	count, err := rs.storage.Delete(req.Id, &expireAtFrom, &expireAtTo)
 	if err != nil {

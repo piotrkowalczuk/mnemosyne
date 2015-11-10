@@ -109,7 +109,7 @@ func (ps *postgresStorage) Get(id *mnemosyne.ID) (*mnemosyne.Session, error) {
 	return &mnemosyne.Session{
 		Id:       id,
 		Data:     data,
-		ExpireAt: expireAt.Format(time.RFC3339),
+		ExpireAt: mnemosyne.TimeToTimestamp(expireAt),
 	}, nil
 }
 
@@ -164,7 +164,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 		sessions = append(sessions, &mnemosyne.Session{
 			Id:       &id,
 			Data:     data,
-			ExpireAt: expireAt.Format(time.RFC3339),
+			ExpireAt: mnemosyne.TimeToTimestamp(expireAt),
 		})
 	}
 	if rows.Err() != nil {

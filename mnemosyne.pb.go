@@ -2,30 +2,6 @@
 // source: mnemosyne.proto
 // DO NOT EDIT!
 
-/*
-Package mnemosyne is a generated protocol buffer package.
-
-It is generated from these files:
-	mnemosyne.proto
-
-It has these top-level messages:
-	ID
-	Session
-	GetRequest
-	GetResponse
-	ListRequest
-	ListResponse
-	ExistsRequest
-	ExistsResponse
-	CreateRequest
-	CreateResponse
-	AbandonRequest
-	AbandonResponse
-	SetDataRequest
-	SetDataResponse
-	DeleteRequest
-	DeleteResponse
-*/
 package mnemosyne
 
 import proto "github.com/golang/protobuf/proto"
@@ -42,6 +18,8 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// Ignoring public import of Timestamp from timestamp.proto
+
 // ID represents identifier of single session. It consist of partition key and a hash.
 type ID struct {
 	Key  string `protobuf:"bytes,1,opt,name=key" json:"key,omitempty"`
@@ -55,7 +33,7 @@ func (*ID) ProtoMessage()    {}
 type Session struct {
 	Id       *ID               `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
 	Data     map[string]string `protobuf:"bytes,2,rep,name=data" json:"data,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpireAt string            `protobuf:"bytes,3,opt,name=expire_at" json:"expire_at,omitempty"`
+	ExpireAt *Timestamp        `protobuf:"bytes,3,opt,name=expire_at" json:"expire_at,omitempty"`
 }
 
 func (m *Session) Reset()         { *m = Session{} }
@@ -72,6 +50,13 @@ func (m *Session) GetId() *ID {
 func (m *Session) GetData() map[string]string {
 	if m != nil {
 		return m.Data
+	}
+	return nil
+}
+
+func (m *Session) GetExpireAt() *Timestamp {
+	if m != nil {
+		return m.ExpireAt
 	}
 	return nil
 }
@@ -107,15 +92,29 @@ func (m *GetResponse) GetSession() *Session {
 }
 
 type ListRequest struct {
-	Offset       int64  `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
-	Limit        int64  `protobuf:"varint,2,opt,name=limit" json:"limit,omitempty"`
-	ExpireAtFrom string `protobuf:"bytes,3,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
-	ExpireAtTo   string `protobuf:"bytes,4,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
+	Offset       int64      `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
+	Limit        int64      `protobuf:"varint,2,opt,name=limit" json:"limit,omitempty"`
+	ExpireAtFrom *Timestamp `protobuf:"bytes,3,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
+	ExpireAtTo   *Timestamp `protobuf:"bytes,4,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
 }
 
 func (m *ListRequest) Reset()         { *m = ListRequest{} }
 func (m *ListRequest) String() string { return proto.CompactTextString(m) }
 func (*ListRequest) ProtoMessage()    {}
+
+func (m *ListRequest) GetExpireAtFrom() *Timestamp {
+	if m != nil {
+		return m.ExpireAtFrom
+	}
+	return nil
+}
+
+func (m *ListRequest) GetExpireAtTo() *Timestamp {
+	if m != nil {
+		return m.ExpireAtTo
+	}
+	return nil
+}
 
 type ListResponse struct {
 	Sessions []*Session `protobuf:"bytes,1,rep,name=sessions" json:"sessions,omitempty"`
@@ -241,9 +240,9 @@ func (m *SetDataResponse) GetSession() *Session {
 }
 
 type DeleteRequest struct {
-	Id           *ID    `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
-	ExpireAtFrom string `protobuf:"bytes,2,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
-	ExpireAtTo   string `protobuf:"bytes,3,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
+	Id           *ID        `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	ExpireAtFrom *Timestamp `protobuf:"bytes,2,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
+	ExpireAtTo   *Timestamp `protobuf:"bytes,3,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
 }
 
 func (m *DeleteRequest) Reset()         { *m = DeleteRequest{} }
@@ -257,6 +256,20 @@ func (m *DeleteRequest) GetId() *ID {
 	return nil
 }
 
+func (m *DeleteRequest) GetExpireAtFrom() *Timestamp {
+	if m != nil {
+		return m.ExpireAtFrom
+	}
+	return nil
+}
+
+func (m *DeleteRequest) GetExpireAtTo() *Timestamp {
+	if m != nil {
+		return m.ExpireAtTo
+	}
+	return nil
+}
+
 type DeleteResponse struct {
 	Count int64 `protobuf:"varint,1,opt,name=count" json:"count,omitempty"`
 }
@@ -264,6 +277,25 @@ type DeleteResponse struct {
 func (m *DeleteResponse) Reset()         { *m = DeleteResponse{} }
 func (m *DeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*DeleteResponse) ProtoMessage()    {}
+
+func init() {
+	proto.RegisterType((*ID)(nil), "mnemosyne.ID")
+	proto.RegisterType((*Session)(nil), "mnemosyne.Session")
+	proto.RegisterType((*GetRequest)(nil), "mnemosyne.GetRequest")
+	proto.RegisterType((*GetResponse)(nil), "mnemosyne.GetResponse")
+	proto.RegisterType((*ListRequest)(nil), "mnemosyne.ListRequest")
+	proto.RegisterType((*ListResponse)(nil), "mnemosyne.ListResponse")
+	proto.RegisterType((*ExistsRequest)(nil), "mnemosyne.ExistsRequest")
+	proto.RegisterType((*ExistsResponse)(nil), "mnemosyne.ExistsResponse")
+	proto.RegisterType((*CreateRequest)(nil), "mnemosyne.CreateRequest")
+	proto.RegisterType((*CreateResponse)(nil), "mnemosyne.CreateResponse")
+	proto.RegisterType((*AbandonRequest)(nil), "mnemosyne.AbandonRequest")
+	proto.RegisterType((*AbandonResponse)(nil), "mnemosyne.AbandonResponse")
+	proto.RegisterType((*SetDataRequest)(nil), "mnemosyne.SetDataRequest")
+	proto.RegisterType((*SetDataResponse)(nil), "mnemosyne.SetDataResponse")
+	proto.RegisterType((*DeleteRequest)(nil), "mnemosyne.DeleteRequest")
+	proto.RegisterType((*DeleteResponse)(nil), "mnemosyne.DeleteResponse")
+}
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context

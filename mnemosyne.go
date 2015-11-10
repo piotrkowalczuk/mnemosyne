@@ -26,6 +26,16 @@ func (lr *ListRequest) Context() []interface{} {
 	}
 }
 
+// ExpireAtFromTime ...
+func (lr *ListRequest) ExpireAtFromTime() time.Time {
+	return TimestampToTime(lr.ExpireAtFrom)
+}
+
+// ExpireAtToTime ...
+func (lr *ListRequest) ExpireAtToTime() time.Time {
+	return TimestampToTime(lr.ExpireAtTo)
+}
+
 // Context implements sklog.Contexter interface.
 func (er *ExistsRequest) Context() []interface{} {
 	return []interface{}{"id", er.Id}
@@ -65,6 +75,16 @@ func (dr *DeleteRequest) Context() []interface{} {
 	}
 }
 
+// ExpireAtFromTime ...
+func (dr *DeleteRequest) ExpireAtFromTime() time.Time {
+	return TimestampToTime(dr.ExpireAtFrom)
+}
+
+// ExpireAtToTime ...
+func (dr *DeleteRequest) ExpireAtToTime() time.Time {
+	return TimestampToTime(dr.ExpireAtTo)
+}
+
 // SetValue ...
 func (s *Session) SetValue(key, value string) {
 	if s.Data == nil {
@@ -81,6 +101,11 @@ func (s *Session) Value(key string) string {
 	}
 
 	return s.Data[key]
+}
+
+// ExpireAtFromTime ...
+func (s *Session) ExpireAtTime() time.Time {
+	return TimestampToTime(s.ExpireAt)
 }
 
 // ParseTime ...

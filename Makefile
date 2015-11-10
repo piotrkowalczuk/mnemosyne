@@ -22,7 +22,10 @@ FLAGS=-h=$(MNEMOSYNE_HOST) \
 all: proto build test run
 
 proto:
-	@${PROTOC} --go_out=plugins=grpc:. ${SERVICE}.proto
+	@${PROTOC} \
+	    --go_out=plugins=grpc:. \
+	    timestamp.proto \
+	    ${SERVICE}.proto
 	@ls -al
 
 build: build-daemon

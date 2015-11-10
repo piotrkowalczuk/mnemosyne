@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package mnemosyne;
 
-import public "timestamp.proto";
+import public "github.com/piotrkowalczuk/mnemosyne/timestamp.proto";
 
 service RPC {
     rpc Get(GetRequest) returns (GetResponse) {};

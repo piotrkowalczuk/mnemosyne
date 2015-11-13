@@ -76,6 +76,7 @@ func main() {
 	mnemosyneServer := &rpcServer{
 		logger:  logger,
 		storage: storage,
+		monitor: monitor,
 	}
 	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
 

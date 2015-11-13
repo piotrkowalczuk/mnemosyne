@@ -41,9 +41,18 @@ func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mne
 		Key:   "method",
 		Value: "list",
 	}
-	rs.monitor.rpc.requests.With(field).Add(1)
 
-	return nil, nil
+	expiredAtFrom := mnemosyne.TimestampToTime(req.ExpireAtFrom)
+	expiredAtTo := mnemosyne.TimestampToTime(req.ExpireAtTo)
+
+	rs.monitor.rpc.requests.With(field).Add(1)
+	sessions, err := rs.storage.List(req.Offset, req.Limit, &expiredAtFrom, &expiredAtTo)
+	if err != nil {
+		return nil, rs.error(err, field, req)
+	}
+	return &mnemosyne.ListResponse{
+		Sessions: sessions,
+	}, nil
 }
 
 // Create ...

@@ -145,7 +145,7 @@ func (t *Token) Scan(src interface{}) error {
 	case string:
 		token, err = NewTokenFromString(s)
 	default:
-		return errors.New("mnemosyne: id supports scan only from slice of bytes and string")
+		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
 	}
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func NewTokenFromString(s string) (*Token, error) {
 	parts := strings.Split(s, ":")
 
 	if len(parts) != 2 {
-		return nil, errors.New("mnemosyne: id cannot be allocated, given string has wrong format")
+		return nil, errors.New("mnemosyne: token cannot be allocated, given string has wrong format")
 	}
 
 	return &Token{
@@ -183,7 +183,7 @@ func NewTokenFromBytes(b []byte) (*Token, error) {
 	parts := bytes.Split(b, []byte{':'})
 
 	if len(parts) != 2 {
-		return nil, errors.New("mnemosyne: id cannot be allocated, given byte slice has wrong format")
+		return nil, errors.New("mnemosyne: token cannot be allocated, given byte slice has wrong format")
 	}
 
 	return &Token{

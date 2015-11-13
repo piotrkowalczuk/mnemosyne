@@ -108,7 +108,3 @@ type Timestamp struct {
 func (m *Timestamp) Reset()         { *m = Timestamp{} }
 func (m *Timestamp) String() string { return proto.CompactTextString(m) }
 func (*Timestamp) ProtoMessage()    {}
-
-func init() {
-	proto.RegisterType((*Timestamp)(nil), "mnemosyne.Timestamp")
-}

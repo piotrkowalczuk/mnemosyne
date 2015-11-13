@@ -278,25 +278,6 @@ func (m *DeleteResponse) Reset()         { *m = DeleteResponse{} }
 func (m *DeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*DeleteResponse) ProtoMessage()    {}
 
-func init() {
-	proto.RegisterType((*ID)(nil), "mnemosyne.ID")
-	proto.RegisterType((*Session)(nil), "mnemosyne.Session")
-	proto.RegisterType((*GetRequest)(nil), "mnemosyne.GetRequest")
-	proto.RegisterType((*GetResponse)(nil), "mnemosyne.GetResponse")
-	proto.RegisterType((*ListRequest)(nil), "mnemosyne.ListRequest")
-	proto.RegisterType((*ListResponse)(nil), "mnemosyne.ListResponse")
-	proto.RegisterType((*ExistsRequest)(nil), "mnemosyne.ExistsRequest")
-	proto.RegisterType((*ExistsResponse)(nil), "mnemosyne.ExistsResponse")
-	proto.RegisterType((*CreateRequest)(nil), "mnemosyne.CreateRequest")
-	proto.RegisterType((*CreateResponse)(nil), "mnemosyne.CreateResponse")
-	proto.RegisterType((*AbandonRequest)(nil), "mnemosyne.AbandonRequest")
-	proto.RegisterType((*AbandonResponse)(nil), "mnemosyne.AbandonResponse")
-	proto.RegisterType((*SetDataRequest)(nil), "mnemosyne.SetDataRequest")
-	proto.RegisterType((*SetDataResponse)(nil), "mnemosyne.SetDataResponse")
-	proto.RegisterType((*DeleteRequest)(nil), "mnemosyne.DeleteRequest")
-	proto.RegisterType((*DeleteResponse)(nil), "mnemosyne.DeleteResponse")
-}
-
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn

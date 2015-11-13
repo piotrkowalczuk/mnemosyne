@@ -38,7 +38,7 @@ func main() {
 
 	switch config.monitoring.engine {
 	case "":
-		sklog.Fatal(logger, errors.New("mnemosyned: monitoring is mandatory, at least for now..."))
+		sklog.Fatal(logger, errors.New("mnemosyned: monitoring is mandatory, at least for now"))
 	case monitoringEnginePrometheus:
 		initMonitoring(initPrometheus(config.namespace, config.subsystem, prometheus.Labels{"server": hostname}), logger)
 	default:
@@ -78,6 +78,8 @@ func main() {
 		storage: storage,
 	}
 	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
+
+	sklog.Info(logger, "rpc api is running", "host", config.host, "port", config.port, "subsystem", config.subsystem, "namespace", config.namespace)
 
 	gRPCServer.Serve(listen)
 }

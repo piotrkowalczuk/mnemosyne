@@ -5,28 +5,25 @@ PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
 BINARY=${SERVICE}d/${SERVICE}d
 
 FLAGS=-h=$(MNEMOSYNE_HOST) \
-      	    -p=$(MNEMOSYNE_PORT) \
-      	    -s=$(MNEMOSYNE_SUBSYSTEM) \
-      	    -s=$(MNEMOSYNE_NAMESPACE) \
-      	    -lf=$(MNEMOSYNE_LOGGER_FORMAT) \
-      	    -la=$(MNEMOSYNE_LOGGER_ADAPTER) \
-      	    -ll=$(MNEMOSYNE_LOGGER_LEVEL) \
-      	    -me=$(MNEMOSYNE_MONITORING_ENGINE) \
-      	    -se=$(MNEMOSYNE_STORAGE_ENGINE) \
-      	    -spcs=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
-      	    -sptn=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME) \
-      	    -spr=$(MNEMOSYNE_STORAGE_POSTGRES_RETRY)
+          	    -p=$(MNEMOSYNE_PORT) \
+          	    -s=$(MNEMOSYNE_SUBSYSTEM) \
+          	    -n=$(MNEMOSYNE_NAMESPACE) \
+          	    -lf=$(MNEMOSYNE_LOGGER_FORMAT) \
+          	    -la=$(MNEMOSYNE_LOGGER_ADAPTER) \
+          	    -ll=$(MNEMOSYNE_LOGGER_LEVEL) \
+          	    -me=$(MNEMOSYNE_MONITORING_ENGINE) \
+          	    -se=$(MNEMOSYNE_STORAGE_ENGINE) \
+          	    -spcs=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
+          	    -sptn=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME) \
+          	    -spr=$(MNEMOSYNE_STORAGE_POSTGRES_RETRY)
 
 .PHONY:	all proto build build-daemon run test test-unit test-postgres
 
 all: proto build test run
 
 proto:
-	@${PROTOC} \
-	    --go_out=plugins=grpc:. \
-	    timestamp.proto \
-	    ${SERVICE}.proto
-	@ls -al
+	@${PROTOC} --proto_path=${GOPATH}/src --proto_path=. --go_out=plugins=grpc:. timestamp.proto ${SERVICE}.proto
+	@ls -al | grep "pb.go"
 
 build: build-daemon
 

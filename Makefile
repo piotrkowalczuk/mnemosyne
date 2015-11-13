@@ -4,18 +4,18 @@ PACKAGE=github.com/piotrkowalczuk/mnemosyne
 PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
 BINARY=${SERVICE}d/${SERVICE}d
 
-FLAGS=-h=$(MNEMOSYNE_HOST) \
-          	    -p=$(MNEMOSYNE_PORT) \
-          	    -s=$(MNEMOSYNE_SUBSYSTEM) \
-          	    -n=$(MNEMOSYNE_NAMESPACE) \
-          	    -lf=$(MNEMOSYNE_LOGGER_FORMAT) \
-          	    -la=$(MNEMOSYNE_LOGGER_ADAPTER) \
-          	    -ll=$(MNEMOSYNE_LOGGER_LEVEL) \
-          	    -me=$(MNEMOSYNE_MONITORING_ENGINE) \
-          	    -se=$(MNEMOSYNE_STORAGE_ENGINE) \
-          	    -spcs=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
-          	    -sptn=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME) \
-          	    -spr=$(MNEMOSYNE_STORAGE_POSTGRES_RETRY)
+FLAGS=-host=$(MNEMOSYNE_HOST) \
+          	    -port=$(MNEMOSYNE_PORT) \
+          	    -subsystem=$(MNEMOSYNE_SUBSYSTEM) \
+          	    -namespace=$(MNEMOSYNE_NAMESPACE) \
+          	    -l.format=$(MNEMOSYNE_LOGGER_FORMAT) \
+          	    -l.adapter=$(MNEMOSYNE_LOGGER_ADAPTER) \
+          	    -l.level=$(MNEMOSYNE_LOGGER_LEVEL) \
+          	    -m.engine=$(MNEMOSYNE_MONITORING_ENGINE) \
+          	    -s.engine=$(MNEMOSYNE_STORAGE_ENGINE) \
+          	    -sp.connectionstring=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
+          	    -sp.tablename=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME) \
+          	    -sp.retry=$(MNEMOSYNE_STORAGE_POSTGRES_RETRY)
 
 .PHONY:	all proto build build-daemon run test test-unit test-postgres
 
@@ -36,10 +36,10 @@ run:
 test: test-unit test-postgres
 
 test-unit:
-	@go test -v ${PACKAGE_DAEMON} ${FLAGS}
+	go test -v ${PACKAGE_DAEMON}
 
 test-postgres:
-	@go test -tags postgres -v ${PACKAGE_DAEMON} ${FLAGS}
+	go test -v -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
 
 get:
 	@go get ${PACKAGE_DAEMON}

@@ -13,16 +13,10 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var (
-	config configuration
-)
-
-func init() {
-	config.Init()
-}
-
 func main() {
-	config.Parse()
+	var config configuration
+	config.init()
+	config.parse()
 
 	initLogger(config.logger.adapter, config.logger.format, config.logger.level, sklog.KeySubsystem, config.subsystem)
 	initPostgres(

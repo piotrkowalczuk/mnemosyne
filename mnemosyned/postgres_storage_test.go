@@ -10,7 +10,9 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	config.Parse()
+	var config configuration
+	config.init()
+	config.parse()
 
 	configPostgres := config.storage.postgres
 	configLogger := config.logger
@@ -44,7 +46,7 @@ func TestPostgresStorage_Exists(t *testing.T) {
 	testStorage_Exists(t, storage)
 }
 
-func TestPostgresStorage_Abandon(t *testing.T) {m
+func TestPostgresStorage_Abandon(t *testing.T) {
 	testStorage_Abandon(t, storage)
 }
 

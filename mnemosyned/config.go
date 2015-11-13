@@ -2,7 +2,6 @@ package main
 
 import "flag"
 
-// configuration ...
 type configuration struct {
 	host      string
 	port      int
@@ -26,28 +25,26 @@ type configuration struct {
 	}
 }
 
-// Init ...
-func (c *configuration) Init() {
+func (c *configuration) init() {
 	if c == nil {
 		*c = configuration{}
 	}
 
-	flag.StringVar(&c.host, "h", "127.0.0.1", "host")
-	flag.IntVar(&c.port, "p", 8080, "port")
-	flag.StringVar(&c.namespace, "n", "", "namespace")
-	flag.StringVar(&c.subsystem, "s", "mnemosyne", "subsystem")
-	flag.StringVar(&c.logger.adapter, "la", loggerAdapterStdOut, "logger adapter")
-	flag.StringVar(&c.logger.format, "lf", loggerFormatJSON, "logger format")
-	flag.IntVar(&c.logger.level, "ll", 6, "logger level")
-	flag.StringVar(&c.monitoring.engine, "me", monitoringEnginePrometheus, "monitoring engine")
-	flag.StringVar(&c.storage.engine, "se", storageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
-	flag.StringVar(&c.storage.postgres.connectionString, "spcs", "postgres://localhost:5432?sslmode=disable", "storage postgres connection string")
-	flag.StringVar(&c.storage.postgres.tableName, "sptn", "mnemosyne_session", "storage postgres table name")
-	flag.IntVar(&c.storage.postgres.retry, "spr", 10, "storage postgres possible attempts")
+	flag.StringVar(&c.host, "host", "127.0.0.1", "host")
+	flag.IntVar(&c.port, "port", 8080, "port")
+	flag.StringVar(&c.namespace, "namespace", "", "namespace")
+	flag.StringVar(&c.subsystem, "subsystem", "mnemosyne", "subsystem")
+	flag.StringVar(&c.logger.adapter, "l.adapter", loggerAdapterStdOut, "logger adapter")
+	flag.StringVar(&c.logger.format, "l.format", loggerFormatJSON, "logger format")
+	flag.IntVar(&c.logger.level, "l.level", 6, "logger level")
+	flag.StringVar(&c.monitoring.engine, "m.engine", monitoringEnginePrometheus, "monitoring engine")
+	flag.StringVar(&c.storage.engine, "s.engine", storageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
+	flag.StringVar(&c.storage.postgres.connectionString, "sp.connectionstring", "postgres://localhost:5432?sslmode=disable", "storage postgres connection string")
+	flag.StringVar(&c.storage.postgres.tableName, "sp.tablename", "mnemosyne_session", "storage postgres table name")
+	flag.IntVar(&c.storage.postgres.retry, "sp.retry", 10, "storage postgres possible attempts")
 }
 
-// Parse ...
-func (c *configuration) Parse() {
+func (c *configuration) parse() {
 	if !flag.Parsed() {
 		flag.Parse()
 	}

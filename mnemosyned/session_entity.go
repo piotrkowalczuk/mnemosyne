@@ -8,9 +8,9 @@ import (
 
 // SessionEntity ...
 type SessionEntity struct {
-	ID       *mnemosyne.ID `json:"id"`
-	Data     Data          `json:"data"`
-	ExpireAt *time.Time    `json:"expireAt"`
+	Token    *mnemosyne.Token `json:"token"`
+	Data     Data             `json:"data"`
+	ExpireAt *time.Time       `json:"expireAt"`
 }
 
 func (se *SessionEntity) ExpireAtTimestamp() *mnemosyne.Timestamp {
@@ -21,7 +21,7 @@ func newSessionEntityFromSession(session *mnemosyne.Session) (*SessionEntity, er
 	expireAtTime := session.ExpireAtTime()
 
 	return &SessionEntity{
-		ID:       session.Id,
+		Token:    session.Token,
 		Data:     session.Data,
 		ExpireAt: &expireAtTime,
 	}, nil
@@ -31,7 +31,7 @@ func newSessionFromSessionEntity(entity *SessionEntity) *mnemosyne.Session {
 	expireAtTimestamp := entity.ExpireAtTimestamp()
 
 	return &mnemosyne.Session{
-		Id:       entity.ID,
+		Token:    entity.Token,
 		Data:     entity.Data,
 		ExpireAt: expireAtTimestamp,
 	}

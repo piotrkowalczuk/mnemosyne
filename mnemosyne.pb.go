@@ -20,18 +20,18 @@ var _ = math.Inf
 
 // Ignoring public import of Timestamp from timestamp.proto
 
-// ID represents identifier of single session. It consist of partition key and a hash.
-type ID struct {
+// Token represents identifier of single session. It consist of partition key and a hash.
+type Token struct {
 	Key  string `protobuf:"bytes,1,opt,name=key" json:"key,omitempty"`
 	Hash string `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
 }
 
-func (m *ID) Reset()         { *m = ID{} }
-func (m *ID) String() string { return proto.CompactTextString(m) }
-func (*ID) ProtoMessage()    {}
+func (m *Token) Reset()         { *m = Token{} }
+func (m *Token) String() string { return proto.CompactTextString(m) }
+func (*Token) ProtoMessage()    {}
 
 type Session struct {
-	Id       *ID               `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Token    *Token            `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 	Data     map[string]string `protobuf:"bytes,2,rep,name=data" json:"data,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	ExpireAt *Timestamp        `protobuf:"bytes,3,opt,name=expire_at" json:"expire_at,omitempty"`
 }
@@ -40,9 +40,9 @@ func (m *Session) Reset()         { *m = Session{} }
 func (m *Session) String() string { return proto.CompactTextString(m) }
 func (*Session) ProtoMessage()    {}
 
-func (m *Session) GetId() *ID {
+func (m *Session) GetToken() *Token {
 	if m != nil {
-		return m.Id
+		return m.Token
 	}
 	return nil
 }
@@ -62,16 +62,16 @@ func (m *Session) GetExpireAt() *Timestamp {
 }
 
 type GetRequest struct {
-	Id *ID `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 }
 
 func (m *GetRequest) Reset()         { *m = GetRequest{} }
 func (m *GetRequest) String() string { return proto.CompactTextString(m) }
 func (*GetRequest) ProtoMessage()    {}
 
-func (m *GetRequest) GetId() *ID {
+func (m *GetRequest) GetToken() *Token {
 	if m != nil {
-		return m.Id
+		return m.Token
 	}
 	return nil
 }
@@ -132,16 +132,16 @@ func (m *ListResponse) GetSessions() []*Session {
 }
 
 type ExistsRequest struct {
-	Id *ID `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 }
 
 func (m *ExistsRequest) Reset()         { *m = ExistsRequest{} }
 func (m *ExistsRequest) String() string { return proto.CompactTextString(m) }
 func (*ExistsRequest) ProtoMessage()    {}
 
-func (m *ExistsRequest) GetId() *ID {
+func (m *ExistsRequest) GetToken() *Token {
 	if m != nil {
-		return m.Id
+		return m.Token
 	}
 	return nil
 }
@@ -185,16 +185,16 @@ func (m *CreateResponse) GetSession() *Session {
 }
 
 type AbandonRequest struct {
-	Id *ID `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 }
 
 func (m *AbandonRequest) Reset()         { *m = AbandonRequest{} }
 func (m *AbandonRequest) String() string { return proto.CompactTextString(m) }
 func (*AbandonRequest) ProtoMessage()    {}
 
-func (m *AbandonRequest) GetId() *ID {
+func (m *AbandonRequest) GetToken() *Token {
 	if m != nil {
-		return m.Id
+		return m.Token
 	}
 	return nil
 }
@@ -208,7 +208,7 @@ func (m *AbandonResponse) String() string { return proto.CompactTextString(m) }
 func (*AbandonResponse) ProtoMessage()    {}
 
 type SetDataRequest struct {
-	Id    *ID    `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 	Key   string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
 	Value string `protobuf:"bytes,3,opt,name=value" json:"value,omitempty"`
 }
@@ -217,9 +217,9 @@ func (m *SetDataRequest) Reset()         { *m = SetDataRequest{} }
 func (m *SetDataRequest) String() string { return proto.CompactTextString(m) }
 func (*SetDataRequest) ProtoMessage()    {}
 
-func (m *SetDataRequest) GetId() *ID {
+func (m *SetDataRequest) GetToken() *Token {
 	if m != nil {
-		return m.Id
+		return m.Token
 	}
 	return nil
 }
@@ -240,7 +240,7 @@ func (m *SetDataResponse) GetSession() *Session {
 }
 
 type DeleteRequest struct {
-	Id           *ID        `protobuf:"bytes,1,opt,name=id" json:"id,omitempty"`
+	Token        *Token     `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 	ExpireAtFrom *Timestamp `protobuf:"bytes,2,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
 	ExpireAtTo   *Timestamp `protobuf:"bytes,3,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
 }
@@ -249,9 +249,9 @@ func (m *DeleteRequest) Reset()         { *m = DeleteRequest{} }
 func (m *DeleteRequest) String() string { return proto.CompactTextString(m) }
 func (*DeleteRequest) ProtoMessage()    {}
 
-func (m *DeleteRequest) GetId() *ID {
+func (m *DeleteRequest) GetToken() *Token {
 	if m != nil {
-		return m.Id
+		return m.Token
 	}
 	return nil
 }

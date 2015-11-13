@@ -22,7 +22,7 @@ func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemo
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	ses, err := rs.storage.Get(req.Id)
+	ses, err := rs.storage.Get(req.Token)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
@@ -68,7 +68,7 @@ func (rs *rpcServer) Create(ctx context.Context, req *mnemosyne.CreateRequest) (
 		return nil, rs.error(err, field, req)
 	}
 
-	sklog.Debug(rs.logger, "new session has been created", "id", ses.Id, "expire_at", ses.ExpireAt)
+	sklog.Debug(rs.logger, "new session has been created", "token", ses.Token, "expire_at", ses.ExpireAt)
 
 	return &mnemosyne.CreateResponse{
 		Session: ses,
@@ -83,12 +83,12 @@ func (rs *rpcServer) Exists(ctx context.Context, req *mnemosyne.ExistsRequest) (
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	ex, err := rs.storage.Exists(req.Id)
+	ex, err := rs.storage.Exists(req.Token)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
 
-	sklog.Debug(rs.logger, "session existance has been checked", "id", req.Id, "exists", ex)
+	sklog.Debug(rs.logger, "session existance has been checked", "token", req.Token, "exists", ex)
 
 	return &mnemosyne.ExistsResponse{
 		Exists: ex,
@@ -103,12 +103,12 @@ func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest)
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	ab, err := rs.storage.Abandon(req.Id)
+	ab, err := rs.storage.Abandon(req.Token)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
 
-	sklog.Debug(rs.logger, "session has been abandoned", "id", req.Id, "abadoned", ab)
+	sklog.Debug(rs.logger, "session has been abandoned", "token", req.Token, "abadoned", ab)
 
 	return &mnemosyne.AbandonResponse{
 		Abandoned: ab,
@@ -123,7 +123,7 @@ func (rs *rpcServer) SetData(ctx context.Context, req *mnemosyne.SetDataRequest)
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	ses, err := rs.storage.SetData(req.Id, req.Key, req.Value)
+	ses, err := rs.storage.SetData(req.Token, req.Key, req.Value)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
@@ -146,7 +146,7 @@ func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (
 	expireAtFrom := req.ExpireAtFromTime()
 	expireAtTo := req.ExpireAtToTime()
 
-	count, err := rs.storage.Delete(req.Id, &expireAtFrom, &expireAtTo)
+	count, err := rs.storage.Delete(req.Token, &expireAtFrom, &expireAtTo)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}

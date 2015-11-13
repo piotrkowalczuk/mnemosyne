@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	notExistsID = &mnemosyne.ID{
+	notExistsToken = &mnemosyne.Token{
 		Hash: "NOT EXISTS",
 	}
 )
@@ -24,7 +24,7 @@ func testStorage_Create(t *testing.T, s Storage) {
 	})
 
 	if assert.NoError(t, err) {
-		assert.Len(t, session.Id.Hash, 128)
+		assert.Len(t, session.Token.Hash, 128)
 		assert.Equal(t, session.Data, map[string]string{
 			"username": "test",
 		})
@@ -37,15 +37,15 @@ func testStorage_Get(t *testing.T, s Storage) {
 	})
 	require.NoError(t, err)
 
-	// Check for existing ID
-	got, err := s.Get(new.Id)
+	// Check for existing Token
+	got, err := s.Get(new.Token)
 	require.NoError(t, err)
-	assert.Equal(t, new.Id, got.Id)
+	assert.Equal(t, new.Token, got.Token)
 	assert.Equal(t, new.Data, got.Data)
 	assert.Equal(t, new.ExpireAt, got.ExpireAt)
 
-	// Check for non existing ID
-	got2, err2 := s.Get(notExistsID)
+	// Check for non existing Token
+	got2, err2 := s.Get(notExistsToken)
 	assert.Error(t, err2)
 	assert.EqualError(t, err2, errSessionNotFound.Error())
 	assert.Nil(t, got2)
@@ -64,7 +64,7 @@ func testStorage_List(t *testing.T, s Storage) {
 	if assert.NoError(t, err) {
 		assert.Len(t, sessions, nb)
 		for i, s := range sessions {
-			assert.NotEmpty(t, s.Id)
+			assert.NotEmpty(t, s.Token)
 			assert.NotEmpty(t, s.ExpireAt)
 			assert.Equal(t, s.Value(key), strconv.FormatInt(int64(i+1), 10))
 		}
@@ -77,13 +77,13 @@ func testStorage_Exists(t *testing.T, s Storage) {
 	})
 	require.NoError(t, err)
 
-	// Check for existing ID
-	exists, err := s.Exists(new.Id)
+	// Check for existing Token
+	exists, err := s.Exists(new.Token)
 	require.NoError(t, err)
 	assert.True(t, exists)
 
-	// Check for non existing ID
-	exists2, err2 := s.Exists(notExistsID)
+	// Check for non existing Token
+	exists2, err2 := s.Exists(notExistsToken)
 	if assert.NoError(t, err2) {
 		assert.False(t, exists2)
 	}
@@ -95,18 +95,18 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	})
 	require.NoError(t, err)
 
-	// Check for existing ID
-	ok2, err2 := s.Abandon(new.Id)
+	// Check for existing Token
+	ok2, err2 := s.Abandon(new.Token)
 	assert.True(t, ok2)
 	require.NoError(t, err2)
 
 	// Check for already abondond session
-	ok3, err3 := s.Abandon(new.Id)
+	ok3, err3 := s.Abandon(new.Token)
 	assert.False(t, ok3)
 	assert.EqualError(t, err3, errSessionNotFound.Error())
 
 	// Check for session that never exists
-	ok4, err4 := s.Abandon(notExistsID)
+	ok4, err4 := s.Abandon(notExistsToken)
 	assert.False(t, ok4)
 	assert.EqualError(t, err4, errSessionNotFound.Error())
 }
@@ -117,26 +117,26 @@ func testStorage_SetData(t *testing.T, s Storage) {
 	})
 	require.NoError(t, err)
 
-	// Check for existing ID
-	got, err2 := s.SetData(new.Id, "email", "fake@email.com")
+	// Check for existing Token
+	got, err2 := s.SetData(new.Token, "email", "fake@email.com")
 	require.NoError(t, err2)
-	assert.Equal(t, new.Id, got.Id)
+	assert.Equal(t, new.Token, got.Token)
 	assert.Equal(t, 2, len(got.Data))
 	assert.Equal(t, "fake@email.com", got.Value("email"))
 	assert.Equal(t, "test", got.Value("username"))
 	assert.NotNil(t, got.ExpireAt)
 
 	// Check for overwritten field
-	got2, err2 := s.SetData(new.Id, "email", "morefakethanbefore@email.com")
+	got2, err2 := s.SetData(new.Token, "email", "morefakethanbefore@email.com")
 	require.NoError(t, err2)
-	assert.Equal(t, new.Id, got2.Id)
+	assert.Equal(t, new.Token, got2.Token)
 	assert.Equal(t, 2, len(got2.Data))
 	assert.Equal(t, "morefakethanbefore@email.com", got2.Value("email"))
 	assert.Equal(t, "test", got2.Value("username"))
 	assert.NotNil(t, got2.ExpireAt)
 
-	// Check for non existing ID
-	got3, err3 := s.SetData(notExistsID, "email", "fake@email.com")
+	// Check for non existing Token
+	got3, err3 := s.SetData(notExistsToken, "email", "fake@email.com")
 	require.Error(t, err3, errSessionNotFound.Error())
 	assert.Nil(t, got3)
 
@@ -146,7 +146,7 @@ func testStorage_SetData(t *testing.T, s Storage) {
 		defer wg.Done()
 
 		// Check for overwritten field
-		_, err := s.SetData(new.Id, key, value)
+		_, err := s.SetData(new.Token, key, value)
 
 		assert.NoError(t, err)
 	}
@@ -175,9 +175,9 @@ func testStorage_SetData(t *testing.T, s Storage) {
 
 	wg.Wait()
 
-	got4, err4 := s.Get(new.Id)
+	got4, err4 := s.Get(new.Token)
 	if assert.NoError(t, err4) {
-		assert.Equal(t, new.Id, got4.Id)
+		assert.Equal(t, new.Token, got4.Token)
 		assert.Equal(t, 22, len(got4.Data))
 	}
 }
@@ -232,12 +232,12 @@ DataLoop:
 			continue DataLoop
 		}
 
-		var id *mnemosyne.ID
+		var id *mnemosyne.Token
 		var expiredAtTo *time.Time
 		var expiredAtFrom *time.Time
 
 		if args.id {
-			id = new.Id
+			id = new.Token
 		}
 
 		if args.expiredAtFrom {

@@ -29,7 +29,7 @@ func FromContext(ctx context.Context) (RPCClient, bool) {
 
 // Context implements sklog.Contexter interface.
 func (gr *GetRequest) Context() []interface{} {
-	return []interface{}{"id", gr.Id}
+	return []interface{}{"token", gr.Token}
 }
 
 // Context implements sklog.Contexter interface.
@@ -54,7 +54,7 @@ func (lr *ListRequest) ExpireAtToTime() time.Time {
 
 // Context implements sklog.Contexter interface.
 func (er *ExistsRequest) Context() []interface{} {
-	return []interface{}{"id", er.Id}
+	return []interface{}{"token", er.Token}
 }
 
 // Context implements sklog.Contexter interface.
@@ -69,14 +69,14 @@ func (er *CreateRequest) Context() (ctx []interface{}) {
 // Context implements sklog.Contexter interface.
 func (ar *AbandonRequest) Context() []interface{} {
 	return []interface{}{
-		"id", ar.Id,
+		"token", ar.Token,
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (sdr *SetDataRequest) Context() []interface{} {
 	return []interface{}{
-		"id", sdr.Id,
+		"token", sdr.Token,
 		"key", sdr.Key,
 		"value", sdr.Value,
 	}
@@ -85,7 +85,7 @@ func (sdr *SetDataRequest) Context() []interface{} {
 // Context implements sklog.Contexter interface.
 func (dr *DeleteRequest) Context() []interface{} {
 	return []interface{}{
-		"id", dr.Id,
+		"token", dr.Token,
 		"expire_at_from", dr.ExpireAtFrom,
 		"expire_at_to", dr.ExpireAtTo,
 	}
@@ -130,20 +130,20 @@ func ParseTime(s string) (time.Time, error) {
 }
 
 // Value implements driver.Valuer interface.
-func (i ID) Value() (driver.Value, error) {
-	return i.Key + ":" + i.Hash, nil
+func (t Token) Value() (driver.Value, error) {
+	return t.Key + ":" + t.Hash, nil
 }
 
 // Scan implements sql.Scanner interface.
-func (i *ID) Scan(src interface{}) error {
-	var id *ID
+func (t *Token) Scan(src interface{}) error {
+	var token *Token
 	var err error
 
 	switch s := src.(type) {
 	case []byte:
-		id, err = NewIDFromBytes(s)
+		token, err = NewTokenFromBytes(s)
 	case string:
-		id, err = NewIDFromString(s)
+		token, err = NewTokenFromString(s)
 	default:
 		return errors.New("mnemosyne: id supports scan only from slice of bytes and string")
 	}
@@ -151,61 +151,61 @@ func (i *ID) Scan(src interface{}) error {
 		return err
 	}
 
-	*i = *id
+	*t = *token
 
 	return nil
 }
 
-// NewIDFromString ...
-func NewIDFromString(s string) (*ID, error) {
+// NewTokenFromString parse string and allocates new token instance if ok.
+func NewTokenFromString(s string) (*Token, error) {
 	parts := strings.Split(s, ":")
 
 	if len(parts) != 2 {
 		return nil, errors.New("mnemosyne: id cannot be allocated, given string has wrong format")
 	}
 
-	return &ID{
+	return &Token{
 		Key:  parts[0],
 		Hash: parts[1],
 	}, nil
 }
 
-// NewID ...
-func NewID(key, hash string) *ID {
-	return &ID{
+// NewToken allocates new Token instance.
+func NewToken(key, hash string) *Token {
+	return &Token{
 		Key:  key,
 		Hash: hash,
 	}
 }
 
-// NewIDFromBytes ...
-func NewIDFromBytes(b []byte) (*ID, error) {
+// NewTokenFromBytes ...
+func NewTokenFromBytes(b []byte) (*Token, error) {
 	parts := bytes.Split(b, []byte{':'})
 
 	if len(parts) != 2 {
 		return nil, errors.New("mnemosyne: id cannot be allocated, given byte slice has wrong format")
 	}
 
-	return &ID{
+	return &Token{
 		Key:  string(parts[0]),
 		Hash: string(parts[1]),
 	}, nil
 }
 
-// NewIDRandom ...
-func NewIDRandom(g RandomBytesGenerator, k string) (*ID, error) {
+// NewTokenRandom ...
+func NewTokenRandom(g RandomBytesGenerator, k string) (*Token, error) {
 	buf, err := g.GenerateRandomBytes(128)
 	if err != nil {
 		return nil, err
 	}
 
 	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
-	id := make([]byte, 64)
+	hash := make([]byte, 64)
 	// Compute a 64-byte hash of buf and put it in h.
-	sha3.ShakeSum256(id, buf)
+	sha3.ShakeSum256(hash, buf)
 
-	return &ID{
+	return &Token{
 		Key:  k,
-		Hash: hex.EncodeToString(id),
+		Hash: hex.EncodeToString(hash),
 	}, nil
 }

@@ -38,14 +38,14 @@ func initPostgresStorage(tn string, db *sql.DB, m *monitoring) func() (Storage, 
 
 // Create ...
 func (ps *postgresStorage) Create(data map[string]string) (*mnemosyne.Session, error) {
-	id, err := mnemosyne.NewIDRandom(ps.generator, "1")
+	token, err := mnemosyne.NewTokenRandom(ps.generator, "1")
 	if err != nil {
 		return nil, err
 	}
 
 	entity := &SessionEntity{
-		ID:   id,
-		Data: Data(data),
+		Token: token,
+		Data:  Data(data),
 	}
 
 	if err := ps.save(entity); err != nil {
@@ -57,7 +57,7 @@ func (ps *postgresStorage) Create(data map[string]string) (*mnemosyne.Session, e
 
 func (ps *postgresStorage) save(entity *SessionEntity) error {
 	query := `
-		INSERT INTO ` + ps.tableName + ` (id, data, expire_at)
+		INSERT INTO ` + ps.tableName + ` (token, data, expire_at)
 		VALUES ($1, $2, NOW() + '30 minutes'::interval)
 		RETURNING expire_at
 
@@ -72,7 +72,7 @@ func (ps *postgresStorage) save(entity *SessionEntity) error {
 
 	err = ps.db.QueryRow(
 		query,
-		entity.ID,
+		entity.Token,
 		encodedData,
 	).Scan(
 		&entity.ExpireAt,
@@ -83,18 +83,18 @@ func (ps *postgresStorage) save(entity *SessionEntity) error {
 }
 
 // Get ...
-func (ps *postgresStorage) Get(id *mnemosyne.ID) (*mnemosyne.Session, error) {
+func (ps *postgresStorage) Get(token *mnemosyne.Token) (*mnemosyne.Session, error) {
 	var data Data
 	var expireAt time.Time
 	query := `
 		SELECT data, expire_at
 		FROM ` + ps.tableName + `
-		WHERE id = $1
+		WHERE token = $1
 		LIMIT 1
 	`
 	field := metrics.Field{Key: "query", Value: query}
 
-	err := ps.db.QueryRow(query, id).Scan(
+	err := ps.db.QueryRow(query, token).Scan(
 		&data,
 		&expireAt,
 	)
@@ -107,7 +107,7 @@ func (ps *postgresStorage) Get(id *mnemosyne.ID) (*mnemosyne.Session, error) {
 	}
 
 	return &mnemosyne.Session{
-		Id:       id,
+		Token:    token,
 		Data:     data,
 		ExpireAt: mnemosyne.TimeToTimestamp(expireAt),
 	}, nil
@@ -120,7 +120,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 	}
 
 	args := []interface{}{offset, limit}
-	query := "SELECT id, data, expire_at FROM " + ps.tableName
+	query := "SELECT token, data, expire_at FROM " + ps.tableName
 
 	switch {
 	case expiredAtFrom != nil && expiredAtTo == nil:
@@ -147,12 +147,12 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 
 	sessions := make([]*mnemosyne.Session, 0, limit)
 	for rows.Next() {
-		var id mnemosyne.ID
+		var token mnemosyne.Token
 		var data Data
 		var expireAt time.Time
 
 		err = rows.Scan(
-			&id,
+			&token,
 			&data,
 			&expireAt,
 		)
@@ -162,7 +162,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 		}
 
 		sessions = append(sessions, &mnemosyne.Session{
-			Id:       &id,
+			Token:    &token,
 			Data:     data,
 			ExpireAt: mnemosyne.TimeToTimestamp(expireAt),
 		})
@@ -176,11 +176,11 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 }
 
 // Exists ...
-func (ps *postgresStorage) Exists(id *mnemosyne.ID) (exists bool, err error) {
-	query := `SELECT EXISTS(SELECT 1 FROM ` + ps.tableName + ` WHERE id = $1)`
+func (ps *postgresStorage) Exists(token *mnemosyne.Token) (exists bool, err error) {
+	query := `SELECT EXISTS(SELECT 1 FROM ` + ps.tableName + ` WHERE token = $1)`
 	field := metrics.Field{Key: "query", Value: query}
 
-	err = ps.db.QueryRow(query, id).Scan(
+	err = ps.db.QueryRow(query, token).Scan(
 		&exists,
 	)
 	if err != nil {
@@ -192,11 +192,11 @@ func (ps *postgresStorage) Exists(id *mnemosyne.ID) (exists bool, err error) {
 }
 
 // Abandon ...
-func (ps *postgresStorage) Abandon(id *mnemosyne.ID) (bool, error) {
-	query := `DELETE FROM ` + ps.tableName + ` WHERE id = $1`
+func (ps *postgresStorage) Abandon(token *mnemosyne.Token) (bool, error) {
+	query := `DELETE FROM ` + ps.tableName + ` WHERE token = $1`
 	field := metrics.Field{Key: "query", Value: query}
 
-	result, err := ps.db.Exec(query, id)
+	result, err := ps.db.Exec(query, token)
 	if err != nil {
 		ps.monitor.postgres.errors.With(field).Add(1)
 		return false, err
@@ -217,24 +217,24 @@ func (ps *postgresStorage) Abandon(id *mnemosyne.ID) (bool, error) {
 }
 
 // SetData ...
-func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemosyne.Session, error) {
+func (ps *postgresStorage) SetData(token *mnemosyne.Token, key, value string) (*mnemosyne.Session, error) {
 	var dataEncoded []byte
 	var err error
 
 	entity := &SessionEntity{
-		ID: id,
+		Token: token,
 	}
 	selectQuery := `
 		SELECT data, expire_at
 		FROM ` + ps.tableName + `
-		WHERE id = $1
+		WHERE token = $1
 		FOR UPDATE
 	`
 	updateQuery := `
 		UPDATE ` + ps.tableName + `
 		SET
 			data = $2
-		WHERE id = $1
+		WHERE token = $1
 	`
 
 	tx, err := ps.db.Begin()
@@ -243,7 +243,7 @@ func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemos
 		return nil, err
 	}
 
-	err = tx.QueryRow(selectQuery, id).Scan(
+	err = tx.QueryRow(selectQuery, token).Scan(
 		&dataEncoded,
 		&entity.ExpireAt,
 	)
@@ -271,7 +271,7 @@ func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemos
 		return nil, err
 	}
 
-	_, err = tx.Exec(updateQuery, id, dataEncoded)
+	_, err = tx.Exec(updateQuery, token, dataEncoded)
 	if err != nil {
 		ps.monitor.postgres.errors.With(metrics.Field{Key: "query", Value: updateQuery}).Add(1)
 		tx.Rollback()
@@ -285,12 +285,12 @@ func (ps *postgresStorage) SetData(id *mnemosyne.ID, key, value string) (*mnemos
 }
 
 // Delete
-func (ps *postgresStorage) Delete(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
-	if id == nil && expiredAtFrom == nil && expiredAtTo == nil {
+func (ps *postgresStorage) Delete(token *mnemosyne.Token, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+	if token == nil && expiredAtFrom == nil && expiredAtTo == nil {
 		return 0, errors.New("mnemosyned: session cannot be deleted, no where parameter provided")
 	}
 
-	where, args := ps.where(id, expiredAtFrom, expiredAtTo)
+	where, args := ps.where(token, expiredAtFrom, expiredAtTo)
 	query := "DELETE FROM " + ps.tableName + " WHERE " + where
 	field := metrics.Field{Key: "query", Value: query}
 
@@ -308,7 +308,7 @@ func (ps *postgresStorage) Delete(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *
 func (ps *postgresStorage) Setup() error {
 	sql := strings.Replace(`
 		CREATE TABLE IF NOT EXISTS %%TABLE_NAME%% (
-			id character varying(255) PRIMARY KEY,
+			token character varying(255) PRIMARY KEY,
 			data json NOT NULL,
 			expire_at timestamp with time zone NOT NULL
 		)
@@ -328,22 +328,22 @@ func (ps *postgresStorage) TearDown() error {
 	return err
 }
 
-func (ps *postgresStorage) where(id *mnemosyne.ID, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
+func (ps *postgresStorage) where(token *mnemosyne.Token, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
 	switch {
-	case id != nil && expiredAtFrom == nil && expiredAtTo == nil:
-		return "id = $1", []interface{}{id}
-	case id == nil && expiredAtFrom != nil && expiredAtTo == nil:
+	case token != nil && expiredAtFrom == nil && expiredAtTo == nil:
+		return "token = $1", []interface{}{token}
+	case token == nil && expiredAtFrom != nil && expiredAtTo == nil:
 		return "expire_at > $1", []interface{}{expiredAtFrom}
-	case id == nil && expiredAtFrom == nil && expiredAtTo != nil:
+	case token == nil && expiredAtFrom == nil && expiredAtTo != nil:
 		return "expire_at < $1", []interface{}{expiredAtTo}
-	case id != nil && expiredAtFrom != nil && expiredAtTo == nil:
-		return "id = $1 AND expire_at > $2", []interface{}{id, expiredAtFrom}
-	case id != nil && expiredAtFrom == nil && expiredAtTo != nil:
-		return "id = $1 AND expire_at < $2", []interface{}{id, expiredAtTo}
-	case id == nil && expiredAtFrom != nil && expiredAtTo != nil:
+	case token != nil && expiredAtFrom != nil && expiredAtTo == nil:
+		return "token = $1 AND expire_at > $2", []interface{}{token, expiredAtFrom}
+	case token != nil && expiredAtFrom == nil && expiredAtTo != nil:
+		return "token = $1 AND expire_at < $2", []interface{}{token, expiredAtTo}
+	case token == nil && expiredAtFrom != nil && expiredAtTo != nil:
 		return "expire_at > $1 AND expire_at < $2", []interface{}{expiredAtFrom, expiredAtTo}
-	case id != nil && expiredAtFrom != nil && expiredAtTo != nil:
-		return "id = $1 AND expire_at > $2 AND expire_at < $3", []interface{}{id, expiredAtFrom, expiredAtTo}
+	case token != nil && expiredAtFrom != nil && expiredAtTo != nil:
+		return "token = $1 AND expire_at > $2 AND expire_at < $3", []interface{}{token, expiredAtFrom, expiredAtTo}
 	default:
 		return "", nil
 	}

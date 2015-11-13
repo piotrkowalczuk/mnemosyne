@@ -14,20 +14,20 @@ service RPC {
     rpc Delete(DeleteRequest) returns (DeleteResponse) {};
 }
 
-// ID represents identifier of single session. It consist of partition key and a hash.
-message ID {
+// Token represents identifier of single session. It consist of partition key and a hash.
+message Token {
     string key = 1;
     string hash = 2;
 }
 
 message Session {
-    ID id = 1;
+    Token token = 1;
     map<string, string> data = 2;
     Timestamp expire_at = 3;
 }
 
 message GetRequest {
-    ID id = 1;
+    Token token = 1;
 }
 
 message GetResponse {
@@ -46,7 +46,7 @@ message ListResponse {
 }
 
 message ExistsRequest {
-    ID id = 1;
+    Token token = 1;
 }
 
 message ExistsResponse {
@@ -62,7 +62,7 @@ message CreateResponse {
 }
 
 message AbandonRequest {
-    ID id = 1;
+    Token token = 1;
 }
 
 message AbandonResponse {
@@ -70,7 +70,7 @@ message AbandonResponse {
 }
 
 message SetDataRequest {
-    ID id = 1;
+    Token token = 1;
     string key = 2;
     string value = 3;
 }
@@ -80,7 +80,7 @@ message SetDataResponse {
 }
 
 message DeleteRequest {
-    ID id = 1;
+    Token token = 1;
     Timestamp expire_at_from = 2;
     Timestamp expire_at_to = 3;
 }

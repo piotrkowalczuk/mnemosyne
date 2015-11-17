@@ -36,10 +36,10 @@ run:
 test: test-unit test-postgres
 
 test-unit:
-	go test -v ${PACKAGE_DAEMON}
+	@go test -v ${PACKAGE_DAEMON}
 
 test-postgres:
-	go test -v -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
+	@go test -v -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
 
 get:
 	@go get ${PACKAGE_DAEMON}

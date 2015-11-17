@@ -8,23 +8,92 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"golang.org/x/crypto/sha3"
 	"golang.org/x/net/context"
 )
 
-const (
-	contextKeyRPCClient = "mnemosyne_rpc_client"
-)
-
-// NewContext returns a new Context that carries RPCClient instance.
-func NewContext(ctx context.Context, c RPCClient) context.Context {
-	return context.WithValue(ctx, contextKeyRPCClient, c)
+// Mnemosyne ...
+type Mnemosyne interface {
+	Get(context.Context, *Token) (*Session, error)
+	Exists(context.Context, *Token) (bool, error)
+	Create(context.Context, map[string]string) (*Session, error)
+	Abandon(context.Context, *Token) (bool, error)
+	SetData(context.Context, *Token, string, string) (*Session, error)
 }
 
-// FromContext returns the RPCClient instance stored in context, if any.
-func FromContext(ctx context.Context) (RPCClient, bool) {
-	c, ok := ctx.Value(contextKeyRPCClient).(RPCClient)
-	return c, ok
+type mnemosyne struct {
+	client RPCClient
+}
+
+// MnemosyneOpts ...
+type MnemosyneOpts struct {
+}
+
+// New allocates new mnemosyne instance.
+func New(conn *grpc.ClientConn, options MnemosyneOpts) Mnemosyne {
+	return &mnemosyne{
+		client: NewRPCClient(conn),
+	}
+}
+
+// Get implements Mnemosyne interface.
+func (m *mnemosyne) Get(ctx context.Context, token *Token) (*Session, error) {
+	res, err := m.client.Get(ctx, &GetRequest{Token: token})
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Session, nil
+}
+
+// Exists implements Mnemosyne interface.
+func (m *mnemosyne) Exists(ctx context.Context, token *Token) (bool, error) {
+	res, err := m.client.Exists(ctx, &ExistsRequest{Token: token})
+
+	if err != nil {
+		return false, err
+	}
+
+	return res.Exists, nil
+}
+
+// Create implements Mnemosyne interface.
+func (m *mnemosyne) Create(ctx context.Context, data map[string]string) (*Session, error) {
+	res, err := m.client.Create(ctx, &CreateRequest{Data: data})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Session, nil
+}
+
+// Abandon implements Mnemosyne interface.
+func (m *mnemosyne) Abandon(ctx context.Context, token *Token) (bool, error) {
+	res, err := m.client.Abandon(ctx, &AbandonRequest{Token: token})
+
+	if err != nil {
+		return false, err
+	}
+
+	return res.Abandoned, nil
+}
+
+// SetData implements Mnemosyne interface.
+func (m *mnemosyne) SetData(ctx context.Context, token *Token, key, value string) (*Session, error) {
+	res, err := m.client.SetData(ctx, &SetDataRequest{
+		Token: token,
+		Key:   key,
+		Value: value,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Session, nil
 }
 
 // Context implements sklog.Contexter interface.
@@ -119,7 +188,7 @@ func (s *Session) Value(key string) string {
 	return s.Data[key]
 }
 
-// ExpireAtFromTime ...
+// ExpireAtTime ...
 func (s *Session) ExpireAtTime() time.Time {
 	return TimestampToTime(s.ExpireAt)
 }
@@ -164,10 +233,7 @@ func NewTokenFromString(s string) (*Token, error) {
 		return nil, errors.New("mnemosyne: token cannot be allocated, given string has wrong format")
 	}
 
-	return &Token{
-		Key:  parts[0],
-		Hash: parts[1],
-	}, nil
+	return NewToken(parts[0], parts[1]), nil
 }
 
 // NewToken allocates new Token instance.
@@ -186,10 +252,7 @@ func NewTokenFromBytes(b []byte) (*Token, error) {
 		return nil, errors.New("mnemosyne: token cannot be allocated, given byte slice has wrong format")
 	}
 
-	return &Token{
-		Key:  string(parts[0]),
-		Hash: string(parts[1]),
-	}, nil
+	return NewToken(string(parts[0]), string(parts[1])), nil
 }
 
 // NewTokenRandom ...
@@ -204,8 +267,5 @@ func NewTokenRandom(g RandomBytesGenerator, k string) (*Token, error) {
 	// Compute a 64-byte hash of buf and put it in h.
 	sha3.ShakeSum256(hash, buf)
 
-	return &Token{
-		Key:  k,
-		Hash: hex.EncodeToString(hash),
-	}, nil
+	return NewToken(k, hex.EncodeToString(hash)), nil
 }

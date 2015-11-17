@@ -3,6 +3,7 @@
 mnemosyne.iml
 mnemosyned/mnemosyned
 run.sh
+test.sh
 
 # Golang
 *.o

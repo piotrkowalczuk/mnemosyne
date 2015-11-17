@@ -36,7 +36,7 @@ func initPostgresStorage(tn string, db *sql.DB, m *monitoring) func() (Storage, 
 	}
 }
 
-// Create ...
+// Create implements Storage interface.
 func (ps *postgresStorage) Create(data map[string]string) (*mnemosyne.Session, error) {
 	token, err := mnemosyne.NewTokenRandom(ps.generator, "1")
 	if err != nil {
@@ -57,7 +57,7 @@ func (ps *postgresStorage) Create(data map[string]string) (*mnemosyne.Session, e
 
 func (ps *postgresStorage) save(entity *SessionEntity) error {
 	query := `
-		INSERT INTO ` + ps.tableName + ` (token, data, expire_at)
+		INSERT INTO mnemosyne.` + ps.tableName + ` (token, data, expire_at)
 		VALUES ($1, $2, NOW() + '30 minutes'::interval)
 		RETURNING expire_at
 
@@ -82,13 +82,13 @@ func (ps *postgresStorage) save(entity *SessionEntity) error {
 	return err
 }
 
-// Get ...
+// Get implements Storage interface.
 func (ps *postgresStorage) Get(token *mnemosyne.Token) (*mnemosyne.Session, error) {
 	var data Data
 	var expireAt time.Time
 	query := `
 		SELECT data, expire_at
-		FROM ` + ps.tableName + `
+		FROM mnemosyne.` + ps.tableName + `
 		WHERE token = $1
 		LIMIT 1
 	`
@@ -113,14 +113,14 @@ func (ps *postgresStorage) Get(token *mnemosyne.Token) (*mnemosyne.Session, erro
 	}, nil
 }
 
-// List satisfy Storage interface.
+// List implements Storage interface.
 func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosyne.Session, error) {
 	if limit == 0 {
 		return nil, errors.New("mnemosyned: cannot retrieve list of sessions, limit needs to be higher than 0")
 	}
 
 	args := []interface{}{offset, limit}
-	query := "SELECT token, data, expire_at FROM " + ps.tableName
+	query := "SELECT token, data, expire_at FROM mnemosyne." + ps.tableName
 
 	switch {
 	case expiredAtFrom != nil && expiredAtTo == nil:
@@ -175,9 +175,9 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 	return sessions, nil
 }
 
-// Exists ...
+// Exists implements Storage interface.
 func (ps *postgresStorage) Exists(token *mnemosyne.Token) (exists bool, err error) {
-	query := `SELECT EXISTS(SELECT 1 FROM ` + ps.tableName + ` WHERE token = $1)`
+	query := `SELECT EXISTS(SELECT 1 FROM mnemosyne.` + ps.tableName + ` WHERE token = $1)`
 	field := metrics.Field{Key: "query", Value: query}
 
 	err = ps.db.QueryRow(query, token).Scan(
@@ -193,7 +193,7 @@ func (ps *postgresStorage) Exists(token *mnemosyne.Token) (exists bool, err erro
 
 // Abandon ...
 func (ps *postgresStorage) Abandon(token *mnemosyne.Token) (bool, error) {
-	query := `DELETE FROM ` + ps.tableName + ` WHERE token = $1`
+	query := `DELETE FROM mnemosyne.` + ps.tableName + ` WHERE token = $1`
 	field := metrics.Field{Key: "query", Value: query}
 
 	result, err := ps.db.Exec(query, token)
@@ -216,7 +216,7 @@ func (ps *postgresStorage) Abandon(token *mnemosyne.Token) (bool, error) {
 	return true, nil
 }
 
-// SetData ...
+// SetData implements Storage interface.
 func (ps *postgresStorage) SetData(token *mnemosyne.Token, key, value string) (*mnemosyne.Session, error) {
 	var dataEncoded []byte
 	var err error
@@ -226,12 +226,12 @@ func (ps *postgresStorage) SetData(token *mnemosyne.Token, key, value string) (*
 	}
 	selectQuery := `
 		SELECT data, expire_at
-		FROM ` + ps.tableName + `
+		FROM mnemosyne.` + ps.tableName + `
 		WHERE token = $1
 		FOR UPDATE
 	`
 	updateQuery := `
-		UPDATE ` + ps.tableName + `
+		UPDATE mnemosyne.` + ps.tableName + `
 		SET
 			data = $2
 		WHERE token = $1
@@ -284,14 +284,14 @@ func (ps *postgresStorage) SetData(token *mnemosyne.Token, key, value string) (*
 	return newSessionFromSessionEntity(entity), nil
 }
 
-// Delete
+// Delete implements Storage interface.
 func (ps *postgresStorage) Delete(token *mnemosyne.Token, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	if token == nil && expiredAtFrom == nil && expiredAtTo == nil {
 		return 0, errors.New("mnemosyned: session cannot be deleted, no where parameter provided")
 	}
 
 	where, args := ps.where(token, expiredAtFrom, expiredAtTo)
-	query := "DELETE FROM " + ps.tableName + " WHERE " + where
+	query := "DELETE FROM mnemosyne." + ps.tableName + " WHERE " + where
 	field := metrics.Field{Key: "query", Value: query}
 
 	result, err := ps.db.Exec(query, args...)
@@ -304,10 +304,11 @@ func (ps *postgresStorage) Delete(token *mnemosyne.Token, expiredAtFrom, expired
 	return result.RowsAffected()
 }
 
-// Setup prepares storage for usage.
+// Setup implements Storage interface.
 func (ps *postgresStorage) Setup() error {
 	sql := strings.Replace(`
-		CREATE TABLE IF NOT EXISTS %%TABLE_NAME%% (
+		CREATE SCHEMA IF NOT EXISTS mnemosyne;
+		CREATE TABLE IF NOT EXISTS mnemosyne.%%TABLE_NAME%% (
 			token character varying(255) PRIMARY KEY,
 			data json NOT NULL,
 			expire_at timestamp with time zone NOT NULL
@@ -319,11 +320,9 @@ func (ps *postgresStorage) Setup() error {
 	return err
 }
 
-// TearDown ...
+// TearDown implements Storage interface.
 func (ps *postgresStorage) TearDown() error {
-	sql := strings.Replace(`DROP TABLE %%TABLE_NAME%%`, postgresTableNamePlaceholder, ps.tableName, -1)
-
-	_, err := ps.db.Exec(sql)
+	_, err := ps.db.Exec(`DROP SCHEMA mnemosyne`)
 
 	return err
 }

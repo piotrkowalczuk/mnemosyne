@@ -1,10 +1,6 @@
 package main
 
-import (
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics"
-	"github.com/piotrkowalczuk/sklog"
-)
+import "github.com/go-kit/kit/metrics"
 
 var (
 	monitor             *monitoring
@@ -25,13 +21,4 @@ type monitoring struct {
 		queries metrics.Counter
 		errors  metrics.Counter
 	}
-}
-
-func initMonitoring(fn func() (*monitoring, error), logger log.Logger) {
-	m, err := fn()
-	if err != nil {
-		sklog.Fatal(logger, err)
-	}
-
-	monitor = m
 }

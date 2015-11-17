@@ -13,13 +13,21 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-func main() {
-	var config configuration
+var config configuration
+
+func init() {
 	config.init()
+}
+
+func main() {
+	var (
+		monitor *monitoring
+		storage Storage
+	)
 	config.parse()
 
-	initLogger(config.logger.adapter, config.logger.format, config.logger.level, sklog.KeySubsystem, config.subsystem)
-	initPostgres(
+	logger := initLogger(config.logger.adapter, config.logger.format, config.logger.level, sklog.KeySubsystem, config.subsystem)
+	postgres := initPostgres(
 		config.storage.postgres.connectionString,
 		config.storage.postgres.retry,
 		logger,
@@ -34,7 +42,7 @@ func main() {
 	case "":
 		sklog.Fatal(logger, errors.New("mnemosyned: monitoring is mandatory, at least for now"))
 	case monitoringEnginePrometheus:
-		initMonitoring(initPrometheus(config.namespace, config.subsystem, prometheus.Labels{"server": hostname}), logger)
+		monitor = initMonitoring(initPrometheus(config.namespace, config.subsystem, prometheus.Labels{"server": hostname}), logger)
 	default:
 		sklog.Fatal(logger, errors.New("mnemosyned: unknown monitoring engine"))
 	}
@@ -43,7 +51,7 @@ func main() {
 	case storageEngineInMemory:
 		sklog.Fatal(logger, errors.New("mnemosyned: in memory storage is not implemented yet"))
 	case storageEnginePostgres:
-		initStorage(initPostgresStorage(config.storage.postgres.tableName, postgres, monitor), logger)
+		storage = initStorage(initPostgresStorage(config.storage.postgres.tableName, postgres, monitor), logger)
 	case storageEngineRedis:
 		sklog.Fatal(logger, errors.New("mnemosyned: redis storage is not implemented yet"))
 	default:

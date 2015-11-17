@@ -9,51 +9,53 @@ import (
 	"github.com/piotrkowalczuk/sklog"
 )
 
+var (
+	store Storage
+)
+
 func TestMain(m *testing.M) {
-	var config configuration
-	config.init()
 	config.parse()
 
 	configPostgres := config.storage.postgres
 	configLogger := config.logger
 
-	initLogger(configLogger.adapter, configLogger.format, configLogger.level, sklog.KeySubsystem, "mnemosyne")
-	initPostgres(configPostgres.connectionString, configPostgres.retry, logger)
-	initMonitoring(initPrometheus(config.namespace, config.subsystem, nil), logger)
-	initStorage(initPostgresStorage(configPostgres.tableName, postgres, monitor), logger)
+	logger := initLogger(configLogger.adapter, configLogger.format, configLogger.level, sklog.KeySubsystem, "mnemosyne")
+	postgres := initPostgres(configPostgres.connectionString, configPostgres.retry, logger)
+	monitor := initMonitoring(initPrometheus(config.namespace, config.subsystem, nil), logger)
+	store = initStorage(initPostgresStorage(configPostgres.tableName, postgres, monitor), logger)
 
 	code := m.Run()
 
-	storage.TearDown()
+	store.TearDown()
 	postgres.Close()
 
 	os.Exit(code)
 }
 
 func TestPostgresStorage_Create(t *testing.T) {
-	testStorage_Create(t, storage)
+	testStorage_Create(t, store)
 }
 
 func TestPostgresStorage_Get(t *testing.T) {
-	testStorage_Get(t, storage)
+	testStorage_Get(t, store)
 }
 
 func TestPostgresStorage_List(t *testing.T) {
-	testStorage_List(t, storage)
+	testStorage_List(t, store)
 }
 
 func TestPostgresStorage_Exists(t *testing.T) {
-	testStorage_Exists(t, storage)
+	testStorage_Exists(t, store)
 }
 
 func TestPostgresStorage_Abandon(t *testing.T) {
-	testStorage_Abandon(t, storage)
+	testStorage_Abandon(t, store)
 }
 
 func TestPostgresStorage_SetData(t *testing.T) {
-	testStorage_SetData(t, storage)
+	testStorage_SetData(t, store)
 }
 
 func TestPostgresStorage_Delete(t *testing.T) {
-	testStorage_Delete(t, storage)
+	testStorage_Delete(t, store)
 }

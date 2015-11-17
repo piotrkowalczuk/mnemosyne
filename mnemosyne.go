@@ -14,6 +14,21 @@ import (
 	"golang.org/x/net/context"
 )
 
+const (
+	contextKeySession = "context_key_mnemosyne_session"
+)
+
+// NewContext returns a new Context that carries Session value.
+func NewContext(ctx context.Context, ses Session) context.Context {
+	return context.WithValue(ctx, contextKeySession, ses)
+}
+
+// FromContext returns the Session value stored in context, if any.
+func FromContext(ctx context.Context) (Session, bool) {
+	c, ok := ctx.Value(contextKeySession).(Session)
+	return c, ok
+}
+
 // Mnemosyne ...
 type Mnemosyne interface {
 	Get(context.Context, *Token) (*Session, error)

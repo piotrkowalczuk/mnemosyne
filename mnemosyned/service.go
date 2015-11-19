@@ -68,7 +68,7 @@ func initLogger(adapter, format string, level int, context ...interface{}) log.L
 
 	switch format {
 	case loggerFormatHumane:
-		l = sklog.NewHumaneLogger(os.Stdout)
+		l = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	case loggerFormatJSON:
 		l = log.NewJSONLogger(os.Stdout)
 	case loggerFormatLogFmt:

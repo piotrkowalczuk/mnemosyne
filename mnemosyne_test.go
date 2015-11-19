@@ -38,3 +38,20 @@ func TestToken_Value(t *testing.T) {
 		}
 	}
 }
+
+func TestNewToken(t *testing.T) {
+	success := map[string]Token{
+		"1:1":  Token{Key: "1", Hash: "1"},
+		"1":    Token{Key: "", Hash: "1"},
+		":1":   Token{Key: "", Hash: "1"},
+		"1:":   Token{Key: "", Hash: "1"},
+		":":    Token{Key: "", Hash: ""},
+		"":     Token{Key: "", Hash: ""},
+		":   ": Token{Key: "", Hash: "   "},
+		"   :": Token{Key: "", Hash: "   "},
+	}
+
+	for given, expected := range success {
+		assert.Equal(t, expected, NewToken(given))
+	}
+}

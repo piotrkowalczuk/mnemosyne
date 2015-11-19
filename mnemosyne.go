@@ -1,7 +1,6 @@
 package mnemosyne
 
 import (
-	"bytes"
 	"database/sql/driver"
 	"encoding/hex"
 	"errors"
@@ -238,18 +237,14 @@ func (t Token) Value() (driver.Value, error) {
 // Scan implements sql.Scanner interface.
 func (t *Token) Scan(src interface{}) error {
 	var token Token
-	var err error
 
 	switch s := src.(type) {
 	case []byte:
-		token, err = NewTokenFromBytes(s)
+		token = NewToken(string(s))
 	case string:
-		token, err = NewTokenFromString(s)
+		token = NewToken(s)
 	default:
 		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
-	}
-	if err != nil {
-		return err
 	}
 
 	*t = token
@@ -257,37 +252,33 @@ func (t *Token) Scan(src interface{}) error {
 	return nil
 }
 
-// NewTokenFromString parse string and allocates new token instance if ok.
-func NewTokenFromString(s string) (t Token, err error) {
+// NewToken parse string and allocates new token instance if ok. Expected token has format <key>:<hash>.
+// If given string does not satisfy such pattern,
+// entire string (excluding extremely situated colons) will be threaten like a hash.
+func NewToken(s string) (t Token) {
 	parts := strings.Split(s, ":")
 
-	if len(parts) != 2 {
-		err = errors.New("mnemosyne: token cannot be allocated, given string has wrong format")
+	if len(parts) == 1 {
+		t = Token{
+			Hash: parts[0],
+		}
+
 		return
 	}
 
-	t = NewToken(parts[0], parts[1])
-	return
-}
+	if parts[1] == "" {
+		t = Token{
+			Hash: parts[0],
+		}
 
-// NewToken allocates new Token instance.
-func NewToken(key, hash string) Token {
-	return Token{
-		Key:  key,
-		Hash: hash,
-	}
-}
-
-// NewTokenFromBytes ...
-func NewTokenFromBytes(b []byte) (t Token, err error) {
-	parts := bytes.Split(b, []byte{':'})
-
-	if len(parts) != 2 {
-		err = errors.New("mnemosyne: token cannot be allocated, given byte slice has wrong format")
 		return
 	}
 
-	t = NewToken(string(parts[0]), string(parts[1]))
+	t = Token{
+		Key:  parts[0],
+		Hash: parts[1],
+	}
+
 	return
 }
 
@@ -304,7 +295,10 @@ func NewTokenRandom(g RandomBytesGenerator, k string) (t Token, err error) {
 	// Compute a 64-byte hash of buf and put it in h.
 	sha3.ShakeSum256(hash, buf)
 
-	t = NewToken(k, hex.EncodeToString(hash))
+	t = Token{
+		Key:  k,
+		Hash: hex.EncodeToString(hash),
+	}
 	return
 }
 
@@ -312,10 +306,7 @@ func NewTokenRandom(g RandomBytesGenerator, k string) (t Token, err error) {
 func TokenContextMiddleware(header string) func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
 	return func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
 		return func(ctx context.Context, rw http.ResponseWriter, r *http.Request) {
-			token, err := NewTokenFromString(r.Header.Get(header))
-			if err == nil {
-				ctx = NewTokenContext(ctx, token)
-			}
+			ctx = NewTokenContext(ctx, NewToken(r.Header.Get(header)))
 
 			fn(ctx, rw, r)
 		}

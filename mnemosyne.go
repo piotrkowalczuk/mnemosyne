@@ -34,7 +34,7 @@ type Mnemosyne interface {
 	Get(context.Context) (*Session, error)
 	Exists(context.Context) (bool, error)
 	Create(context.Context, map[string]string) (*Session, error)
-	Abandon(context.Context) (bool, error)
+	Abandon(context.Context) error
 	SetData(context.Context, string, string) (*Session, error)
 }
 
@@ -94,18 +94,14 @@ func (m *mnemosyne) Create(ctx context.Context, data map[string]string) (*Sessio
 }
 
 // Abandon implements Mnemosyne interface.
-func (m *mnemosyne) Abandon(ctx context.Context) (bool, error) {
+func (m *mnemosyne) Abandon(ctx context.Context) error {
 	token, ok := TokenFromContext(ctx)
 	if !ok {
-		return false, errors.New("mnemosyne: session cannot be abandoned, missing session token in the context")
+		return errors.New("mnemosyne: session cannot be abandoned, missing session token in the context")
 	}
-	res, err := m.client.Abandon(ctx, &AbandonRequest{Token: &token})
+	_, err := m.client.Abandon(ctx, &AbandonRequest{Token: &token})
 
-	if err != nil {
-		return false, err
-	}
-
-	return res.Abandoned, nil
+	return err
 }
 
 // SetData implements Mnemosyne interface.

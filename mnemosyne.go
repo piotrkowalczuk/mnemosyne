@@ -15,23 +15,24 @@ import (
 )
 
 const (
-	contextKeySession = "context_key_mnemosyne_session"
+	contextKeyToken = "context_key_mnemosyne_token"
 )
 
-// NewContext returns a new Context that carries Session value.
-func NewContext(ctx context.Context, ses Session) context.Context {
-	return context.WithValue(ctx, contextKeySession, ses)
+// NewTokenContext returns a new Context that carries Token value.
+func NewTokenContext(ctx context.Context, t Token) context.Context {
+	return context.WithValue(ctx, contextKeyToken, t)
 }
 
-// FromContext returns the Session value stored in context, if any.
-func FromContext(ctx context.Context) (Session, bool) {
-	c, ok := ctx.Value(contextKeySession).(Session)
-	return c, ok
+// TokenFromContext returns the Token value stored in context, if any.
+func TokenFromContext(ctx context.Context) (Token, bool) {
+	t, ok := ctx.Value(contextKeyToken).(Token)
+	return t, ok
 }
 
 // Mnemosyne ...
 type Mnemosyne interface {
 	Get(context.Context, *Token) (*Session, error)
+	GetArbitrarily(context.Context) (*Session, error)
 	Exists(context.Context, *Token) (bool, error)
 	Create(context.Context, map[string]string) (*Session, error)
 	Abandon(context.Context, *Token) (bool, error)
@@ -61,6 +62,16 @@ func (m *mnemosyne) Get(ctx context.Context, token *Token) (*Session, error) {
 	}
 
 	return res.Session, nil
+}
+
+// GetArbitrarily implements Mnemosyne interface.
+func (m *mnemosyne) GetArbitrarily(ctx context.Context) (*Session, error) {
+	token, ok := TokenFromContext(ctx)
+	if !ok {
+		return nil, errors.New("mnemosyne: session cannot be retrieved, missing session token in the context")
+	}
+
+	return m.Get(ctx, &token)
 }
 
 // Exists implements Mnemosyne interface.

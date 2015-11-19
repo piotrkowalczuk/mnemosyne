@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"encoding/hex"
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -31,12 +32,11 @@ func TokenFromContext(ctx context.Context) (Token, bool) {
 
 // Mnemosyne ...
 type Mnemosyne interface {
-	Get(context.Context, *Token) (*Session, error)
-	GetArbitrarily(context.Context) (*Session, error)
-	Exists(context.Context, *Token) (bool, error)
+	Get(context.Context) (*Session, error)
+	Exists(context.Context) (bool, error)
 	Create(context.Context, map[string]string) (*Session, error)
-	Abandon(context.Context, *Token) (bool, error)
-	SetData(context.Context, *Token, string, string) (*Session, error)
+	Abandon(context.Context) (bool, error)
+	SetData(context.Context, string, string) (*Session, error)
 }
 
 type mnemosyne struct {
@@ -55,8 +55,13 @@ func New(conn *grpc.ClientConn, options MnemosyneOpts) Mnemosyne {
 }
 
 // Get implements Mnemosyne interface.
-func (m *mnemosyne) Get(ctx context.Context, token *Token) (*Session, error) {
-	res, err := m.client.Get(ctx, &GetRequest{Token: token})
+func (m *mnemosyne) Get(ctx context.Context) (*Session, error) {
+	token, ok := TokenFromContext(ctx)
+	if !ok {
+		return nil, errors.New("mnemosyne: session cannot be retrieved, missing session token in the context")
+	}
+
+	res, err := m.client.Get(ctx, &GetRequest{Token: &token})
 	if err != nil {
 		return nil, err
 	}
@@ -64,19 +69,13 @@ func (m *mnemosyne) Get(ctx context.Context, token *Token) (*Session, error) {
 	return res.Session, nil
 }
 
-// GetArbitrarily implements Mnemosyne interface.
-func (m *mnemosyne) GetArbitrarily(ctx context.Context) (*Session, error) {
+// Exists implements Mnemosyne interface.
+func (m *mnemosyne) Exists(ctx context.Context) (bool, error) {
 	token, ok := TokenFromContext(ctx)
 	if !ok {
-		return nil, errors.New("mnemosyne: session cannot be retrieved, missing session token in the context")
+		return false, errors.New("mnemosyne: session existance cannot be checked, missing session token in the context")
 	}
-
-	return m.Get(ctx, &token)
-}
-
-// Exists implements Mnemosyne interface.
-func (m *mnemosyne) Exists(ctx context.Context, token *Token) (bool, error) {
-	res, err := m.client.Exists(ctx, &ExistsRequest{Token: token})
+	res, err := m.client.Exists(ctx, &ExistsRequest{Token: &token})
 
 	if err != nil {
 		return false, err
@@ -88,7 +87,6 @@ func (m *mnemosyne) Exists(ctx context.Context, token *Token) (bool, error) {
 // Create implements Mnemosyne interface.
 func (m *mnemosyne) Create(ctx context.Context, data map[string]string) (*Session, error) {
 	res, err := m.client.Create(ctx, &CreateRequest{Data: data})
-
 	if err != nil {
 		return nil, err
 	}
@@ -97,8 +95,12 @@ func (m *mnemosyne) Create(ctx context.Context, data map[string]string) (*Sessio
 }
 
 // Abandon implements Mnemosyne interface.
-func (m *mnemosyne) Abandon(ctx context.Context, token *Token) (bool, error) {
-	res, err := m.client.Abandon(ctx, &AbandonRequest{Token: token})
+func (m *mnemosyne) Abandon(ctx context.Context) (bool, error) {
+	token, ok := TokenFromContext(ctx)
+	if !ok {
+		return false, errors.New("mnemosyne: session cannot be abandoned, missing session token in the context")
+	}
+	res, err := m.client.Abandon(ctx, &AbandonRequest{Token: &token})
 
 	if err != nil {
 		return false, err
@@ -108,9 +110,13 @@ func (m *mnemosyne) Abandon(ctx context.Context, token *Token) (bool, error) {
 }
 
 // SetData implements Mnemosyne interface.
-func (m *mnemosyne) SetData(ctx context.Context, token *Token, key, value string) (*Session, error) {
+func (m *mnemosyne) SetData(ctx context.Context, key, value string) (*Session, error) {
+	token, ok := TokenFromContext(ctx)
+	if !ok {
+		return nil, errors.New("mnemosyne: session data cannot be set, missing session token in the context")
+	}
 	res, err := m.client.SetData(ctx, &SetDataRequest{
-		Token: token,
+		Token: &token,
 		Key:   key,
 		Value: value,
 	})
@@ -231,7 +237,7 @@ func (t Token) Value() (driver.Value, error) {
 
 // Scan implements sql.Scanner interface.
 func (t *Token) Scan(src interface{}) error {
-	var token *Token
+	var token Token
 	var err error
 
 	switch s := src.(type) {
@@ -246,46 +252,51 @@ func (t *Token) Scan(src interface{}) error {
 		return err
 	}
 
-	*t = *token
+	*t = token
 
 	return nil
 }
 
 // NewTokenFromString parse string and allocates new token instance if ok.
-func NewTokenFromString(s string) (*Token, error) {
+func NewTokenFromString(s string) (t Token, err error) {
 	parts := strings.Split(s, ":")
 
 	if len(parts) != 2 {
-		return nil, errors.New("mnemosyne: token cannot be allocated, given string has wrong format")
+		err = errors.New("mnemosyne: token cannot be allocated, given string has wrong format")
+		return
 	}
 
-	return NewToken(parts[0], parts[1]), nil
+	t = NewToken(parts[0], parts[1])
+	return
 }
 
 // NewToken allocates new Token instance.
-func NewToken(key, hash string) *Token {
-	return &Token{
+func NewToken(key, hash string) Token {
+	return Token{
 		Key:  key,
 		Hash: hash,
 	}
 }
 
 // NewTokenFromBytes ...
-func NewTokenFromBytes(b []byte) (*Token, error) {
+func NewTokenFromBytes(b []byte) (t Token, err error) {
 	parts := bytes.Split(b, []byte{':'})
 
 	if len(parts) != 2 {
-		return nil, errors.New("mnemosyne: token cannot be allocated, given byte slice has wrong format")
+		err = errors.New("mnemosyne: token cannot be allocated, given byte slice has wrong format")
+		return
 	}
 
-	return NewToken(string(parts[0]), string(parts[1])), nil
+	t = NewToken(string(parts[0]), string(parts[1]))
+	return
 }
 
 // NewTokenRandom ...
-func NewTokenRandom(g RandomBytesGenerator, k string) (*Token, error) {
-	buf, err := g.GenerateRandomBytes(128)
+func NewTokenRandom(g RandomBytesGenerator, k string) (t Token, err error) {
+	var buf []byte
+	buf, err = g.GenerateRandomBytes(128)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
@@ -293,5 +304,20 @@ func NewTokenRandom(g RandomBytesGenerator, k string) (*Token, error) {
 	// Compute a 64-byte hash of buf and put it in h.
 	sha3.ShakeSum256(hash, buf)
 
-	return NewToken(k, hex.EncodeToString(hash)), nil
+	t = NewToken(k, hex.EncodeToString(hash))
+	return
+}
+
+// TokenContextMiddleware puts token taken from header into current context.
+func TokenContextMiddleware(header string) func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+	return func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+		return func(ctx context.Context, rw http.ResponseWriter, r *http.Request) {
+			token, err := NewTokenFromString(r.Header.Get(header))
+			if err == nil {
+				ctx = NewTokenContext(ctx, token)
+			}
+
+			fn(ctx, rw, r)
+		}
+	}
 }

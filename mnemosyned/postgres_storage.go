@@ -44,7 +44,7 @@ func (ps *postgresStorage) Create(data map[string]string) (*mnemosyne.Session, e
 	}
 
 	entity := &SessionEntity{
-		Token: token,
+		Token: &token,
 		Data:  Data(data),
 	}
 

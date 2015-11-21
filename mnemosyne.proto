@@ -2,15 +2,17 @@ syntax = "proto3";
 
 package mnemosyne;
 
-import public "timestamp.proto";
+import "protot.proto";
 
 service RPC {
     rpc Get(GetRequest) returns (GetResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
     rpc Exists(ExistsRequest) returns (ExistsResponse) {};
-    rpc Create(CreateRequest) returns (CreateResponse) {};
+    rpc Start(StartRequest) returns (StartResponse) {};
     rpc Abandon(AbandonRequest) returns (AbandonResponse) {};
-    rpc SetData(SetDataRequest) returns (SetDataResponse) {};
+    rpc SetValue(SetValueRequest) returns (SetValueResponse) {};
+//    rpc DeleteValue(DeleteValueRequest) returns (DeleteValueResponse) {};
+//    rpc Clear(ClearRequest) returns (ClearResponse) {};
     rpc Delete(DeleteRequest) returns (DeleteResponse) {};
 }
 
@@ -22,14 +24,14 @@ message Token {
 
 message Session {
     Token token = 1;
-    map<string, string> data = 2;
-    Timestamp expire_at = 3;
+    string subject_id = 2;
+    map<string, string> bag = 3;
+    protot.Timestamp expire_at = 4;
 }
 
 message GetRequest {
     Token token = 1;
 }
-
 message GetResponse {
     Session session = 1;
 }
@@ -37,10 +39,9 @@ message GetResponse {
 message ListRequest {
     int64 offset = 1;
     int64 limit = 2;
-    Timestamp expire_at_from = 3;
-    Timestamp expire_at_to = 4;
+    protot.Timestamp expire_at_from = 3;
+    protot.Timestamp expire_at_to = 4;
 }
-
 message ListResponse {
     repeated Session sessions = 1;
 }
@@ -48,44 +49,53 @@ message ListResponse {
 message ExistsRequest {
     Token token = 1;
 }
-
 message ExistsResponse {
     bool exists = 1;
 }
 
-message CreateRequest {
-    map<string, string> data = 1;
+message StartRequest {
+    string subject_id = 1;
+    map<string, string> bag = 2;
 }
-
-message CreateResponse {
+message StartResponse {
     Session session = 1;
 }
 
 message AbandonRequest {
     Token token = 1;
 }
-
 message AbandonResponse {
     bool abandoned = 1;
 }
 
-message SetDataRequest {
+message SetValueRequest {
     Token token = 1;
     string key = 2;
     string value = 3;
 }
-
-message SetDataResponse {
+message SetValueResponse {
     Session session = 1;
+}
+
+message DeleteValueRequest {
+    Token token = 1;
+    string key = 2;
+}
+message DeleteValueResponse {
+    Session session = 1;
+}
+
+message ClearRequest {
+    Token token = 1;
+}
+message ClearResponse {
 }
 
 message DeleteRequest {
     Token token = 1;
-    Timestamp expire_at_from = 2;
-    Timestamp expire_at_to = 3;
+    protot.Timestamp expire_at_from = 2;
+    protot.Timestamp expire_at_to = 3;
 }
-
-
 message DeleteResponse {
     int64 count = 1;
 }

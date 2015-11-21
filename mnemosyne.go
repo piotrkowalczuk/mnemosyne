@@ -33,9 +33,11 @@ func TokenFromContext(ctx context.Context) (Token, bool) {
 type Mnemosyne interface {
 	Get(context.Context) (*Session, error)
 	Exists(context.Context) (bool, error)
-	Create(context.Context, map[string]string) (*Session, error)
+	Start(context.Context, map[string]string) (*Session, error)
 	Abandon(context.Context) error
-	SetData(context.Context, string, string) (*Session, error)
+	SetValue(context.Context, string, string) (*Session, error)
+	//	DeleteValue(context.Context, string) (*Session, error)
+	//	Clear(context.Context) error
 }
 
 type mnemosyne struct {
@@ -84,8 +86,8 @@ func (m *mnemosyne) Exists(ctx context.Context) (bool, error) {
 }
 
 // Create implements Mnemosyne interface.
-func (m *mnemosyne) Create(ctx context.Context, data map[string]string) (*Session, error) {
-	res, err := m.client.Create(ctx, &CreateRequest{Data: data})
+func (m *mnemosyne) Start(ctx context.Context, data map[string]string) (*Session, error) {
+	res, err := m.client.Start(ctx, &StartRequest{Bag: data})
 	if err != nil {
 		return nil, err
 	}
@@ -105,12 +107,12 @@ func (m *mnemosyne) Abandon(ctx context.Context) error {
 }
 
 // SetData implements Mnemosyne interface.
-func (m *mnemosyne) SetData(ctx context.Context, key, value string) (*Session, error) {
+func (m *mnemosyne) SetValue(ctx context.Context, key, value string) (*Session, error) {
 	token, ok := TokenFromContext(ctx)
 	if !ok {
-		return nil, errors.New("mnemosyne: session data cannot be set, missing session token in the context")
+		return nil, errors.New("mnemosyne: session value cannot be set, missing session token in the context")
 	}
-	res, err := m.client.SetData(ctx, &SetDataRequest{
+	res, err := m.client.SetValue(ctx, &SetValueRequest{
 		Token: &token,
 		Key:   key,
 		Value: value,
@@ -122,6 +124,35 @@ func (m *mnemosyne) SetData(ctx context.Context, key, value string) (*Session, e
 
 	return res.Session, nil
 }
+
+//// DeleteValue implements Mnemosyne interface.
+//func (m *mnemosyne) DeleteValue(ctx context.Context, key string) (*Session, error) {
+//	token, ok := TokenFromContext(ctx)
+//	if !ok {
+//		return nil, errors.New("mnemosyne: session value cannot be deleted, missing session token in the context")
+//	}
+//	res, err := m.client.DeleteValue(ctx, &DeleteValueRequest{
+//		Token: &token,
+//		Key:   key,
+//	})
+//
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return res.Session, nil
+//}
+
+//// Clear ...
+//func (m *mnemosyne) Clear(ctx context.Context) error {
+//	token, ok := TokenFromContext(ctx)
+//	if !ok {
+//		return errors.New("mnemosyne: session bag cannot be cleared, missing session token in the context")
+//	}
+//	_, err := m.client.Clear(ctx, &ClearRequest{Token: &token})
+//
+//	return err
+//}
 
 // Context implements sklog.Contexter interface.
 func (gr *GetRequest) Context() []interface{} {
@@ -138,25 +169,15 @@ func (lr *ListRequest) Context() []interface{} {
 	}
 }
 
-// ExpireAtFromTime ...
-func (lr *ListRequest) ExpireAtFromTime() time.Time {
-	return TimestampToTime(lr.ExpireAtFrom)
-}
-
-// ExpireAtToTime ...
-func (lr *ListRequest) ExpireAtToTime() time.Time {
-	return TimestampToTime(lr.ExpireAtTo)
-}
-
 // Context implements sklog.Contexter interface.
 func (er *ExistsRequest) Context() []interface{} {
 	return []interface{}{"token", er.Token}
 }
 
 // Context implements sklog.Contexter interface.
-func (er *CreateRequest) Context() (ctx []interface{}) {
-	for key, value := range er.Data {
-		ctx = append(ctx, "data_"+key, value)
+func (er *StartRequest) Context() (ctx []interface{}) {
+	for key, value := range er.Bag {
+		ctx = append(ctx, "bag_"+key, value)
 	}
 
 	return
@@ -170,11 +191,26 @@ func (ar *AbandonRequest) Context() []interface{} {
 }
 
 // Context implements sklog.Contexter interface.
-func (sdr *SetDataRequest) Context() []interface{} {
+func (svr *SetValueRequest) Context() []interface{} {
 	return []interface{}{
-		"token", sdr.Token,
-		"key", sdr.Key,
-		"value", sdr.Value,
+		"token", svr.Token,
+		"key", svr.Key,
+		"value", svr.Value,
+	}
+}
+
+// Context implements sklog.Contexter interface.
+func (dvr *DeleteValueRequest) Context() []interface{} {
+	return []interface{}{
+		"token", dvr.Token,
+		"key", dvr.Key,
+	}
+}
+
+// Context implements sklog.Contexter interface.
+func (cr *ClearRequest) Context() []interface{} {
+	return []interface{}{
+		"token", cr.Token,
 	}
 }
 
@@ -185,39 +221,6 @@ func (dr *DeleteRequest) Context() []interface{} {
 		"expire_at_from", dr.ExpireAtFrom,
 		"expire_at_to", dr.ExpireAtTo,
 	}
-}
-
-// ExpireAtFromTime ...
-func (dr *DeleteRequest) ExpireAtFromTime() time.Time {
-	return TimestampToTime(dr.ExpireAtFrom)
-}
-
-// ExpireAtToTime ...
-func (dr *DeleteRequest) ExpireAtToTime() time.Time {
-	return TimestampToTime(dr.ExpireAtTo)
-}
-
-// SetValue ...
-func (s *Session) SetValue(key, value string) {
-	if s.Data == nil {
-		s.Data = make(map[string]string)
-	}
-
-	s.Data[key] = value
-}
-
-// Value ...
-func (s *Session) Value(key string) string {
-	if s.Data == nil {
-		s.Data = make(map[string]string)
-	}
-
-	return s.Data[key]
-}
-
-// ExpireAtTime ...
-func (s *Session) ExpireAtTime() time.Time {
-	return TimestampToTime(s.ExpireAt)
 }
 
 // ParseTime ...

@@ -22,7 +22,11 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 all: proto build test run
 
 proto:
-	@${PROTOC} --proto_path=${GOPATH}/src --proto_path=. --go_out=plugins=grpc:. timestamp.proto ${SERVICE}.proto
+	@${PROTOC} --proto_path=${GOPATH}/src \
+	    --proto_path=. \
+	    --proto_path=${GOPATH}/src/github.com/piotrkowalczuk/protot \
+	    --go_out=Mprotot.proto=github.com/piotrkowalczuk/protot,plugins=grpc:. \
+	    ${SERVICE}.proto
 	@ls -al | grep "pb.go"
 
 build: build-daemon

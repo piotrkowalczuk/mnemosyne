@@ -2,11 +2,40 @@
 // source: mnemosyne.proto
 // DO NOT EDIT!
 
+/*
+Package mnemosyne is a generated protocol buffer package.
+
+It is generated from these files:
+	mnemosyne.proto
+
+It has these top-level messages:
+	Token
+	Session
+	GetRequest
+	GetResponse
+	ListRequest
+	ListResponse
+	ExistsRequest
+	ExistsResponse
+	StartRequest
+	StartResponse
+	AbandonRequest
+	AbandonResponse
+	SetValueRequest
+	SetValueResponse
+	DeleteValueRequest
+	DeleteValueResponse
+	ClearRequest
+	ClearResponse
+	DeleteRequest
+	DeleteResponse
+*/
 package mnemosyne
 
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
+import protot "github.com/piotrkowalczuk/protot"
 
 import (
 	context "golang.org/x/net/context"
@@ -17,8 +46,6 @@ import (
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-
-// Ignoring public import of Timestamp from timestamp.proto
 
 // Token represents identifier of single session. It consist of partition key and a hash.
 type Token struct {
@@ -31,9 +58,10 @@ func (m *Token) String() string { return proto.CompactTextString(m) }
 func (*Token) ProtoMessage()    {}
 
 type Session struct {
-	Token    *Token            `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
-	Data     map[string]string `protobuf:"bytes,2,rep,name=data" json:"data,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpireAt *Timestamp        `protobuf:"bytes,3,opt,name=expire_at" json:"expire_at,omitempty"`
+	Token     *Token            `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
+	SubjectId string            `protobuf:"bytes,2,opt,name=subject_id" json:"subject_id,omitempty"`
+	Bag       map[string]string `protobuf:"bytes,3,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ExpireAt  *protot.Timestamp `protobuf:"bytes,4,opt,name=expire_at" json:"expire_at,omitempty"`
 }
 
 func (m *Session) Reset()         { *m = Session{} }
@@ -47,14 +75,14 @@ func (m *Session) GetToken() *Token {
 	return nil
 }
 
-func (m *Session) GetData() map[string]string {
+func (m *Session) GetBag() map[string]string {
 	if m != nil {
-		return m.Data
+		return m.Bag
 	}
 	return nil
 }
 
-func (m *Session) GetExpireAt() *Timestamp {
+func (m *Session) GetExpireAt() *protot.Timestamp {
 	if m != nil {
 		return m.ExpireAt
 	}
@@ -92,24 +120,24 @@ func (m *GetResponse) GetSession() *Session {
 }
 
 type ListRequest struct {
-	Offset       int64      `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
-	Limit        int64      `protobuf:"varint,2,opt,name=limit" json:"limit,omitempty"`
-	ExpireAtFrom *Timestamp `protobuf:"bytes,3,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
-	ExpireAtTo   *Timestamp `protobuf:"bytes,4,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
+	Offset       int64             `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
+	Limit        int64             `protobuf:"varint,2,opt,name=limit" json:"limit,omitempty"`
+	ExpireAtFrom *protot.Timestamp `protobuf:"bytes,3,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
+	ExpireAtTo   *protot.Timestamp `protobuf:"bytes,4,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
 }
 
 func (m *ListRequest) Reset()         { *m = ListRequest{} }
 func (m *ListRequest) String() string { return proto.CompactTextString(m) }
 func (*ListRequest) ProtoMessage()    {}
 
-func (m *ListRequest) GetExpireAtFrom() *Timestamp {
+func (m *ListRequest) GetExpireAtFrom() *protot.Timestamp {
 	if m != nil {
 		return m.ExpireAtFrom
 	}
 	return nil
 }
 
-func (m *ListRequest) GetExpireAtTo() *Timestamp {
+func (m *ListRequest) GetExpireAtTo() *protot.Timestamp {
 	if m != nil {
 		return m.ExpireAtTo
 	}
@@ -154,30 +182,31 @@ func (m *ExistsResponse) Reset()         { *m = ExistsResponse{} }
 func (m *ExistsResponse) String() string { return proto.CompactTextString(m) }
 func (*ExistsResponse) ProtoMessage()    {}
 
-type CreateRequest struct {
-	Data map[string]string `protobuf:"bytes,1,rep,name=data" json:"data,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+type StartRequest struct {
+	SubjectId string            `protobuf:"bytes,1,opt,name=subject_id" json:"subject_id,omitempty"`
+	Bag       map[string]string `protobuf:"bytes,2,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *CreateRequest) Reset()         { *m = CreateRequest{} }
-func (m *CreateRequest) String() string { return proto.CompactTextString(m) }
-func (*CreateRequest) ProtoMessage()    {}
+func (m *StartRequest) Reset()         { *m = StartRequest{} }
+func (m *StartRequest) String() string { return proto.CompactTextString(m) }
+func (*StartRequest) ProtoMessage()    {}
 
-func (m *CreateRequest) GetData() map[string]string {
+func (m *StartRequest) GetBag() map[string]string {
 	if m != nil {
-		return m.Data
+		return m.Bag
 	}
 	return nil
 }
 
-type CreateResponse struct {
+type StartResponse struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
 }
 
-func (m *CreateResponse) Reset()         { *m = CreateResponse{} }
-func (m *CreateResponse) String() string { return proto.CompactTextString(m) }
-func (*CreateResponse) ProtoMessage()    {}
+func (m *StartResponse) Reset()         { *m = StartResponse{} }
+func (m *StartResponse) String() string { return proto.CompactTextString(m) }
+func (*StartResponse) ProtoMessage()    {}
 
-func (m *CreateResponse) GetSession() *Session {
+func (m *StartResponse) GetSession() *Session {
 	if m != nil {
 		return m.Session
 	}
@@ -207,42 +236,95 @@ func (m *AbandonResponse) Reset()         { *m = AbandonResponse{} }
 func (m *AbandonResponse) String() string { return proto.CompactTextString(m) }
 func (*AbandonResponse) ProtoMessage()    {}
 
-type SetDataRequest struct {
+type SetValueRequest struct {
 	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 	Key   string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
 	Value string `protobuf:"bytes,3,opt,name=value" json:"value,omitempty"`
 }
 
-func (m *SetDataRequest) Reset()         { *m = SetDataRequest{} }
-func (m *SetDataRequest) String() string { return proto.CompactTextString(m) }
-func (*SetDataRequest) ProtoMessage()    {}
+func (m *SetValueRequest) Reset()         { *m = SetValueRequest{} }
+func (m *SetValueRequest) String() string { return proto.CompactTextString(m) }
+func (*SetValueRequest) ProtoMessage()    {}
 
-func (m *SetDataRequest) GetToken() *Token {
+func (m *SetValueRequest) GetToken() *Token {
 	if m != nil {
 		return m.Token
 	}
 	return nil
 }
 
-type SetDataResponse struct {
+type SetValueResponse struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
 }
 
-func (m *SetDataResponse) Reset()         { *m = SetDataResponse{} }
-func (m *SetDataResponse) String() string { return proto.CompactTextString(m) }
-func (*SetDataResponse) ProtoMessage()    {}
+func (m *SetValueResponse) Reset()         { *m = SetValueResponse{} }
+func (m *SetValueResponse) String() string { return proto.CompactTextString(m) }
+func (*SetValueResponse) ProtoMessage()    {}
 
-func (m *SetDataResponse) GetSession() *Session {
+func (m *SetValueResponse) GetSession() *Session {
 	if m != nil {
 		return m.Session
 	}
 	return nil
 }
 
+type DeleteValueRequest struct {
+	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
+	Key   string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
+}
+
+func (m *DeleteValueRequest) Reset()         { *m = DeleteValueRequest{} }
+func (m *DeleteValueRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteValueRequest) ProtoMessage()    {}
+
+func (m *DeleteValueRequest) GetToken() *Token {
+	if m != nil {
+		return m.Token
+	}
+	return nil
+}
+
+type DeleteValueResponse struct {
+	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
+}
+
+func (m *DeleteValueResponse) Reset()         { *m = DeleteValueResponse{} }
+func (m *DeleteValueResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteValueResponse) ProtoMessage()    {}
+
+func (m *DeleteValueResponse) GetSession() *Session {
+	if m != nil {
+		return m.Session
+	}
+	return nil
+}
+
+type ClearRequest struct {
+	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
+}
+
+func (m *ClearRequest) Reset()         { *m = ClearRequest{} }
+func (m *ClearRequest) String() string { return proto.CompactTextString(m) }
+func (*ClearRequest) ProtoMessage()    {}
+
+func (m *ClearRequest) GetToken() *Token {
+	if m != nil {
+		return m.Token
+	}
+	return nil
+}
+
+type ClearResponse struct {
+}
+
+func (m *ClearResponse) Reset()         { *m = ClearResponse{} }
+func (m *ClearResponse) String() string { return proto.CompactTextString(m) }
+func (*ClearResponse) ProtoMessage()    {}
+
 type DeleteRequest struct {
-	Token        *Token     `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
-	ExpireAtFrom *Timestamp `protobuf:"bytes,2,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
-	ExpireAtTo   *Timestamp `protobuf:"bytes,3,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
+	Token        *Token            `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
+	ExpireAtFrom *protot.Timestamp `protobuf:"bytes,2,opt,name=expire_at_from" json:"expire_at_from,omitempty"`
+	ExpireAtTo   *protot.Timestamp `protobuf:"bytes,3,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
 }
 
 func (m *DeleteRequest) Reset()         { *m = DeleteRequest{} }
@@ -256,14 +338,14 @@ func (m *DeleteRequest) GetToken() *Token {
 	return nil
 }
 
-func (m *DeleteRequest) GetExpireAtFrom() *Timestamp {
+func (m *DeleteRequest) GetExpireAtFrom() *protot.Timestamp {
 	if m != nil {
 		return m.ExpireAtFrom
 	}
 	return nil
 }
 
-func (m *DeleteRequest) GetExpireAtTo() *Timestamp {
+func (m *DeleteRequest) GetExpireAtTo() *protot.Timestamp {
 	if m != nil {
 		return m.ExpireAtTo
 	}
@@ -278,6 +360,29 @@ func (m *DeleteResponse) Reset()         { *m = DeleteResponse{} }
 func (m *DeleteResponse) String() string { return proto.CompactTextString(m) }
 func (*DeleteResponse) ProtoMessage()    {}
 
+func init() {
+	proto.RegisterType((*Token)(nil), "mnemosyne.Token")
+	proto.RegisterType((*Session)(nil), "mnemosyne.Session")
+	proto.RegisterType((*GetRequest)(nil), "mnemosyne.GetRequest")
+	proto.RegisterType((*GetResponse)(nil), "mnemosyne.GetResponse")
+	proto.RegisterType((*ListRequest)(nil), "mnemosyne.ListRequest")
+	proto.RegisterType((*ListResponse)(nil), "mnemosyne.ListResponse")
+	proto.RegisterType((*ExistsRequest)(nil), "mnemosyne.ExistsRequest")
+	proto.RegisterType((*ExistsResponse)(nil), "mnemosyne.ExistsResponse")
+	proto.RegisterType((*StartRequest)(nil), "mnemosyne.StartRequest")
+	proto.RegisterType((*StartResponse)(nil), "mnemosyne.StartResponse")
+	proto.RegisterType((*AbandonRequest)(nil), "mnemosyne.AbandonRequest")
+	proto.RegisterType((*AbandonResponse)(nil), "mnemosyne.AbandonResponse")
+	proto.RegisterType((*SetValueRequest)(nil), "mnemosyne.SetValueRequest")
+	proto.RegisterType((*SetValueResponse)(nil), "mnemosyne.SetValueResponse")
+	proto.RegisterType((*DeleteValueRequest)(nil), "mnemosyne.DeleteValueRequest")
+	proto.RegisterType((*DeleteValueResponse)(nil), "mnemosyne.DeleteValueResponse")
+	proto.RegisterType((*ClearRequest)(nil), "mnemosyne.ClearRequest")
+	proto.RegisterType((*ClearResponse)(nil), "mnemosyne.ClearResponse")
+	proto.RegisterType((*DeleteRequest)(nil), "mnemosyne.DeleteRequest")
+	proto.RegisterType((*DeleteResponse)(nil), "mnemosyne.DeleteResponse")
+}
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ context.Context
 var _ grpc.ClientConn
@@ -288,9 +393,11 @@ type RPCClient interface {
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 	Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error)
-	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
+	Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error)
 	Abandon(ctx context.Context, in *AbandonRequest, opts ...grpc.CallOption) (*AbandonResponse, error)
-	SetData(ctx context.Context, in *SetDataRequest, opts ...grpc.CallOption) (*SetDataResponse, error)
+	SetValue(ctx context.Context, in *SetValueRequest, opts ...grpc.CallOption) (*SetValueResponse, error)
+	//    rpc DeleteValue(DeleteValueRequest) returns (DeleteValueResponse) {};
+	//    rpc Clear(ClearRequest) returns (ClearResponse) {};
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 }
 
@@ -329,9 +436,9 @@ func (c *rPCClient) Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.
 	return out, nil
 }
 
-func (c *rPCClient) Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
-	out := new(CreateResponse)
-	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Create", in, out, c.cc, opts...)
+func (c *rPCClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error) {
+	out := new(StartResponse)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Start", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -347,9 +454,9 @@ func (c *rPCClient) Abandon(ctx context.Context, in *AbandonRequest, opts ...grp
 	return out, nil
 }
 
-func (c *rPCClient) SetData(ctx context.Context, in *SetDataRequest, opts ...grpc.CallOption) (*SetDataResponse, error) {
-	out := new(SetDataResponse)
-	err := grpc.Invoke(ctx, "/mnemosyne.RPC/SetData", in, out, c.cc, opts...)
+func (c *rPCClient) SetValue(ctx context.Context, in *SetValueRequest, opts ...grpc.CallOption) (*SetValueResponse, error) {
+	out := new(SetValueResponse)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/SetValue", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -371,9 +478,11 @@ type RPCServer interface {
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	List(context.Context, *ListRequest) (*ListResponse, error)
 	Exists(context.Context, *ExistsRequest) (*ExistsResponse, error)
-	Create(context.Context, *CreateRequest) (*CreateResponse, error)
+	Start(context.Context, *StartRequest) (*StartResponse, error)
 	Abandon(context.Context, *AbandonRequest) (*AbandonResponse, error)
-	SetData(context.Context, *SetDataRequest) (*SetDataResponse, error)
+	SetValue(context.Context, *SetValueRequest) (*SetValueResponse, error)
+	//    rpc DeleteValue(DeleteValueRequest) returns (DeleteValueResponse) {};
+	//    rpc Clear(ClearRequest) returns (ClearResponse) {};
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
 }
 
@@ -417,12 +526,12 @@ func _RPC_Exists_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return out, nil
 }
 
-func _RPC_Create_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
-	in := new(CreateRequest)
+func _RPC_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+	in := new(StartRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(RPCServer).Create(ctx, in)
+	out, err := srv.(RPCServer).Start(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -441,12 +550,12 @@ func _RPC_Abandon_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return out, nil
 }
 
-func _RPC_SetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
-	in := new(SetDataRequest)
+func _RPC_SetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+	in := new(SetValueRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
-	out, err := srv.(RPCServer).SetData(ctx, in)
+	out, err := srv.(RPCServer).SetValue(ctx, in)
 	if err != nil {
 		return nil, err
 	}
@@ -482,16 +591,16 @@ var _RPC_serviceDesc = grpc.ServiceDesc{
 			Handler:    _RPC_Exists_Handler,
 		},
 		{
-			MethodName: "Create",
-			Handler:    _RPC_Create_Handler,
+			MethodName: "Start",
+			Handler:    _RPC_Start_Handler,
 		},
 		{
 			MethodName: "Abandon",
 			Handler:    _RPC_Abandon_Handler,
 		},
 		{
-			MethodName: "SetData",
-			Handler:    _RPC_SetData_Handler,
+			MethodName: "SetValue",
+			Handler:    _RPC_SetValue_Handler,
 		},
 		{
 			MethodName: "Delete",

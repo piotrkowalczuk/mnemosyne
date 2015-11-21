@@ -32,8 +32,8 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestPostgresStorage_Create(t *testing.T) {
-	testStorage_Create(t, store)
+func TestPostgresStorage_Start(t *testing.T) {
+	testStorage_Start(t, store)
 }
 
 func TestPostgresStorage_Get(t *testing.T) {
@@ -52,8 +52,8 @@ func TestPostgresStorage_Abandon(t *testing.T) {
 	testStorage_Abandon(t, store)
 }
 
-func TestPostgresStorage_SetData(t *testing.T) {
-	testStorage_SetData(t, store)
+func TestPostgresStorage_SetValue(t *testing.T) {
+	testStorage_SetValue(t, store)
 }
 
 func TestPostgresStorage_Delete(t *testing.T) {

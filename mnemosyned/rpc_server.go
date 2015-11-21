@@ -42,11 +42,11 @@ func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mne
 		Value: "list",
 	}
 
-	expiredAtFrom := mnemosyne.TimestampToTime(req.ExpireAtFrom)
-	expiredAtTo := mnemosyne.TimestampToTime(req.ExpireAtTo)
+	expireAtFrom := req.ExpireAtFrom.Time()
+	expireAtTo := req.ExpireAtTo.Time()
 
 	rs.monitor.rpc.requests.With(field).Add(1)
-	sessions, err := rs.storage.List(req.Offset, req.Limit, &expiredAtFrom, &expiredAtTo)
+	sessions, err := rs.storage.List(req.Offset, req.Limit, &expireAtFrom, &expireAtTo)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
@@ -55,22 +55,22 @@ func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mne
 	}, nil
 }
 
-// Create ...
-func (rs *rpcServer) Create(ctx context.Context, req *mnemosyne.CreateRequest) (*mnemosyne.CreateResponse, error) {
+// Start ...
+func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.StartResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
 		Value: "create",
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	ses, err := rs.storage.Create(req.Data)
+	ses, err := rs.storage.Start(req.SubjectId, req.Bag)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
 
 	sklog.Debug(rs.logger, "new session has been created", "token", ses.Token, "expire_at", ses.ExpireAt)
 
-	return &mnemosyne.CreateResponse{
+	return &mnemosyne.StartResponse{
 		Session: ses,
 	}, nil
 }
@@ -115,25 +115,45 @@ func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest)
 	}, nil
 }
 
-// SetData ...
-func (rs *rpcServer) SetData(ctx context.Context, req *mnemosyne.SetDataRequest) (*mnemosyne.SetDataResponse, error) {
+// SetValue ...
+func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueRequest) (*mnemosyne.SetValueResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
-		Value: "set_data",
+		Value: "set_value",
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	ses, err := rs.storage.SetData(req.Token, req.Key, req.Value)
+	ses, err := rs.storage.SetValue(req.Token, req.Key, req.Value)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
 
-	sklog.Debug(rs.logger, "session data has been set", req.Context()...)
+	sklog.Debug(rs.logger, "session value has been set", req.Context()...)
 
-	return &mnemosyne.SetDataResponse{
+	return &mnemosyne.SetValueResponse{
 		Session: ses,
 	}, err
 }
+
+//// DeleteValue ...
+//func (rs *rpcServer) DeleteValue(ctx context.Context, req *mnemosyne.DeleteValueRequest) (*mnemosyne.DeleteValueResponse, error) {
+//	field := metrics.Field{
+//		Key:   "method",
+//		Value: "delete_value",
+//	}
+//	rs.monitor.rpc.requests.With(field).Add(1)
+//
+//	ses, err := rs.storage.DeleteValue(req.Token, req.Key)
+//	if err != nil {
+//		return nil, rs.error(err, field, req)
+//	}
+//
+//	sklog.Debug(rs.logger, "session value has been deleted", req.Context()...)
+//
+//	return &mnemosyne.DeleteValueResponse{
+//		Session: ses,
+//	}, err
+//}
 
 // Delete ...
 func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (*mnemosyne.DeleteResponse, error) {
@@ -143,8 +163,8 @@ func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	expireAtFrom := req.ExpireAtFromTime()
-	expireAtTo := req.ExpireAtToTime()
+	expireAtFrom := req.ExpireAtFrom.Time()
+	expireAtTo := req.ExpireAtTo.Time()
 
 	count, err := rs.storage.Delete(req.Token, &expireAtFrom, &expireAtTo)
 	if err != nil {

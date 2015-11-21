@@ -18,21 +18,22 @@ var (
 	}
 )
 
-func testStorage_Create(t *testing.T, s Storage) {
-	session, err := s.Create(Data{
+func testStorage_Start(t *testing.T, s Storage) {
+	subjectID := "subjectID"
+	bag := map[string]string{
 		"username": "test",
-	})
+	}
+	session, err := s.Start(subjectID, bag)
 
 	if assert.NoError(t, err) {
 		assert.Len(t, session.Token.Hash, 128)
-		assert.Equal(t, session.Data, map[string]string{
-			"username": "test",
-		})
+		assert.Equal(t, subjectID, session.SubjectId)
+		assert.Equal(t, bag, session.Bag)
 	}
 }
 
 func testStorage_Get(t *testing.T, s Storage) {
-	new, err := s.Create(Data{
+	new, err := s.Start("subjectID", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -41,7 +42,7 @@ func testStorage_Get(t *testing.T, s Storage) {
 	got, err := s.Get(new.Token)
 	require.NoError(t, err)
 	assert.Equal(t, new.Token, got.Token)
-	assert.Equal(t, new.Data, got.Data)
+	assert.Equal(t, new.Bag, got.Bag)
 	assert.Equal(t, new.ExpireAt, got.ExpireAt)
 
 	// Check for non existing Token
@@ -56,7 +57,7 @@ func testStorage_List(t *testing.T, s Storage) {
 	key := "index"
 
 	for i := 1; i <= nb; i++ {
-		_, err := s.Create(Data{key: strconv.FormatInt(int64(i), 10)})
+		_, err := s.Start("subjectID", map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		require.NoError(t, err)
 	}
 
@@ -66,13 +67,13 @@ func testStorage_List(t *testing.T, s Storage) {
 		for i, s := range sessions {
 			assert.NotEmpty(t, s.Token)
 			assert.NotEmpty(t, s.ExpireAt)
-			assert.Equal(t, s.Value(key), strconv.FormatInt(int64(i+1), 10))
+			assert.Equal(t, s.Bag[key], strconv.FormatInt(int64(i+1), 10))
 		}
 	}
 }
 
 func testStorage_Exists(t *testing.T, s Storage) {
-	new, err := s.Create(Data{
+	new, err := s.Start("subjectID", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -90,7 +91,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 }
 
 func testStorage_Abandon(t *testing.T, s Storage) {
-	new, err := s.Create(Data{
+	new, err := s.Start("subjectID", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -111,32 +112,32 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	assert.EqualError(t, err4, errSessionNotFound.Error())
 }
 
-func testStorage_SetData(t *testing.T, s Storage) {
-	new, err := s.Create(Data{
+func testStorage_SetValue(t *testing.T, s Storage) {
+	new, err := s.Start("subjectID", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
 
 	// Check for existing Token
-	got, err2 := s.SetData(new.Token, "email", "fake@email.com")
+	got, err2 := s.SetValue(new.Token, "email", "fake@email.com")
 	require.NoError(t, err2)
 	assert.Equal(t, new.Token, got.Token)
-	assert.Equal(t, 2, len(got.Data))
-	assert.Equal(t, "fake@email.com", got.Value("email"))
-	assert.Equal(t, "test", got.Value("username"))
+	assert.Equal(t, 2, len(got.Bag))
+	assert.Equal(t, "fake@email.com", got.Bag["email"])
+	assert.Equal(t, "test", got.Bag["username"])
 	assert.NotNil(t, got.ExpireAt)
 
 	// Check for overwritten field
-	got2, err2 := s.SetData(new.Token, "email", "morefakethanbefore@email.com")
+	got2, err2 := s.SetValue(new.Token, "email", "morefakethanbefore@email.com")
 	require.NoError(t, err2)
 	assert.Equal(t, new.Token, got2.Token)
-	assert.Equal(t, 2, len(got2.Data))
-	assert.Equal(t, "morefakethanbefore@email.com", got2.Value("email"))
-	assert.Equal(t, "test", got2.Value("username"))
+	assert.Equal(t, 2, len(got2.Bag))
+	assert.Equal(t, "morefakethanbefore@email.com", got2.Bag["email"])
+	assert.Equal(t, "test", got2.Bag["username"])
 	assert.NotNil(t, got2.ExpireAt)
 
 	// Check for non existing Token
-	got3, err3 := s.SetData(notExistsToken, "email", "fake@email.com")
+	got3, err3 := s.SetValue(notExistsToken, "email", "fake@email.com")
 	require.Error(t, err3, errSessionNotFound.Error())
 	assert.Nil(t, got3)
 
@@ -146,7 +147,7 @@ func testStorage_SetData(t *testing.T, s Storage) {
 		defer wg.Done()
 
 		// Check for overwritten field
-		_, err := s.SetData(new.Token, key, value)
+		_, err := s.SetValue(new.Token, key, value)
 
 		assert.NoError(t, err)
 	}
@@ -178,7 +179,7 @@ func testStorage_SetData(t *testing.T, s Storage) {
 	got4, err4 := s.Get(new.Token)
 	if assert.NoError(t, err4) {
 		assert.Equal(t, new.Token, got4.Token)
-		assert.Equal(t, 22, len(got4.Data))
+		assert.Equal(t, 22, len(got4.Bag))
 	}
 }
 
@@ -225,7 +226,7 @@ func testStorage_Delete(t *testing.T, s Storage) {
 
 DataLoop:
 	for _, args := range data {
-		new, err := s.Create(nil)
+		new, err := s.Start("subjectID", nil)
 		require.NoError(t, err)
 
 		if !assert.NoError(t, err) {
@@ -241,11 +242,11 @@ DataLoop:
 		}
 
 		if args.expiredAtFrom {
-			eaf := new.ExpireAtTime().Add(-29 * time.Minute)
+			eaf := new.ExpireAt.Time().Add(-29 * time.Minute)
 			expiredAtFrom = &eaf
 		}
 		if args.expiredAtTo {
-			eat := new.ExpireAtTime().Add(29 * time.Minute)
+			eat := new.ExpireAt.Time().Add(29 * time.Minute)
 			expiredAtTo = &eat
 		}
 

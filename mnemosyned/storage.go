@@ -21,11 +21,15 @@ var (
 type Storage interface {
 	Setup() error
 	TearDown() error
+
+	Start(string, map[string]string) (*mnemosyne.Session, error)
+	Abandon(*mnemosyne.Token) (bool, error)
 	Get(*mnemosyne.Token) (*mnemosyne.Session, error)
 	List(int64, int64, *time.Time, *time.Time) ([]*mnemosyne.Session, error)
 	Exists(*mnemosyne.Token) (bool, error)
-	Create(map[string]string) (*mnemosyne.Session, error)
-	Abandon(*mnemosyne.Token) (bool, error)
-	SetData(*mnemosyne.Token, string, string) (*mnemosyne.Session, error)
 	Delete(*mnemosyne.Token, *time.Time, *time.Time) (int64, error)
+
+	SetValue(*mnemosyne.Token, string, string) (*mnemosyne.Session, error)
+	//	DeleteValue(*mnemosyne.Token, string) (*mnemosyne.Session, error)
+	//	Clear(*mnemosyne.Token) (*mnemosyne.Session, error)
 }

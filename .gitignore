@@ -4,6 +4,9 @@ mnemosyne.iml
 mnemosyned/mnemosyned
 run.sh
 test.sh
+*.sublime-project
+*.sublime-workspace
+.vscode
 
 # Golang
 *.o

@@ -11,12 +11,14 @@ env:
   MNEMOSYNE_MONITORING_ENGINE: prometheus
   MNEMOSYNE_STORAGE_ENGINE: postgres
   MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING: postgres://postgres:@localhost/travis_ci_test?sslmode=disable
-  MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME: mnemosyne_session
+  MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME: session
   MNEMOSYNE_STORAGE_POSTGRES_RETRY: 10
 go:
 - tip
 install:
 - go get github.com/stretchr/testify/...
+- go get github.com/onsi/ginkgo
+- go get github.com/onsi/gomega
 - make get
 before_script:
 - psql -c 'create database travis_ci_test;' -U postgres

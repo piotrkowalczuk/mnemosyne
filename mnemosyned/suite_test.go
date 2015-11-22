@@ -39,7 +39,7 @@ func TestPackage(t *testing.T) {
 
 	RegisterFailHandler(Fail)
 
-	suiteName := "campaignserviced"
+	suiteName := "mnemosyned"
 
 	if metricsSpace := os.Getenv("METRICSSPACE"); metricsSpace != "" {
 		junitReporter := reporters.NewJUnitReporter(metricsSpace + "/junit.xml")

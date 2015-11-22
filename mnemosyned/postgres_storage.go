@@ -124,7 +124,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 	}
 
 	args := []interface{}{offset, limit}
-	query := "SELECT token, subject_id, bag, expire_at FROM mnemosyne." + ps.tableName
+	query := "SELECT token, subject_id, bag, expire_at FROM mnemosyne.session"
 
 	switch {
 	case expiredAtFrom != nil && expiredAtTo == nil:
@@ -282,7 +282,7 @@ func (ps *postgresStorage) Delete(token *mnemosyne.Token, expiredAtFrom, expired
 	}
 
 	where, args := ps.where(token, expiredAtFrom, expiredAtTo)
-	query := "DELETE FROM mnemosyne." + ps.tableName + " WHERE " + where
+	query := "DELETE FROM mnemosyne.session WHERE " + where
 	field := metrics.Field{Key: "query", Value: query}
 
 	result, err := ps.db.Exec(query, args...)

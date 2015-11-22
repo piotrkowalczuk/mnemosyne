@@ -37,13 +37,14 @@ build-daemon:
 run:
 	@${BINARY} ${FLAGS}
 
-test: test-unit test-postgres
+test: test-lib test-daemon
 
-test-unit:
+test-lib:
+	@go test -v ${PACKAGE}
+
+test-daemon:
 	@go test -v ${PACKAGE_DAEMON}
-
-test-postgres:
-	@go test -v -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
+	@go test -v -tags=postgres ${PACKAGE_DAEMON} -- ${FLAGS}
 
 get:
 	@go get ${PACKAGE_DAEMON}

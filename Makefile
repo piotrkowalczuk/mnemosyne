@@ -43,7 +43,7 @@ test-lib:
 	@go test -v ${PACKAGE}
 
 test-daemon:
-	@go test -v ${PACKAGE_DAEMON}
+	@go test -v -tags=unit ${PACKAGE_DAEMON}
 	@go test -v -tags=postgres ${PACKAGE_DAEMON} -- ${FLAGS}
 
 get:

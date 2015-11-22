@@ -1,4 +1,4 @@
-// +build postgres
+// +build postgres !unit
 
 package main
 

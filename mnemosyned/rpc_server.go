@@ -1,11 +1,15 @@
 package main
 
 import (
+	"errors"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 type rpcServer struct {
@@ -14,7 +18,7 @@ type rpcServer struct {
 	storage Storage
 }
 
-// Get ...
+// Get implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyne.GetResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
@@ -34,8 +38,7 @@ func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemo
 	}, nil
 }
 
-// List ...
-// TODO: implement
+// List implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mnemosyne.ListResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
@@ -55,7 +58,7 @@ func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mne
 	}, nil
 }
 
-// Start ...
+// Start implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.StartResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
@@ -63,6 +66,9 @@ func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*m
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
+	if req.SubjectId == "" {
+		return nil, errors.New("mnemosyned: session cannot be started, subject id is missing")
+	}
 	ses, err := rs.storage.Start(req.SubjectId, req.Bag)
 	if err != nil {
 		return nil, rs.error(err, field, req)
@@ -75,7 +81,7 @@ func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*m
 	}, nil
 }
 
-// Exists ...
+// Exists implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Exists(ctx context.Context, req *mnemosyne.ExistsRequest) (*mnemosyne.ExistsResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
@@ -95,7 +101,7 @@ func (rs *rpcServer) Exists(ctx context.Context, req *mnemosyne.ExistsRequest) (
 	}, nil
 }
 
-// Abandon ...
+// Abandon implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (*mnemosyne.AbandonResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
@@ -115,7 +121,7 @@ func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest)
 	}, nil
 }
 
-// SetValue ...
+// SetValue implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueRequest) (*mnemosyne.SetValueResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
@@ -123,7 +129,7 @@ func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueReques
 	}
 	rs.monitor.rpc.requests.With(field).Add(1)
 
-	ses, err := rs.storage.SetValue(req.Token, req.Key, req.Value)
+	bag, err := rs.storage.SetValue(req.Token, req.Key, req.Value)
 	if err != nil {
 		return nil, rs.error(err, field, req)
 	}
@@ -131,7 +137,7 @@ func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueReques
 	sklog.Debug(rs.logger, "session value has been set", req.Context()...)
 
 	return &mnemosyne.SetValueResponse{
-		Session: ses,
+		Bag: bag,
 	}, err
 }
 
@@ -155,7 +161,7 @@ func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueReques
 //	}, err
 //}
 
-// Delete ...
+// Delete implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (*mnemosyne.DeleteResponse, error) {
 	field := metrics.Field{
 		Key:   "method",
@@ -182,5 +188,5 @@ func (rs *rpcServer) error(err error, field metrics.Field, ctx sklog.Contexter) 
 	rs.monitor.rpc.errors.With(field).Add(1)
 	sklog.Error(rs.logger, err, ctx.Context()...)
 
-	return err
+	return grpc.Errorf(codes.Internal, err.Error())
 }

@@ -1,15 +1,27 @@
 package main
 
 import (
+	"io"
+	"net"
+	"os"
+	"strconv"
+	"sync"
 	"testing"
 	"time"
 
-	"strconv"
-	"sync"
-
+	"github.com/go-kit/kit/log"
+	. "github.com/onsi/ginkgo"
+	"github.com/onsi/ginkgo/reporters"
+	. "github.com/onsi/gomega"
 	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/protot"
+	"github.com/piotrkowalczuk/sklog"
+	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/grpclog"
 )
 
 var (
@@ -17,6 +29,122 @@ var (
 		Hash: "NOT EXISTS",
 	}
 )
+
+var (
+	address = "127.0.0.1:12345"
+)
+
+func TestPackage(t *testing.T) {
+	config.parse()
+
+	RegisterFailHandler(Fail)
+
+	suiteName := "campaignserviced"
+
+	if metricsSpace := os.Getenv("METRICSSPACE"); metricsSpace != "" {
+		junitReporter := reporters.NewJUnitReporter(metricsSpace + "/junit.xml")
+		RunSpecsWithDefaultAndCustomReporters(t, suiteName, []Reporter{junitReporter})
+	} else {
+		RunSpecs(t, suiteName)
+	}
+}
+
+func AssertTimestamp(t *protot.Timestamp) (b bool) {
+	b = Expect(t).ToNot(BeNil())
+	if !b {
+		return
+	}
+	b = Expect(t.Nanos).ToNot(BeZero())
+	if !b {
+		return
+	}
+	return Expect(t.Seconds).ToNot(BeZero())
+}
+
+func AssertGRPCError(err error, code codes.Code, desc string) bool {
+	r1 := Expect(err).ToNot(BeNil())
+	r2 := Expect(grpc.Code(err)).To(Equal(code))
+	r3 := Expect(grpc.ErrorDesc(err)).To(Equal(desc))
+
+	return r1 && r2 && r3
+}
+
+func AssertToken(t *mnemosyne.Token) (b bool) {
+	b = Expect(t).ToNot(BeNil())
+	if !b {
+		return
+	}
+	b = Expect(t.Key).ToNot(BeEmpty())
+	if !b {
+		return
+	}
+	return Expect(t.Hash).ToNot(BeEmpty())
+}
+
+type integrationSuite struct {
+	logger        log.Logger
+	listener      net.Listener
+	server        *grpc.Server
+	service       mnemosyne.RPCClient
+	serviceConn   *grpc.ClientConn
+	serviceServer mnemosyne.RPCServer
+}
+
+func newIntegrationSuite(store Storage) *integrationSuite {
+	logger := sklog.NewHumaneLogger(GinkgoWriter, sklog.DefaultHTTPFormatter)
+	monitor := initMonitoring(initPrometheus("mnemosyne_test", "mnemosyne", stdprometheus.Labels{"server": "test"}), logger)
+
+	return &integrationSuite{
+		logger: logger,
+		serviceServer: &rpcServer{
+			logger:  logger,
+			storage: store,
+			monitor: monitor,
+		},
+	}
+}
+
+func (is *integrationSuite) serve(dialOpts ...grpc.DialOption) (err error) {
+	is.listener, err = net.Listen("tcp", address)
+	if err != nil {
+		return
+	}
+
+	grpclog.SetLogger(sklog.NewGRPCLogger(is.logger))
+	var opts []grpc.ServerOption
+	is.server = grpc.NewServer(opts...)
+
+	mnemosyne.RegisterRPCServer(is.server, is.serviceServer)
+
+	go is.server.Serve(is.listener)
+
+	is.serviceConn, err = grpc.Dial(address, dialOpts...)
+	if err != nil {
+		return err
+	}
+	is.service = mnemosyne.NewRPCClient(is.serviceConn)
+
+	return
+}
+
+func (is *integrationSuite) teardown() (err error) {
+	close := func(c io.Closer) {
+		if err != nil {
+			return
+		}
+
+		if c == nil {
+			return
+		}
+
+		err = c.Close()
+	}
+
+	//	close(is.serviceConn)
+	close(is.listener)
+
+	return
+}
 
 func testStorage_Start(t *testing.T, s Storage) {
 	subjectID := "subjectID"
@@ -121,25 +249,21 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	// Check for existing Token
 	got, err2 := s.SetValue(new.Token, "email", "fake@email.com")
 	require.NoError(t, err2)
-	assert.Equal(t, new.Token, got.Token)
-	assert.Equal(t, 2, len(got.Bag))
-	assert.Equal(t, "fake@email.com", got.Bag["email"])
-	assert.Equal(t, "test", got.Bag["username"])
-	assert.NotNil(t, got.ExpireAt)
+	assert.Equal(t, 2, len(got))
+	assert.Equal(t, "fake@email.com", got["email"])
+	assert.Equal(t, "test", got["username"])
 
 	// Check for overwritten field
-	got2, err2 := s.SetValue(new.Token, "email", "morefakethanbefore@email.com")
+	bag2, err2 := s.SetValue(new.Token, "email", "morefakethanbefore@email.com")
 	require.NoError(t, err2)
-	assert.Equal(t, new.Token, got2.Token)
-	assert.Equal(t, 2, len(got2.Bag))
-	assert.Equal(t, "morefakethanbefore@email.com", got2.Bag["email"])
-	assert.Equal(t, "test", got2.Bag["username"])
-	assert.NotNil(t, got2.ExpireAt)
+	assert.Equal(t, 2, len(bag2))
+	assert.Equal(t, "morefakethanbefore@email.com", bag2["email"])
+	assert.Equal(t, "test", bag2["username"])
 
 	// Check for non existing Token
-	got3, err3 := s.SetValue(notExistsToken, "email", "fake@email.com")
+	bag3, err3 := s.SetValue(notExistsToken, "email", "fake@email.com")
 	require.Error(t, err3, errSessionNotFound.Error())
-	assert.Nil(t, got3)
+	assert.Nil(t, bag3)
 
 	wg := sync.WaitGroup{}
 	// Check for concurent access

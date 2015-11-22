@@ -3,7 +3,6 @@ package main
 import "github.com/go-kit/kit/metrics"
 
 var (
-	monitor             *monitoring
 	monitoringRPCLabels = []string{
 		"method",
 	}

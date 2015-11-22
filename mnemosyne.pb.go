@@ -254,16 +254,16 @@ func (m *SetValueRequest) GetToken() *Token {
 }
 
 type SetValueResponse struct {
-	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
+	Bag map[string]string `protobuf:"bytes,1,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *SetValueResponse) Reset()         { *m = SetValueResponse{} }
 func (m *SetValueResponse) String() string { return proto.CompactTextString(m) }
 func (*SetValueResponse) ProtoMessage()    {}
 
-func (m *SetValueResponse) GetSession() *Session {
+func (m *SetValueResponse) GetBag() map[string]string {
 	if m != nil {
-		return m.Session
+		return m.Bag
 	}
 	return nil
 }

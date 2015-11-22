@@ -35,7 +35,7 @@ type Mnemosyne interface {
 	Exists(context.Context) (bool, error)
 	Start(context.Context, map[string]string) (*Session, error)
 	Abandon(context.Context) error
-	SetValue(context.Context, string, string) (*Session, error)
+	SetValue(context.Context, string, string) (map[string]string, error)
 	//	DeleteValue(context.Context, string) (*Session, error)
 	//	Clear(context.Context) error
 }
@@ -107,7 +107,7 @@ func (m *mnemosyne) Abandon(ctx context.Context) error {
 }
 
 // SetData implements Mnemosyne interface.
-func (m *mnemosyne) SetValue(ctx context.Context, key, value string) (*Session, error) {
+func (m *mnemosyne) SetValue(ctx context.Context, key, value string) (map[string]string, error) {
 	token, ok := TokenFromContext(ctx)
 	if !ok {
 		return nil, errors.New("mnemosyne: session value cannot be set, missing session token in the context")
@@ -122,7 +122,7 @@ func (m *mnemosyne) SetValue(ctx context.Context, key, value string) (*Session, 
 		return nil, err
 	}
 
-	return res.Session, nil
+	return res.Bag, nil
 }
 
 //// DeleteValue implements Mnemosyne interface.

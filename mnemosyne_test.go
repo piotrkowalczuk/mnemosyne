@@ -52,6 +52,6 @@ func TestNewToken(t *testing.T) {
 	}
 
 	for given, expected := range success {
-		assert.Equal(t, expected, NewToken(given))
+		assert.Equal(t, expected, DecodeToken(given))
 	}
 }

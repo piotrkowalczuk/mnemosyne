@@ -15,37 +15,43 @@ import (
 )
 
 const (
-	contextKeyToken = "context_key_mnemosyne_token"
+	// TokenContextKey is used by Mnemosyne internally to retrieve session token from context.Context.
+	TokenContextKey = "mnemosyne_token"
+	// TokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
+	TokenMetadataKey = "mnemosyne_token"
 )
 
 // NewTokenContext returns a new Context that carries Token value.
 func NewTokenContext(ctx context.Context, t Token) context.Context {
-	return context.WithValue(ctx, contextKeyToken, t)
+	return context.WithValue(ctx, TokenContextKey, t)
 }
 
 // TokenFromContext returns the Token value stored in context, if any.
 func TokenFromContext(ctx context.Context) (Token, bool) {
-	t, ok := ctx.Value(contextKeyToken).(Token)
+	t, ok := ctx.Value(TokenContextKey).(Token)
+
 	return t, ok
 }
 
 // Mnemosyne ...
 type Mnemosyne interface {
-	Get(context.Context) (*Session, error)
-	Exists(context.Context) (bool, error)
-	Start(context.Context, map[string]string) (*Session, error)
-	Abandon(context.Context) error
-	SetValue(context.Context, string, string) (map[string]string, error)
+	Get(context.Context, Token) (*Session, error)
+	Exists(context.Context, Token) (bool, error)
+	Start(context.Context, string, map[string]string) (*Session, error)
+	Abandon(context.Context, Token) error
+	SetValue(context.Context, Token, string, string) (map[string]string, error)
 	//	DeleteValue(context.Context, string) (*Session, error)
 	//	Clear(context.Context) error
 }
 
 type mnemosyne struct {
-	client RPCClient
+	metadata []string
+	client   RPCClient
 }
 
 // MnemosyneOpts ...
 type MnemosyneOpts struct {
+	Metadata []string
 }
 
 // New allocates new mnemosyne instance.
@@ -56,12 +62,7 @@ func New(conn *grpc.ClientConn, options MnemosyneOpts) Mnemosyne {
 }
 
 // Get implements Mnemosyne interface.
-func (m *mnemosyne) Get(ctx context.Context) (*Session, error) {
-	token, ok := TokenFromContext(ctx)
-	if !ok {
-		return nil, errors.New("mnemosyne: session cannot be retrieved, missing session token in the context")
-	}
-
+func (m *mnemosyne) Get(ctx context.Context, token Token) (*Session, error) {
 	res, err := m.client.Get(ctx, &GetRequest{Token: &token})
 	if err != nil {
 		return nil, err
@@ -71,11 +72,7 @@ func (m *mnemosyne) Get(ctx context.Context) (*Session, error) {
 }
 
 // Exists implements Mnemosyne interface.
-func (m *mnemosyne) Exists(ctx context.Context) (bool, error) {
-	token, ok := TokenFromContext(ctx)
-	if !ok {
-		return false, errors.New("mnemosyne: session existance cannot be checked, missing session token in the context")
-	}
+func (m *mnemosyne) Exists(ctx context.Context, token Token) (bool, error) {
 	res, err := m.client.Exists(ctx, &ExistsRequest{Token: &token})
 
 	if err != nil {
@@ -86,8 +83,11 @@ func (m *mnemosyne) Exists(ctx context.Context) (bool, error) {
 }
 
 // Create implements Mnemosyne interface.
-func (m *mnemosyne) Start(ctx context.Context, data map[string]string) (*Session, error) {
-	res, err := m.client.Start(ctx, &StartRequest{Bag: data})
+func (m *mnemosyne) Start(ctx context.Context, subjectID string, data map[string]string) (*Session, error) {
+	res, err := m.client.Start(ctx, &StartRequest{
+		SubjectId: subjectID,
+		Bag:       data,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -96,22 +96,14 @@ func (m *mnemosyne) Start(ctx context.Context, data map[string]string) (*Session
 }
 
 // Abandon implements Mnemosyne interface.
-func (m *mnemosyne) Abandon(ctx context.Context) error {
-	token, ok := TokenFromContext(ctx)
-	if !ok {
-		return errors.New("mnemosyne: session cannot be abandoned, missing session token in the context")
-	}
+func (m *mnemosyne) Abandon(ctx context.Context, token Token) error {
 	_, err := m.client.Abandon(ctx, &AbandonRequest{Token: &token})
 
 	return err
 }
 
 // SetData implements Mnemosyne interface.
-func (m *mnemosyne) SetValue(ctx context.Context, key, value string) (map[string]string, error) {
-	token, ok := TokenFromContext(ctx)
-	if !ok {
-		return nil, errors.New("mnemosyne: session value cannot be set, missing session token in the context")
-	}
+func (m *mnemosyne) SetValue(ctx context.Context, token Token, key, value string) (map[string]string, error) {
 	res, err := m.client.SetValue(ctx, &SetValueRequest{
 		Token: &token,
 		Key:   key,
@@ -156,7 +148,7 @@ func (m *mnemosyne) SetValue(ctx context.Context, key, value string) (map[string
 
 // Context implements sklog.Contexter interface.
 func (gr *GetRequest) Context() []interface{} {
-	return []interface{}{"token", gr.Token}
+	return []interface{}{"token", gr.Token.Encode()}
 }
 
 // Context implements sklog.Contexter interface.
@@ -171,7 +163,7 @@ func (lr *ListRequest) Context() []interface{} {
 
 // Context implements sklog.Contexter interface.
 func (er *ExistsRequest) Context() []interface{} {
-	return []interface{}{"token", er.Token}
+	return []interface{}{"token", er.Token.Encode()}
 }
 
 // Context implements sklog.Contexter interface.
@@ -186,38 +178,38 @@ func (er *StartRequest) Context() (ctx []interface{}) {
 // Context implements sklog.Contexter interface.
 func (ar *AbandonRequest) Context() []interface{} {
 	return []interface{}{
-		"token", ar.Token,
+		"token", ar.Token.Encode(),
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (svr *SetValueRequest) Context() []interface{} {
 	return []interface{}{
-		"token", svr.Token,
-		"key", svr.Key,
-		"value", svr.Value,
+		"token", svr.Token.Encode(),
+		"bag_key", svr.Key,
+		"bag_value", svr.Value,
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (dvr *DeleteValueRequest) Context() []interface{} {
 	return []interface{}{
-		"token", dvr.Token,
-		"key", dvr.Key,
+		"token", dvr.Token.Encode(),
+		"bag_key", dvr.Key,
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (cr *ClearRequest) Context() []interface{} {
 	return []interface{}{
-		"token", cr.Token,
+		"token", cr.Token.Encode(),
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (dr *DeleteRequest) Context() []interface{} {
 	return []interface{}{
-		"token", dr.Token,
+		"token", dr.Token.Encode(),
 		"expire_at_from", dr.ExpireAtFrom,
 		"expire_at_to", dr.ExpireAtTo,
 	}
@@ -230,7 +222,7 @@ func ParseTime(s string) (time.Time, error) {
 
 // Value implements driver.Valuer interface.
 func (t Token) Value() (driver.Value, error) {
-	return t.Key + ":" + t.Hash, nil
+	return t.Encode(), nil
 }
 
 // Scan implements sql.Scanner interface.
@@ -239,9 +231,9 @@ func (t *Token) Scan(src interface{}) error {
 
 	switch s := src.(type) {
 	case []byte:
-		token = NewToken(string(s))
+		token = DecodeToken(string(s))
 	case string:
-		token = NewToken(s)
+		token = DecodeToken(s)
 	default:
 		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
 	}
@@ -251,10 +243,15 @@ func (t *Token) Scan(src interface{}) error {
 	return nil
 }
 
-// NewToken parse string and allocates new token instance if ok. Expected token has format <key>:<hash>.
+// Encode ...
+func (t *Token) Encode() string {
+	return t.Key + ":" + t.Hash
+}
+
+// DecodeToken parse string and allocates new token instance if ok. Expected token has format <key>:<hash>.
 // If given string does not satisfy such pattern,
 // entire string (excluding extremely situated colons) will be threaten like a hash.
-func NewToken(s string) (t Token) {
+func DecodeToken(s string) (t Token) {
 	parts := strings.Split(s, ":")
 
 	if len(parts) == 1 {
@@ -305,8 +302,10 @@ func NewTokenRandom(g RandomBytesGenerator, k string) (t Token, err error) {
 func TokenContextMiddleware(header string) func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
 	return func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
 		return func(ctx context.Context, rw http.ResponseWriter, r *http.Request) {
-			ctx = NewTokenContext(ctx, NewToken(r.Header.Get(header)))
+			token := r.Header.Get(header)
+			ctx = NewTokenContext(ctx, DecodeToken(token))
 
+			rw.Header().Set(header, token)
 			fn(ctx, rw, r)
 		}
 	}

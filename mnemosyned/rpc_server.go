@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 
+	"time"
+
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/piotrkowalczuk/mnemosyne"
@@ -74,7 +76,7 @@ func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*m
 		return nil, rs.error(err, field, req)
 	}
 
-	sklog.Debug(rs.logger, "new session has been created", "token", ses.Token, "expire_at", ses.ExpireAt)
+	sklog.Debug(rs.logger, "new session has been created", "token", ses.Token, "expire_at", ses.ExpireAt.Time().Format(time.RFC3339))
 
 	return &mnemosyne.StartResponse{
 		Session: ses,

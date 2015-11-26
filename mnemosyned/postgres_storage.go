@@ -111,9 +111,10 @@ func (ps *postgresStorage) Get(token *mnemosyne.Token) (*mnemosyne.Session, erro
 	}
 
 	return &mnemosyne.Session{
-		Token:    token,
-		Bag:      entity.Bag,
-		ExpireAt: protot.TimeToTimestamp(entity.ExpireAt),
+		Token:     token,
+		SubjectId: entity.SubjectID,
+		Bag:       entity.Bag,
+		ExpireAt:  protot.TimeToTimestamp(entity.ExpireAt),
 	}, nil
 }
 
@@ -165,9 +166,10 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 		}
 
 		sessions = append(sessions, &mnemosyne.Session{
-			Token:    &entity.Token,
-			Bag:      entity.Bag,
-			ExpireAt: protot.TimeToTimestamp(entity.ExpireAt),
+			Token:     &entity.Token,
+			SubjectId: entity.SubjectID,
+			Bag:       entity.Bag,
+			ExpireAt:  protot.TimeToTimestamp(entity.ExpireAt),
 		})
 	}
 	if rows.Err() != nil {

@@ -28,5 +28,5 @@ script:
 - make test-postgres
 notifications:
   slack:
-    secure: $SLACK_SECURE
-
+    rooms:
+      secure: $SLACK_SECURE

@@ -105,7 +105,7 @@ func (ps *postgresStorage) Get(token *mnemosyne.Token) (*mnemosyne.Session, erro
 	if err != nil {
 		ps.monitor.postgres.errors.With(field).Add(1)
 		if err == sql.ErrNoRows {
-			return nil, errSessionNotFound
+			return nil, mnemosyne.ErrSessionNotFound
 		}
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func (ps *postgresStorage) Abandon(token *mnemosyne.Token) (bool, error) {
 	}
 
 	if affected == 0 {
-		return false, errSessionNotFound
+		return false, mnemosyne.ErrSessionNotFound
 	}
 
 	return true, nil
@@ -256,7 +256,7 @@ func (ps *postgresStorage) SetValue(token *mnemosyne.Token, key, value string) (
 		ps.monitor.postgres.errors.With(metrics.Field{Key: "query", Value: selectQuery}).Add(1)
 		tx.Rollback()
 		if err == sql.ErrNoRows {
-			return nil, errSessionNotFound
+			return nil, mnemosyne.ErrSessionNotFound
 		}
 		return nil, err
 	}

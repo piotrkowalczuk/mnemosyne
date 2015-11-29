@@ -21,6 +21,11 @@ const (
 	TokenMetadataKey = "mnemosyne_token"
 )
 
+var (
+	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
+	ErrSessionNotFound = errors.New("mnemosyne: session not found")
+)
+
 // NewTokenContext returns a new Context that carries Token value.
 func NewTokenContext(ctx context.Context, t Token) context.Context {
 	return context.WithValue(ctx, TokenContextKey, t)

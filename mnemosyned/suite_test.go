@@ -176,7 +176,7 @@ func testStorage_Get(t *testing.T, s Storage) {
 	// Check for non existing Token
 	got2, err2 := s.Get(notExistsToken)
 	assert.Error(t, err2)
-	assert.EqualError(t, err2, errSessionNotFound.Error())
+	assert.EqualError(t, err2, mnemosyne.ErrSessionNotFound.Error())
 	assert.Nil(t, got2)
 }
 
@@ -232,12 +232,12 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	// Check for already abondond session
 	ok3, err3 := s.Abandon(new.Token)
 	assert.False(t, ok3)
-	assert.EqualError(t, err3, errSessionNotFound.Error())
+	assert.EqualError(t, err3, mnemosyne.ErrSessionNotFound.Error())
 
 	// Check for session that never exists
 	ok4, err4 := s.Abandon(notExistsToken)
 	assert.False(t, ok4)
-	assert.EqualError(t, err4, errSessionNotFound.Error())
+	assert.EqualError(t, err4, mnemosyne.ErrSessionNotFound.Error())
 }
 
 func testStorage_SetValue(t *testing.T, s Storage) {
@@ -262,7 +262,7 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 
 	// Check for non existing Token
 	bag3, err3 := s.SetValue(notExistsToken, "email", "fake@email.com")
-	require.Error(t, err3, errSessionNotFound.Error())
+	require.Error(t, err3, mnemosyne.ErrSessionNotFound.Error())
 	assert.Nil(t, bag3)
 
 	wg := sync.WaitGroup{}

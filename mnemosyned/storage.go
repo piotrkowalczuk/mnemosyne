@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"time"
 
 	"github.com/piotrkowalczuk/mnemosyne"
@@ -12,10 +11,6 @@ const (
 	storageEngineInMemory = "in_memory"
 	storageEnginePostgres = "postgres"
 	storageEngineRedis    = "redis"
-)
-
-var (
-	errSessionNotFound = errors.New("mnemosyned: session not found")
 )
 
 // Storage combines API that needs to be implemented by any storage to be replaceable.

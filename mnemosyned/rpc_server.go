@@ -30,6 +30,9 @@ func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemo
 
 	ses, err := rs.storage.Get(req.Token)
 	if err != nil {
+		if err == errSessionNotFound {
+			return nil, mnemosyne.ErrSessionNotFound
+		}
 		return nil, rs.error(err, field, req)
 	}
 
@@ -113,6 +116,9 @@ func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest)
 
 	ab, err := rs.storage.Abandon(req.Token)
 	if err != nil {
+		if err == errSessionNotFound {
+			return nil, mnemosyne.ErrSessionNotFound
+		}
 		return nil, rs.error(err, field, req)
 	}
 
@@ -133,6 +139,9 @@ func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueReques
 
 	bag, err := rs.storage.SetValue(req.Token, req.Key, req.Value)
 	if err != nil {
+		if err == errSessionNotFound {
+			return nil, mnemosyne.ErrSessionNotFound
+		}
 		return nil, rs.error(err, field, req)
 	}
 

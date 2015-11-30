@@ -8,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"golang.org/x/crypto/sha3"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 
 var (
 	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
-	ErrSessionNotFound = errors.New("mnemosyne: session not found")
+	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyne: session not found")
 )
 
 // NewTokenContext returns a new Context that carries Token value.

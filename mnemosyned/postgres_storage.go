@@ -148,6 +148,8 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 		ps.monitor.postgres.errors.With(field).Add(1)
 		return nil, err
 	}
+	defer rows.Close()
+
 	ps.monitor.postgres.queries.With(field).Add(1)
 
 	sessions := make([]*mnemosyne.Session, 0, limit)

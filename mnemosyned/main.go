@@ -29,7 +29,6 @@ func main() {
 	logger := initLogger(config.logger.adapter, config.logger.format, config.logger.level, sklog.KeySubsystem, config.subsystem)
 	postgres := initPostgres(
 		config.storage.postgres.connectionString,
-		config.storage.postgres.retry,
 		logger,
 	)
 

@@ -5,6 +5,7 @@ package mnemosyne;
 import "protot.proto";
 
 service RPC {
+    rpc Context(Empty) returns (Session) {};
     rpc Get(GetRequest) returns (GetResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
     rpc Exists(ExistsRequest) returns (ExistsResponse) {};
@@ -16,10 +17,11 @@ service RPC {
     rpc Delete(DeleteRequest) returns (DeleteResponse) {};
 }
 
+message Empty {}
 // Token represents identifier of single session. It consist of partition key and a hash.
 message Token {
-    string key = 1;
-    string hash = 2;
+    bytes key = 1;
+    bytes hash = 2;
 }
 
 message Session {

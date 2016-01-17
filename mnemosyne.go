@@ -1,11 +1,10 @@
 package mnemosyne
 
 import (
+	"bytes"
 	"database/sql/driver"
 	"encoding/hex"
 	"errors"
-	"net/http"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/sha3"
@@ -26,20 +25,21 @@ var (
 	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyne: session not found")
 )
 
-// NewTokenContext returns a new Context that carries Token value.
-func NewTokenContext(ctx context.Context, t Token) context.Context {
-	return context.WithValue(ctx, TokenContextKey, t)
-}
-
-// TokenFromContext returns the Token value stored in context, if any.
-func TokenFromContext(ctx context.Context) (Token, bool) {
-	t, ok := ctx.Value(TokenContextKey).(Token)
-
-	return t, ok
-}
+//// NewTokenContext returns a new Context that carries Token value.
+//func NewTokenContext(ctx context.Context, t Token) context.Context {
+//	return context.WithValue(ctx, TokenContextKey, t)
+//}
+//
+//// TokenFromContext returns the Token value stored in context, if any.
+//func TokenFromContext(ctx context.Context) (Token, bool) {
+//	t, ok := ctx.Value(TokenContextKey).(Token)
+//
+//	return t, ok
+//}
 
 // Mnemosyne ...
 type Mnemosyne interface {
+	FromContext(context.Context) (*Session, error)
 	Get(context.Context, Token) (*Session, error)
 	Exists(context.Context, Token) (bool, error)
 	Start(context.Context, string, map[string]string) (*Session, error)
@@ -64,6 +64,11 @@ func New(conn *grpc.ClientConn, options MnemosyneOpts) Mnemosyne {
 	return &mnemosyne{
 		client: NewRPCClient(conn),
 	}
+}
+
+// FromContext implements Mnemosyne interface.
+func (m *mnemosyne) FromContext(ctx context.Context) (*Session, error) {
+	return m.client.Context(ctx, nil)
 }
 
 // Get implements Mnemosyne interface.
@@ -225,6 +230,23 @@ func ParseTime(s string) (time.Time, error) {
 	return time.Parse(time.RFC3339, s)
 }
 
+// EncodeToken ...
+func EncodeToken(key, hash []byte) Token {
+	t := Token{
+		Key:  make([]byte, hex.EncodedLen(len(key))),
+		Hash: make([]byte, hex.EncodedLen(len(hash))),
+	}
+	hex.Encode(t.Key, key)
+	hex.Encode(t.Hash, hash)
+
+	return t
+}
+
+// EncodeTokenString ...
+func EncodeTokenString(key, hash string) (t Token) {
+	return EncodeToken([]byte(key), []byte(hash))
+}
+
 // Value implements driver.Valuer interface.
 func (t Token) Value() (driver.Value, error) {
 	return t.Encode(), nil
@@ -232,13 +254,19 @@ func (t Token) Value() (driver.Value, error) {
 
 // Scan implements sql.Scanner interface.
 func (t *Token) Scan(src interface{}) error {
-	var token Token
+	var (
+		token Token
+		err   error
+	)
 
 	switch s := src.(type) {
 	case []byte:
-		token = DecodeToken(string(s))
-	case string:
 		token = DecodeToken(s)
+	case string:
+		if token, err = DecodeTokenString(s); err != nil {
+			return err
+		}
+
 	default:
 		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
 	}
@@ -249,42 +277,54 @@ func (t *Token) Scan(src interface{}) error {
 }
 
 // Encode ...
-func (t *Token) Encode() string {
-	return t.Key + ":" + t.Hash
+func (t *Token) Encode() []byte {
+	return append(append(t.Key, ':'), t.Hash...)
+}
+
+// IsEmpty
+func (t *Token) IsEmpty() bool {
+	if t == nil {
+		return true
+	}
+	return len(t.Hash) == 0
 }
 
 // DecodeToken parse string and allocates new token instance if ok. Expected token has format <key>:<hash>.
 // If given string does not satisfy such pattern,
 // entire string (excluding extremely situated colons) will be threaten like a hash.
-func DecodeToken(s string) (t Token) {
-	parts := strings.Split(s, ":")
+func DecodeToken(s []byte) (t Token) {
+	parts := bytes.Split(s, []byte(":"))
 
 	if len(parts) == 1 {
-		t = Token{
-			Hash: parts[0],
+		return Token{
+			Hash: bytes.TrimSpace(parts[0]),
 		}
-
-		return
 	}
 
-	if parts[1] == "" {
-		t = Token{
-			Hash: parts[0],
+	if len(parts[1]) == 0 {
+		return Token{
+			Hash: bytes.TrimSpace(parts[0]),
 		}
-
-		return
 	}
 
-	t = Token{
-		Key:  parts[0],
-		Hash: parts[1],
+	return Token{
+		Key:  bytes.TrimSpace(parts[0]),
+		Hash: bytes.TrimSpace(parts[1]),
 	}
-
-	return
 }
 
-// NewTokenRandom ...
-func NewTokenRandom(g RandomBytesGenerator, k string) (t Token, err error) {
+// DecodeTokenString ...
+func DecodeTokenString(s string) (Token, error) {
+	hx, err := hex.DecodeString(s)
+	if err != nil {
+		return Token{}, err
+	}
+
+	return DecodeToken(hx), nil
+}
+
+// RandomToken ...
+func RandomToken(g RandomBytesGenerator, k []byte) (t Token, err error) {
 	var buf []byte
 	buf, err = g.GenerateRandomBytes(128)
 	if err != nil {
@@ -296,22 +336,19 @@ func NewTokenRandom(g RandomBytesGenerator, k string) (t Token, err error) {
 	// Compute a 64-byte hash of buf and put it in h.
 	sha3.ShakeSum256(hash, buf)
 
-	t = Token{
-		Key:  k,
-		Hash: hex.EncodeToString(hash),
-	}
+	t = EncodeToken(k, hash)
 	return
 }
 
-// TokenContextMiddleware puts token taken from header into current context.
-func TokenContextMiddleware(header string) func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
-	return func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
-		return func(ctx context.Context, rw http.ResponseWriter, r *http.Request) {
-			token := r.Header.Get(header)
-			ctx = NewTokenContext(ctx, DecodeToken(token))
-
-			rw.Header().Set(header, token)
-			fn(ctx, rw, r)
-		}
-	}
-}
+//// TokenContextMiddleware puts token taken from header into current context.
+//func TokenContextMiddleware(header string) func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+//	return func(fn func(context.Context, http.ResponseWriter, *http.Request)) func(context.Context, http.ResponseWriter, *http.Request) {
+//		return func(ctx context.Context, rw http.ResponseWriter, r *http.Request) {
+//			token := r.Header.Get(header)
+//			ctx = NewTokenContext(ctx, DecodeToken(token))
+//
+//			rw.Header().Set(header, token)
+//			fn(ctx, rw, r)
+//		}
+//	}
+//}

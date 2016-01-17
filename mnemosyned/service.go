@@ -2,9 +2,9 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	stdlog "log"
 	"os"
-	"time"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics/prometheus"
@@ -71,36 +71,13 @@ func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Label
 	}
 }
 
-
-
-func initPostgres(connectionString string, retry int, logger log.Logger) *sql.DB {
-	var err error
-	var postgres *sql.DB
-
-	// Because of recursion it needs to be checked to not spawn more than one.
-	if postgres == nil {
-		postgres, err = sql.Open("postgres", connectionString)
-		if err != nil {
-			sklog.Fatal(logger, err)
-		}
+func initPostgres(connectionString string, logger log.Logger) *sql.DB {
+	postgres, err := sql.Open("postgres", connectionString)
+	if err != nil {
+		sklog.Fatal(logger, fmt.Errorf("mnemosyned: postgres connection failure: %s", err.Error()))
 	}
 
-	// At this moment connection is not yet established.
-	// Ping is required.
-RetryLoop:
-	for i := 0; i <= retry; i++ {
-		if err := postgres.Ping(); err != nil {
-			if i == retry {
-				sklog.Fatal(logger, err)
-			}
-
-			sklog.Error(logger, err)
-			time.Sleep(2 * time.Second)
-		}
-		break RetryLoop
-	}
-
-	sklog.Info(logger, "connection do postgres established successfully", "address", connectionString, "retry", retry)
+	sklog.Info(logger, "postgres connected", "address", connectionString)
 
 	return postgres
 }
@@ -149,12 +126,12 @@ func initLogger(adapter, format string, level int, context ...interface{}) log.L
 func initStorage(fn func() (Storage, error), logger log.Logger) Storage {
 	s, err := fn()
 	if err != nil {
-		sklog.Fatal(logger, err)
+		sklog.Fatal(logger, fmt.Errorf("mnemosyned: storage init failure: %s", err.Error()))
 	}
 
 	err = s.Setup()
 	if err != nil {
-		sklog.Fatal(logger, err)
+		sklog.Fatal(logger, fmt.Errorf("mnemosyned: storage setup failure: %s", err.Error()))
 	}
 
 	return s

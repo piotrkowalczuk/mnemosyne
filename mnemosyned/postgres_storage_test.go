@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	configLogger := config.logger
 
 	logger := initLogger(configLogger.adapter, configLogger.format, configLogger.level, sklog.KeySubsystem, "mnemosyne")
-	postgres := initPostgres(configPostgres.connectionString, configPostgres.retry, logger)
+	postgres := initPostgres(configPostgres.connectionString, logger)
 	monitor := initMonitoring(initPrometheus(config.namespace, config.subsystem, nil), logger)
 	store = initStorage(initPostgresStorage(configPostgres.tableName, postgres, monitor), logger)
 

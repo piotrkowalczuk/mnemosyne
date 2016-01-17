@@ -25,14 +25,17 @@ import (
 )
 
 var (
-	notExistsToken = &mnemosyne.Token{
-		Hash: "NOT EXISTS",
-	}
+	notExistsToken *mnemosyne.Token
 )
 
 var (
 	address = "127.0.0.1:12345"
 )
+
+func init() {
+	tk := mnemosyne.EncodeTokenString("", "fake")
+	notExistsToken = &tk
+}
 
 func TestPackage(t *testing.T) {
 	config.parse()
@@ -161,17 +164,17 @@ func testStorage_Start(t *testing.T, s Storage) {
 }
 
 func testStorage_Get(t *testing.T, s Storage) {
-	new, err := s.Start("subjectID", map[string]string{
+	ses, err := s.Start("subjectID", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
 
 	// Check for existing Token
-	got, err := s.Get(new.Token)
+	got, err := s.Get(ses.Token)
 	require.NoError(t, err)
-	assert.Equal(t, new.Token, got.Token)
-	assert.Equal(t, new.Bag, got.Bag)
-	assert.Equal(t, new.ExpireAt, got.ExpireAt)
+	assert.Equal(t, ses.Token, got.Token)
+	assert.Equal(t, ses.Bag, got.Bag)
+	assert.Equal(t, ses.ExpireAt, got.ExpireAt)
 
 	// Check for non existing Token
 	got2, err2 := s.Get(notExistsToken)
@@ -357,9 +360,11 @@ DataLoop:
 			continue DataLoop
 		}
 
-		var id *mnemosyne.Token
-		var expiredAtTo *time.Time
-		var expiredAtFrom *time.Time
+		var (
+			id            *mnemosyne.Token
+			expiredAtTo   *time.Time
+			expiredAtFrom *time.Time
+		)
 
 		if args.id {
 			id = new.Token

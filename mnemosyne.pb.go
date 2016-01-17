@@ -9,6 +9,7 @@ It is generated from these files:
 	mnemosyne.proto
 
 It has these top-level messages:
+	Empty
 	Token
 	Session
 	GetRequest
@@ -47,16 +48,22 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
-// Token represents identifier of single session. It consist of partition key and a hash.
-type Token struct {
-	Key  string `protobuf:"bytes,1,opt,name=key" json:"key,omitempty"`
-	Hash string `protobuf:"bytes,2,opt,name=hash" json:"hash,omitempty"`
+type Empty struct {
 }
 
-func (m *Token) Reset()                    { *m = Token{} }
-func (m *Token) String() string            { return proto.CompactTextString(m) }
-func (*Token) ProtoMessage()               {}
-func (*Token) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (m *Empty) Reset()         { *m = Empty{} }
+func (m *Empty) String() string { return proto.CompactTextString(m) }
+func (*Empty) ProtoMessage()    {}
+
+// Token represents identifier of single session. It consist of partition key and a hash.
+type Token struct {
+	Key  []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Hash []byte `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
+}
+
+func (m *Token) Reset()         { *m = Token{} }
+func (m *Token) String() string { return proto.CompactTextString(m) }
+func (*Token) ProtoMessage()    {}
 
 type Session struct {
 	Token     *Token            `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
@@ -65,10 +72,9 @@ type Session struct {
 	ExpireAt  *protot.Timestamp `protobuf:"bytes,4,opt,name=expire_at" json:"expire_at,omitempty"`
 }
 
-func (m *Session) Reset()                    { *m = Session{} }
-func (m *Session) String() string            { return proto.CompactTextString(m) }
-func (*Session) ProtoMessage()               {}
-func (*Session) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (m *Session) Reset()         { *m = Session{} }
+func (m *Session) String() string { return proto.CompactTextString(m) }
+func (*Session) ProtoMessage()    {}
 
 func (m *Session) GetToken() *Token {
 	if m != nil {
@@ -95,10 +101,9 @@ type GetRequest struct {
 	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 }
 
-func (m *GetRequest) Reset()                    { *m = GetRequest{} }
-func (m *GetRequest) String() string            { return proto.CompactTextString(m) }
-func (*GetRequest) ProtoMessage()               {}
-func (*GetRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (m *GetRequest) Reset()         { *m = GetRequest{} }
+func (m *GetRequest) String() string { return proto.CompactTextString(m) }
+func (*GetRequest) ProtoMessage()    {}
 
 func (m *GetRequest) GetToken() *Token {
 	if m != nil {
@@ -111,10 +116,9 @@ type GetResponse struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
 }
 
-func (m *GetResponse) Reset()                    { *m = GetResponse{} }
-func (m *GetResponse) String() string            { return proto.CompactTextString(m) }
-func (*GetResponse) ProtoMessage()               {}
-func (*GetResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (m *GetResponse) Reset()         { *m = GetResponse{} }
+func (m *GetResponse) String() string { return proto.CompactTextString(m) }
+func (*GetResponse) ProtoMessage()    {}
 
 func (m *GetResponse) GetSession() *Session {
 	if m != nil {
@@ -130,10 +134,9 @@ type ListRequest struct {
 	ExpireAtTo   *protot.Timestamp `protobuf:"bytes,4,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
 }
 
-func (m *ListRequest) Reset()                    { *m = ListRequest{} }
-func (m *ListRequest) String() string            { return proto.CompactTextString(m) }
-func (*ListRequest) ProtoMessage()               {}
-func (*ListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (m *ListRequest) Reset()         { *m = ListRequest{} }
+func (m *ListRequest) String() string { return proto.CompactTextString(m) }
+func (*ListRequest) ProtoMessage()    {}
 
 func (m *ListRequest) GetExpireAtFrom() *protot.Timestamp {
 	if m != nil {
@@ -153,10 +156,9 @@ type ListResponse struct {
 	Sessions []*Session `protobuf:"bytes,1,rep,name=sessions" json:"sessions,omitempty"`
 }
 
-func (m *ListResponse) Reset()                    { *m = ListResponse{} }
-func (m *ListResponse) String() string            { return proto.CompactTextString(m) }
-func (*ListResponse) ProtoMessage()               {}
-func (*ListResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (m *ListResponse) Reset()         { *m = ListResponse{} }
+func (m *ListResponse) String() string { return proto.CompactTextString(m) }
+func (*ListResponse) ProtoMessage()    {}
 
 func (m *ListResponse) GetSessions() []*Session {
 	if m != nil {
@@ -169,10 +171,9 @@ type ExistsRequest struct {
 	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 }
 
-func (m *ExistsRequest) Reset()                    { *m = ExistsRequest{} }
-func (m *ExistsRequest) String() string            { return proto.CompactTextString(m) }
-func (*ExistsRequest) ProtoMessage()               {}
-func (*ExistsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (m *ExistsRequest) Reset()         { *m = ExistsRequest{} }
+func (m *ExistsRequest) String() string { return proto.CompactTextString(m) }
+func (*ExistsRequest) ProtoMessage()    {}
 
 func (m *ExistsRequest) GetToken() *Token {
 	if m != nil {
@@ -185,20 +186,18 @@ type ExistsResponse struct {
 	Exists bool `protobuf:"varint,1,opt,name=exists" json:"exists,omitempty"`
 }
 
-func (m *ExistsResponse) Reset()                    { *m = ExistsResponse{} }
-func (m *ExistsResponse) String() string            { return proto.CompactTextString(m) }
-func (*ExistsResponse) ProtoMessage()               {}
-func (*ExistsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (m *ExistsResponse) Reset()         { *m = ExistsResponse{} }
+func (m *ExistsResponse) String() string { return proto.CompactTextString(m) }
+func (*ExistsResponse) ProtoMessage()    {}
 
 type StartRequest struct {
 	SubjectId string            `protobuf:"bytes,1,opt,name=subject_id" json:"subject_id,omitempty"`
 	Bag       map[string]string `protobuf:"bytes,2,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *StartRequest) Reset()                    { *m = StartRequest{} }
-func (m *StartRequest) String() string            { return proto.CompactTextString(m) }
-func (*StartRequest) ProtoMessage()               {}
-func (*StartRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (m *StartRequest) Reset()         { *m = StartRequest{} }
+func (m *StartRequest) String() string { return proto.CompactTextString(m) }
+func (*StartRequest) ProtoMessage()    {}
 
 func (m *StartRequest) GetBag() map[string]string {
 	if m != nil {
@@ -211,10 +210,9 @@ type StartResponse struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
 }
 
-func (m *StartResponse) Reset()                    { *m = StartResponse{} }
-func (m *StartResponse) String() string            { return proto.CompactTextString(m) }
-func (*StartResponse) ProtoMessage()               {}
-func (*StartResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (m *StartResponse) Reset()         { *m = StartResponse{} }
+func (m *StartResponse) String() string { return proto.CompactTextString(m) }
+func (*StartResponse) ProtoMessage()    {}
 
 func (m *StartResponse) GetSession() *Session {
 	if m != nil {
@@ -227,10 +225,9 @@ type AbandonRequest struct {
 	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 }
 
-func (m *AbandonRequest) Reset()                    { *m = AbandonRequest{} }
-func (m *AbandonRequest) String() string            { return proto.CompactTextString(m) }
-func (*AbandonRequest) ProtoMessage()               {}
-func (*AbandonRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (m *AbandonRequest) Reset()         { *m = AbandonRequest{} }
+func (m *AbandonRequest) String() string { return proto.CompactTextString(m) }
+func (*AbandonRequest) ProtoMessage()    {}
 
 func (m *AbandonRequest) GetToken() *Token {
 	if m != nil {
@@ -243,10 +240,9 @@ type AbandonResponse struct {
 	Abandoned bool `protobuf:"varint,1,opt,name=abandoned" json:"abandoned,omitempty"`
 }
 
-func (m *AbandonResponse) Reset()                    { *m = AbandonResponse{} }
-func (m *AbandonResponse) String() string            { return proto.CompactTextString(m) }
-func (*AbandonResponse) ProtoMessage()               {}
-func (*AbandonResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+func (m *AbandonResponse) Reset()         { *m = AbandonResponse{} }
+func (m *AbandonResponse) String() string { return proto.CompactTextString(m) }
+func (*AbandonResponse) ProtoMessage()    {}
 
 type SetValueRequest struct {
 	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
@@ -254,10 +250,9 @@ type SetValueRequest struct {
 	Value string `protobuf:"bytes,3,opt,name=value" json:"value,omitempty"`
 }
 
-func (m *SetValueRequest) Reset()                    { *m = SetValueRequest{} }
-func (m *SetValueRequest) String() string            { return proto.CompactTextString(m) }
-func (*SetValueRequest) ProtoMessage()               {}
-func (*SetValueRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (m *SetValueRequest) Reset()         { *m = SetValueRequest{} }
+func (m *SetValueRequest) String() string { return proto.CompactTextString(m) }
+func (*SetValueRequest) ProtoMessage()    {}
 
 func (m *SetValueRequest) GetToken() *Token {
 	if m != nil {
@@ -270,10 +265,9 @@ type SetValueResponse struct {
 	Bag map[string]string `protobuf:"bytes,1,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
-func (m *SetValueResponse) Reset()                    { *m = SetValueResponse{} }
-func (m *SetValueResponse) String() string            { return proto.CompactTextString(m) }
-func (*SetValueResponse) ProtoMessage()               {}
-func (*SetValueResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+func (m *SetValueResponse) Reset()         { *m = SetValueResponse{} }
+func (m *SetValueResponse) String() string { return proto.CompactTextString(m) }
+func (*SetValueResponse) ProtoMessage()    {}
 
 func (m *SetValueResponse) GetBag() map[string]string {
 	if m != nil {
@@ -287,10 +281,9 @@ type DeleteValueRequest struct {
 	Key   string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
 }
 
-func (m *DeleteValueRequest) Reset()                    { *m = DeleteValueRequest{} }
-func (m *DeleteValueRequest) String() string            { return proto.CompactTextString(m) }
-func (*DeleteValueRequest) ProtoMessage()               {}
-func (*DeleteValueRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (m *DeleteValueRequest) Reset()         { *m = DeleteValueRequest{} }
+func (m *DeleteValueRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteValueRequest) ProtoMessage()    {}
 
 func (m *DeleteValueRequest) GetToken() *Token {
 	if m != nil {
@@ -303,10 +296,9 @@ type DeleteValueResponse struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
 }
 
-func (m *DeleteValueResponse) Reset()                    { *m = DeleteValueResponse{} }
-func (m *DeleteValueResponse) String() string            { return proto.CompactTextString(m) }
-func (*DeleteValueResponse) ProtoMessage()               {}
-func (*DeleteValueResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+func (m *DeleteValueResponse) Reset()         { *m = DeleteValueResponse{} }
+func (m *DeleteValueResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteValueResponse) ProtoMessage()    {}
 
 func (m *DeleteValueResponse) GetSession() *Session {
 	if m != nil {
@@ -319,10 +311,9 @@ type ClearRequest struct {
 	Token *Token `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
 }
 
-func (m *ClearRequest) Reset()                    { *m = ClearRequest{} }
-func (m *ClearRequest) String() string            { return proto.CompactTextString(m) }
-func (*ClearRequest) ProtoMessage()               {}
-func (*ClearRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+func (m *ClearRequest) Reset()         { *m = ClearRequest{} }
+func (m *ClearRequest) String() string { return proto.CompactTextString(m) }
+func (*ClearRequest) ProtoMessage()    {}
 
 func (m *ClearRequest) GetToken() *Token {
 	if m != nil {
@@ -334,10 +325,9 @@ func (m *ClearRequest) GetToken() *Token {
 type ClearResponse struct {
 }
 
-func (m *ClearResponse) Reset()                    { *m = ClearResponse{} }
-func (m *ClearResponse) String() string            { return proto.CompactTextString(m) }
-func (*ClearResponse) ProtoMessage()               {}
-func (*ClearResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+func (m *ClearResponse) Reset()         { *m = ClearResponse{} }
+func (m *ClearResponse) String() string { return proto.CompactTextString(m) }
+func (*ClearResponse) ProtoMessage()    {}
 
 type DeleteRequest struct {
 	Token        *Token            `protobuf:"bytes,1,opt,name=token" json:"token,omitempty"`
@@ -345,10 +335,9 @@ type DeleteRequest struct {
 	ExpireAtTo   *protot.Timestamp `protobuf:"bytes,3,opt,name=expire_at_to" json:"expire_at_to,omitempty"`
 }
 
-func (m *DeleteRequest) Reset()                    { *m = DeleteRequest{} }
-func (m *DeleteRequest) String() string            { return proto.CompactTextString(m) }
-func (*DeleteRequest) ProtoMessage()               {}
-func (*DeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+func (m *DeleteRequest) Reset()         { *m = DeleteRequest{} }
+func (m *DeleteRequest) String() string { return proto.CompactTextString(m) }
+func (*DeleteRequest) ProtoMessage()    {}
 
 func (m *DeleteRequest) GetToken() *Token {
 	if m != nil {
@@ -375,12 +364,12 @@ type DeleteResponse struct {
 	Count int64 `protobuf:"varint,1,opt,name=count" json:"count,omitempty"`
 }
 
-func (m *DeleteResponse) Reset()                    { *m = DeleteResponse{} }
-func (m *DeleteResponse) String() string            { return proto.CompactTextString(m) }
-func (*DeleteResponse) ProtoMessage()               {}
-func (*DeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+func (m *DeleteResponse) Reset()         { *m = DeleteResponse{} }
+func (m *DeleteResponse) String() string { return proto.CompactTextString(m) }
+func (*DeleteResponse) ProtoMessage()    {}
 
 func init() {
+	proto.RegisterType((*Empty)(nil), "mnemosyne.Empty")
 	proto.RegisterType((*Token)(nil), "mnemosyne.Token")
 	proto.RegisterType((*Session)(nil), "mnemosyne.Session")
 	proto.RegisterType((*GetRequest)(nil), "mnemosyne.GetRequest")
@@ -410,6 +399,7 @@ var _ grpc.ClientConn
 // Client API for RPC service
 
 type RPCClient interface {
+	Context(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Session, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 	Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error)
@@ -427,6 +417,15 @@ type rPCClient struct {
 
 func NewRPCClient(cc *grpc.ClientConn) RPCClient {
 	return &rPCClient{cc}
+}
+
+func (c *rPCClient) Context(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Session, error) {
+	out := new(Session)
+	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Context", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *rPCClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
@@ -495,6 +494,7 @@ func (c *rPCClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.
 // Server API for RPC service
 
 type RPCServer interface {
+	Context(context.Context, *Empty) (*Session, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	List(context.Context, *ListRequest) (*ListResponse, error)
 	Exists(context.Context, *ExistsRequest) (*ExistsResponse, error)
@@ -508,6 +508,18 @@ type RPCServer interface {
 
 func RegisterRPCServer(s *grpc.Server, srv RPCServer) {
 	s.RegisterService(&_RPC_serviceDesc, srv)
+}
+
+func _RPC_Context_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	out, err := srv.(RPCServer).Context(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func _RPC_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error) (interface{}, error) {
@@ -599,6 +611,10 @@ var _RPC_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*RPCServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "Context",
+			Handler:    _RPC_Context_Handler,
+		},
+		{
 			MethodName: "Get",
 			Handler:    _RPC_Get_Handler,
 		},
@@ -628,48 +644,4 @@ var _RPC_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams: []grpc.StreamDesc{},
-}
-
-var fileDescriptor0 = []byte{
-	// 632 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x9c, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0xad, 0xe3, 0x7c, 0x4e, 0x9c, 0xa4, 0x5d, 0x04, 0x35, 0xee, 0xa1, 0xd1, 0x12, 0x89, 0x82,
-	0xd4, 0x40, 0x43, 0x85, 0xa0, 0x42, 0x42, 0xa4, 0x44, 0x5c, 0x10, 0x42, 0x4d, 0xc5, 0x35, 0x72,
-	0x9a, 0x4d, 0x6b, 0x1a, 0xdb, 0xa9, 0x77, 0x83, 0x9a, 0x03, 0x12, 0x07, 0x7e, 0x15, 0x57, 0xfe,
-	0x18, 0xce, 0xee, 0x66, 0xe3, 0x25, 0x09, 0x38, 0x3d, 0x7a, 0x3c, 0x6f, 0xe6, 0xcd, 0x9b, 0x7d,
-	0x03, 0x35, 0x3f, 0x20, 0x7e, 0x48, 0xa7, 0x01, 0x69, 0x8e, 0xa3, 0x90, 0x85, 0xa8, 0xa4, 0x02,
-	0x8e, 0xc5, 0x23, 0x4c, 0xfc, 0xc0, 0x18, 0x72, 0xe7, 0xe1, 0x35, 0x09, 0x50, 0x19, 0xcc, 0x6b,
-	0x32, 0xb5, 0x8d, 0xba, 0x71, 0x50, 0x42, 0x16, 0x64, 0xaf, 0x5c, 0x7a, 0x65, 0x67, 0x66, 0x5f,
-	0xf8, 0x97, 0x01, 0x85, 0x2e, 0xa1, 0xd4, 0x0b, 0x03, 0xb4, 0x0f, 0x39, 0x36, 0xcb, 0xe7, 0x89,
-	0xe5, 0xd6, 0x76, 0x73, 0xd1, 0x49, 0xd4, 0x41, 0x00, 0x74, 0xd2, 0xff, 0x4a, 0x2e, 0x58, 0xcf,
-	0x1b, 0x88, 0x02, 0xe8, 0x00, 0xcc, 0xbe, 0x7b, 0x69, 0x9b, 0x75, 0x33, 0x86, 0xec, 0x25, 0x20,
-	0xb2, 0x6a, 0xb3, 0xed, 0x5e, 0x76, 0x02, 0x16, 0x4d, 0x51, 0x03, 0x4a, 0xe4, 0x76, 0xec, 0x45,
-	0xa4, 0xe7, 0x32, 0x3b, 0xcb, 0x5b, 0xec, 0x34, 0x25, 0xe1, 0x73, 0xcf, 0x27, 0x94, 0xb9, 0xfe,
-	0xd8, 0x79, 0x0a, 0x45, 0x85, 0xd0, 0x78, 0x57, 0x20, 0xf7, 0xcd, 0x1d, 0x4d, 0x88, 0xe8, 0x7b,
-	0x92, 0x79, 0x65, 0xe0, 0x43, 0x80, 0x0f, 0x84, 0x9d, 0x91, 0x9b, 0x49, 0x0c, 0xfe, 0x2f, 0x7d,
-	0xdc, 0x82, 0x32, 0x4f, 0xa7, 0xe3, 0x30, 0xa0, 0x04, 0x3d, 0x82, 0x02, 0x15, 0x1c, 0x25, 0x02,
-	0x2d, 0xb3, 0xc7, 0x3f, 0x0c, 0x28, 0x7f, 0xf4, 0xa8, 0x6a, 0x52, 0x85, 0x7c, 0x38, 0x1c, 0x52,
-	0xc2, 0x38, 0xc6, 0x9c, 0xb1, 0x1a, 0x79, 0xbe, 0xc7, 0x38, 0x2b, 0x13, 0x3d, 0x81, 0xaa, 0x9a,
-	0xb1, 0x37, 0x8c, 0x42, 0x3f, 0x16, 0x66, 0xf5, 0xa0, 0xe8, 0x31, 0x58, 0x8b, 0x54, 0x16, 0xae,
-	0x55, 0x04, 0x1f, 0x83, 0x25, 0x18, 0x48, 0xde, 0x0d, 0x28, 0x4a, 0xde, 0x34, 0x26, 0x61, 0xae,
-	0x21, 0xfe, 0x1c, 0x2a, 0x9d, 0xdb, 0x18, 0x46, 0x53, 0xcb, 0x53, 0x87, 0xea, 0x1c, 0x21, 0x3b,
-	0xc5, 0xc3, 0x12, 0x1e, 0xe1, 0x98, 0x22, 0xfe, 0x0e, 0x56, 0x97, 0xb9, 0x91, 0x12, 0x43, 0x7f,
-	0x0f, 0x62, 0x4d, 0x87, 0xe2, 0x3d, 0x64, 0x38, 0xb1, 0x7a, 0x92, 0x58, 0x02, 0xa9, 0x1e, 0xc5,
-	0x46, 0xeb, 0x3e, 0x86, 0x8a, 0x2c, 0xb2, 0xc9, 0x06, 0x8f, 0xa0, 0xfa, 0xae, 0xef, 0x06, 0x83,
-	0x30, 0x48, 0xad, 0x44, 0x03, 0x6a, 0x0a, 0x22, 0x5b, 0xed, 0x40, 0xc9, 0x15, 0x21, 0x32, 0x90,
-	0x6a, 0x7c, 0x82, 0x5a, 0x97, 0xb0, 0x2f, 0x33, 0x92, 0x69, 0x2b, 0xcf, 0x47, 0xcc, 0xe8, 0x23,
-	0x9a, 0xdc, 0x8a, 0x37, 0xb0, 0xbd, 0xa8, 0x27, 0xdb, 0x1e, 0x09, 0x35, 0xc5, 0x9a, 0x1b, 0xda,
-	0x74, 0x7a, 0xe6, 0xdd, 0x14, 0x6d, 0x03, 0x7a, 0x4f, 0x46, 0x84, 0x91, 0xbb, 0x4f, 0x81, 0x4f,
-	0xe0, 0x9e, 0x56, 0x63, 0x93, 0xdd, 0x3c, 0x03, 0xeb, 0x74, 0x44, 0xdc, 0x28, 0xf5, 0x66, 0x6a,
-	0x50, 0x91, 0x00, 0xd1, 0x06, 0xff, 0x34, 0xa0, 0x22, 0xda, 0xa7, 0x66, 0xbf, 0xec, 0xd1, 0x4c,
-	0x5a, 0x8f, 0xae, 0x33, 0x33, 0xde, 0x87, 0xea, 0x9c, 0x85, 0x9c, 0x3f, 0x56, 0xfb, 0x22, 0x9c,
-	0x04, 0xf2, 0x4e, 0xb4, 0x7e, 0x9b, 0x60, 0x9e, 0x7d, 0x3e, 0x45, 0x2f, 0xc1, 0x8c, 0x6f, 0x10,
-	0xba, 0x9f, 0x60, 0xb5, 0x38, 0x61, 0xce, 0x83, 0xbf, 0xc3, 0x72, 0xca, 0x2d, 0xf4, 0x1a, 0xb2,
-	0xb3, 0x23, 0x80, 0x92, 0x19, 0x89, 0xbb, 0xe4, 0xec, 0x2e, 0xc5, 0x15, 0xf4, 0x2d, 0xe4, 0x85,
-	0xaf, 0x91, 0x9d, 0x48, 0xd2, 0x8e, 0x83, 0xf3, 0x70, 0xc5, 0x1f, 0x55, 0xe0, 0x0d, 0xe4, 0xb8,
-	0xef, 0xd0, 0xee, 0x1a, 0x3b, 0x3b, 0xf6, 0xf2, 0x0f, 0x85, 0x6e, 0x43, 0x41, 0x9a, 0x09, 0x25,
-	0xbb, 0xe8, 0x9e, 0x74, 0x9c, 0x55, 0xbf, 0x54, 0x8d, 0x0e, 0x14, 0xe7, 0x0f, 0x1e, 0x39, 0x2b,
-	0x5d, 0x20, 0xaa, 0xec, 0xfd, 0xc3, 0x21, 0x42, 0x09, 0xb1, 0x25, 0x4d, 0x09, 0xed, 0xf9, 0x68,
-	0x4a, 0xe8, 0x2b, 0xc5, 0x5b, 0xfd, 0x3c, 0x5f, 0xfc, 0x8b, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff,
-	0x7d, 0x3b, 0x92, 0x76, 0x84, 0x07, 0x00, 0x00,
 }

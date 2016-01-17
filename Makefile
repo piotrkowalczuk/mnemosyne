@@ -14,8 +14,7 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
           	    -m.engine=$(MNEMOSYNE_MONITORING_ENGINE) \
           	    -s.engine=$(MNEMOSYNE_STORAGE_ENGINE) \
           	    -sp.connectionstring=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
-          	    -sp.tablename=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME) \
-          	    -sp.retry=$(MNEMOSYNE_STORAGE_POSTGRES_RETRY)
+          	    -sp.tablename=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME)
 
 .PHONY:	all proto build build-daemon run test test-unit test-postgres
 

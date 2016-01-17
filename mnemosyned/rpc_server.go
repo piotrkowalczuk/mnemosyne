@@ -12,12 +12,39 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 )
 
 type rpcServer struct {
 	logger  log.Logger
 	monitor *monitoring
 	storage Storage
+}
+
+func (rs *rpcServer) Context(ctx context.Context, req *mnemosyne.Empty) (*mnemosyne.Session, error) {
+	field := metrics.Field{
+		Key:   "method",
+		Value: "context",
+	}
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return nil, errors.New("mnemosyned: missing metadata in context, session token cannot be retrieved")
+	}
+
+	if len(md[mnemosyne.TokenMetadataKey]) == 0 {
+		return nil, errors.New("mnemosyned: missing sesion token in metadata")
+	}
+
+	token := mnemosyne.DecodeToken([]byte(md[mnemosyne.TokenMetadataKey][0]))
+
+	ses, err := rs.storage.Get(&token)
+	if err != nil {
+		return nil, rs.error(err, field, nil)
+	}
+
+	sklog.Debug(rs.logger, "session has been retrieved", "endpoint", "context", "token", md[mnemosyne.TokenMetadataKey][0])
+
+	return ses, nil
 }
 
 // Get implements mnemosyne.RPCServer interface.
@@ -196,8 +223,17 @@ func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (
 }
 
 func (rs *rpcServer) error(err error, field metrics.Field, ctx sklog.Contexter) error {
-	rs.monitor.rpc.errors.With(field).Add(1)
-	sklog.Error(rs.logger, err, ctx.Context()...)
+	if err == nil {
+		return nil
+	}
 
-	return grpc.Errorf(codes.Internal, err.Error())
+	rs.monitor.rpc.errors.With(field).Add(1)
+
+	switch err {
+	case errSessionNotFound:
+		return mnemosyne.ErrSessionNotFound
+	default:
+		sklog.Error(rs.logger, err, ctx.Context()...)
+		return grpc.Errorf(codes.Internal, err.Error())
+	}
 }

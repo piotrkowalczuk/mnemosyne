@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -14,12 +15,16 @@ const (
 	postgresSchema = `
 		CREATE SCHEMA IF NOT EXISTS mnemosyne;
 		CREATE TABLE IF NOT EXISTS mnemosyne.session (
-			token character varying(255) PRIMARY KEY,
+			token BYTEA PRIMARY KEY,
 			subject_id TEXT NOT NULL,
 			bag bytea NOT NULL,
 			expire_at timestamp with time zone NOT NULL
 		)
     `
+)
+
+var (
+	tmpKey = []byte(hex.EncodeToString([]byte("1")))
 )
 
 type postgresStorage struct {
@@ -46,7 +51,7 @@ func initPostgresStorage(tn string, db *sql.DB, m *monitoring) func() (Storage, 
 
 // Create implements Storage interface.
 func (ps *postgresStorage) Start(subjectID string, bag map[string]string) (*mnemosyne.Session, error) {
-	token, err := mnemosyne.NewTokenRandom(ps.generator, "1")
+	token, err := mnemosyne.RandomToken(ps.generator, tmpKey)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +192,7 @@ func (ps *postgresStorage) Exists(token *mnemosyne.Token) (exists bool, err erro
 	query := `SELECT EXISTS(SELECT 1 FROM mnemosyne.session WHERE token = $1)`
 	field := metrics.Field{Key: "query", Value: query}
 
-	err = ps.db.QueryRow(query, token).Scan(
+	err = ps.db.QueryRow(query, *token).Scan(
 		&exists,
 	)
 	if err != nil {
@@ -203,7 +208,7 @@ func (ps *postgresStorage) Abandon(token *mnemosyne.Token) (bool, error) {
 	query := `DELETE FROM mnemosyne.session WHERE token = $1`
 	field := metrics.Field{Key: "query", Value: query}
 
-	result, err := ps.db.Exec(query, token)
+	result, err := ps.db.Exec(query, *token)
 	if err != nil {
 		ps.monitor.postgres.errors.With(field).Add(1)
 		return false, err
@@ -249,7 +254,7 @@ func (ps *postgresStorage) SetValue(token *mnemosyne.Token, key, value string) (
 		return nil, err
 	}
 
-	err = tx.QueryRow(selectQuery, token).Scan(
+	err = tx.QueryRow(selectQuery, *token).Scan(
 		&entity.SubjectID,
 		&entity.Bag,
 		&entity.ExpireAt,
@@ -266,7 +271,7 @@ func (ps *postgresStorage) SetValue(token *mnemosyne.Token, key, value string) (
 
 	entity.Bag.Set(key, value)
 
-	_, err = tx.Exec(updateQuery, token, entity.Bag)
+	_, err = tx.Exec(updateQuery, *token, entity.Bag)
 	if err != nil {
 		ps.monitor.postgres.errors.With(metrics.Field{Key: "query", Value: updateQuery}).Add(1)
 		tx.Rollback()

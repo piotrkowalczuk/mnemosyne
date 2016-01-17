@@ -20,7 +20,6 @@ type configuration struct {
 		postgres struct {
 			connectionString string
 			tableName        string
-			retry            int
 		}
 	}
 }
@@ -41,7 +40,6 @@ func (c *configuration) init() {
 	flag.StringVar(&c.storage.engine, "s.engine", storageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.storage.postgres.connectionString, "sp.connectionstring", "postgres://localhost:5432?sslmode=disable", "storage postgres connection string")
 	flag.StringVar(&c.storage.postgres.tableName, "sp.tablename", "mnemosyne_session", "storage postgres table name")
-	flag.IntVar(&c.storage.postgres.retry, "sp.retry", 10, "storage postgres possible attempts")
 }
 
 func (c *configuration) parse() {

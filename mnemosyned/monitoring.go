@@ -12,12 +12,16 @@ var (
 )
 
 type monitoring struct {
-	rpc struct {
-		requests metrics.Counter
-		errors   metrics.Counter
-	}
-	postgres struct {
-		queries metrics.Counter
-		errors  metrics.Counter
-	}
+	rpc      monitoringRPC
+	postgres monitoringPostgres
+}
+
+type monitoringRPC struct {
+	requests metrics.Counter
+	errors   metrics.Counter
+}
+
+type monitoringPostgres struct {
+	queries metrics.Counter
+	errors  metrics.Counter
 }

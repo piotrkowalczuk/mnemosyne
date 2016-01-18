@@ -23,6 +23,10 @@ const (
 var (
 	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
 	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyne: session not found")
+	// ErrMissingToken can be returned by any endpoint that expects token in request.
+	ErrMissingToken = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing token")
+	// ErrMissingSubjectID can be returned by start endpoint if subject was not provided.
+	ErrMissingSubjectID = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing subject id")
 )
 
 //// NewTokenContext returns a new Context that carries Token value.
@@ -158,7 +162,7 @@ func (m *mnemosyne) SetValue(ctx context.Context, token Token, key, value string
 
 // Context implements sklog.Contexter interface.
 func (gr *GetRequest) Context() []interface{} {
-	return []interface{}{"token", gr.Token.Encode()}
+	return []interface{}{"token", gr.Token.Bytes()}
 }
 
 // Context implements sklog.Contexter interface.
@@ -173,7 +177,7 @@ func (lr *ListRequest) Context() []interface{} {
 
 // Context implements sklog.Contexter interface.
 func (er *ExistsRequest) Context() []interface{} {
-	return []interface{}{"token", er.Token.Encode()}
+	return []interface{}{"token", er.Token.Bytes()}
 }
 
 // Context implements sklog.Contexter interface.
@@ -188,14 +192,14 @@ func (er *StartRequest) Context() (ctx []interface{}) {
 // Context implements sklog.Contexter interface.
 func (ar *AbandonRequest) Context() []interface{} {
 	return []interface{}{
-		"token", ar.Token.Encode(),
+		"token", ar.Token.Bytes(),
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (svr *SetValueRequest) Context() []interface{} {
 	return []interface{}{
-		"token", svr.Token.Encode(),
+		"token", svr.Token.Bytes(),
 		"bag_key", svr.Key,
 		"bag_value", svr.Value,
 	}
@@ -204,7 +208,7 @@ func (svr *SetValueRequest) Context() []interface{} {
 // Context implements sklog.Contexter interface.
 func (dvr *DeleteValueRequest) Context() []interface{} {
 	return []interface{}{
-		"token", dvr.Token.Encode(),
+		"token", dvr.Token.Bytes(),
 		"bag_key", dvr.Key,
 	}
 }
@@ -212,14 +216,14 @@ func (dvr *DeleteValueRequest) Context() []interface{} {
 // Context implements sklog.Contexter interface.
 func (cr *ClearRequest) Context() []interface{} {
 	return []interface{}{
-		"token", cr.Token.Encode(),
+		"token", cr.Token.Bytes(),
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (dr *DeleteRequest) Context() []interface{} {
 	return []interface{}{
-		"token", dr.Token.Encode(),
+		"token", dr.Token.Bytes(),
 		"expire_at_from", dr.ExpireAtFrom,
 		"expire_at_to", dr.ExpireAtTo,
 	}
@@ -232,6 +236,10 @@ func ParseTime(s string) (time.Time, error) {
 
 // EncodeToken ...
 func EncodeToken(key, hash []byte) Token {
+	if len(hash) == 0 {
+		return Token{}
+	}
+
 	t := Token{
 		Key:  make([]byte, hex.EncodedLen(len(key))),
 		Hash: make([]byte, hex.EncodedLen(len(hash))),
@@ -245,48 +253,6 @@ func EncodeToken(key, hash []byte) Token {
 // EncodeTokenString ...
 func EncodeTokenString(key, hash string) (t Token) {
 	return EncodeToken([]byte(key), []byte(hash))
-}
-
-// Value implements driver.Valuer interface.
-func (t Token) Value() (driver.Value, error) {
-	return t.Encode(), nil
-}
-
-// Scan implements sql.Scanner interface.
-func (t *Token) Scan(src interface{}) error {
-	var (
-		token Token
-		err   error
-	)
-
-	switch s := src.(type) {
-	case []byte:
-		token = DecodeToken(s)
-	case string:
-		if token, err = DecodeTokenString(s); err != nil {
-			return err
-		}
-
-	default:
-		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
-	}
-
-	*t = token
-
-	return nil
-}
-
-// Encode ...
-func (t *Token) Encode() []byte {
-	return append(append(t.Key, ':'), t.Hash...)
-}
-
-// IsEmpty
-func (t *Token) IsEmpty() bool {
-	if t == nil {
-		return true
-	}
-	return len(t.Hash) == 0
 }
 
 // DecodeToken parse string and allocates new token instance if ok. Expected token has format <key>:<hash>.
@@ -338,6 +304,48 @@ func RandomToken(g RandomBytesGenerator, k []byte) (t Token, err error) {
 
 	t = EncodeToken(k, hash)
 	return
+}
+
+// Value implements driver.Valuer interface.
+func (t Token) Value() (driver.Value, error) {
+	return t.Bytes(), nil
+}
+
+// Scan implements sql.Scanner interface.
+func (t *Token) Scan(src interface{}) error {
+	var (
+		token Token
+		err   error
+	)
+
+	switch s := src.(type) {
+	case []byte:
+		token = DecodeToken(s)
+	case string:
+		if token, err = DecodeTokenString(s); err != nil {
+			return err
+		}
+
+	default:
+		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
+	}
+
+	*t = token
+
+	return nil
+}
+
+// Bytes ...
+func (t *Token) Bytes() []byte {
+	return append(append(t.Key, ':'), t.Hash...)
+}
+
+// IsEmpty
+func (t *Token) IsEmpty() bool {
+	if t == nil {
+		return true
+	}
+	return len(t.Hash) == 0
 }
 
 //// TokenContextMiddleware puts token taken from header into current context.

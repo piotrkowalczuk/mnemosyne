@@ -1,69 +1,61 @@
 package main
 
 import (
-	"errors"
-
-	"time"
-
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics"
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 )
 
 type rpcServer struct {
 	logger  log.Logger
 	monitor *monitoring
 	storage Storage
+	alloc   struct {
+		abandon  handlerFunc
+		context  handlerFunc
+		delete   handlerFunc
+		exists   handlerFunc
+		get      handlerFunc
+		list     handlerFunc
+		setValue handlerFunc
+		start    handlerFunc
+	}
 }
 
+// Get implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Context(ctx context.Context, req *mnemosyne.Empty) (*mnemosyne.Session, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "context",
-	}
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		return nil, errors.New("mnemosyned: missing metadata in context, session token cannot be retrieved")
-	}
+	h := rs.alloc.context(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	if len(md[mnemosyne.TokenMetadataKey]) == 0 {
-		return nil, errors.New("mnemosyned: missing sesion token in metadata")
-	}
-
-	token := mnemosyne.DecodeToken([]byte(md[mnemosyne.TokenMetadataKey][0]))
-
-	ses, err := rs.storage.Get(&token)
+	ses, err := h.context(ctx)
 	if err != nil {
-		return nil, rs.error(err, field, nil)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
 
-	sklog.Debug(rs.logger, "session has been retrieved", "endpoint", "context", "token", md[mnemosyne.TokenMetadataKey][0])
-
+	sklog.Debug(h.logger, "session has been retrieved (by context)")
 	return ses, nil
 }
 
 // Get implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyne.GetResponse, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "get",
-	}
-	rs.monitor.rpc.requests.With(field).Add(1)
+	h := rs.alloc.get(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	ses, err := rs.storage.Get(req.Token)
+	ses, err := h.get(ctx, req)
 	if err != nil {
-		if err == errSessionNotFound {
-			return nil, mnemosyne.ErrSessionNotFound
-		}
-		return nil, rs.error(err, field, req)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
 
-	sklog.Debug(rs.logger, "session has been retrieved", req.Context()...)
+	sklog.Debug(h.logger, "session has been retrieved (by token)")
 
 	return &mnemosyne.GetResponse{
 		Session: ses,
@@ -72,19 +64,19 @@ func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemo
 
 // List implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mnemosyne.ListResponse, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "list",
-	}
+	h := rs.alloc.list(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	expireAtFrom := req.ExpireAtFrom.Time()
-	expireAtTo := req.ExpireAtTo.Time()
-
-	rs.monitor.rpc.requests.With(field).Add(1)
-	sessions, err := rs.storage.List(req.Offset, req.Limit, &expireAtFrom, &expireAtTo)
+	sessions, err := h.list(ctx, req)
 	if err != nil {
-		return nil, rs.error(err, field, req)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
+
+	sklog.Debug(h.logger, "session list has been retrieved")
+
 	return &mnemosyne.ListResponse{
 		Sessions: sessions,
 	}, nil
@@ -92,21 +84,18 @@ func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mne
 
 // Start implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.StartResponse, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "create",
-	}
-	rs.monitor.rpc.requests.With(field).Add(1)
+	h := rs.alloc.start(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	if req.SubjectId == "" {
-		return nil, errors.New("mnemosyned: session cannot be started, subject id is missing")
-	}
-	ses, err := rs.storage.Start(req.SubjectId, req.Bag)
+	ses, err := h.start(ctx, req)
 	if err != nil {
-		return nil, rs.error(err, field, req)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
 
-	sklog.Debug(rs.logger, "new session has been created", "token", ses.Token, "expire_at", ses.ExpireAt.Time().Format(time.RFC3339))
+	sklog.Debug(h.logger, "session has been started")
 
 	return &mnemosyne.StartResponse{
 		Session: ses,
@@ -115,125 +104,93 @@ func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*m
 
 // Exists implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Exists(ctx context.Context, req *mnemosyne.ExistsRequest) (*mnemosyne.ExistsResponse, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "exists",
-	}
-	rs.monitor.rpc.requests.With(field).Add(1)
+	h := rs.alloc.exists(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	ex, err := rs.storage.Exists(req.Token)
+	exists, err := h.exists(ctx, req)
 	if err != nil {
-		return nil, rs.error(err, field, req)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
 
-	sklog.Debug(rs.logger, "session existance has been checked", "token", req.Token, "exists", ex)
+	sklog.Debug(h.logger, "session presence has been checked")
 
 	return &mnemosyne.ExistsResponse{
-		Exists: ex,
+		Exists: exists,
 	}, nil
 }
 
 // Abandon implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (*mnemosyne.AbandonResponse, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "abandon",
-	}
-	rs.monitor.rpc.requests.With(field).Add(1)
+	h := rs.alloc.abandon(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	ab, err := rs.storage.Abandon(req.Token)
+	abandoned, err := h.abandon(ctx, req)
 	if err != nil {
-		if err == errSessionNotFound {
-			return nil, mnemosyne.ErrSessionNotFound
-		}
-		return nil, rs.error(err, field, req)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
 
-	sklog.Debug(rs.logger, "session has been abandoned", "token", req.Token, "abadoned", ab)
+	sklog.Debug(h.logger, "session has been abandoned")
 
 	return &mnemosyne.AbandonResponse{
-		Abandoned: ab,
+		Abandoned: abandoned,
 	}, nil
 }
 
 // SetValue implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueRequest) (*mnemosyne.SetValueResponse, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "set_value",
-	}
-	rs.monitor.rpc.requests.With(field).Add(1)
+	h := rs.alloc.setValue(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	bag, err := rs.storage.SetValue(req.Token, req.Key, req.Value)
+	bag, err := h.setValue(ctx, req)
 	if err != nil {
-		if err == errSessionNotFound {
-			return nil, mnemosyne.ErrSessionNotFound
-		}
-		return nil, rs.error(err, field, req)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
 
-	sklog.Debug(rs.logger, "session value has been set", req.Context()...)
+	sklog.Debug(h.logger, "session bag value has been set")
 
 	return &mnemosyne.SetValueResponse{
 		Bag: bag,
-	}, err
+	}, nil
 }
-
-//// DeleteValue ...
-//func (rs *rpcServer) DeleteValue(ctx context.Context, req *mnemosyne.DeleteValueRequest) (*mnemosyne.DeleteValueResponse, error) {
-//	field := metrics.Field{
-//		Key:   "method",
-//		Value: "delete_value",
-//	}
-//	rs.monitor.rpc.requests.With(field).Add(1)
-//
-//	ses, err := rs.storage.DeleteValue(req.Token, req.Key)
-//	if err != nil {
-//		return nil, rs.error(err, field, req)
-//	}
-//
-//	sklog.Debug(rs.logger, "session value has been deleted", req.Context()...)
-//
-//	return &mnemosyne.DeleteValueResponse{
-//		Session: ses,
-//	}, err
-//}
 
 // Delete implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (*mnemosyne.DeleteResponse, error) {
-	field := metrics.Field{
-		Key:   "method",
-		Value: "delete",
-	}
-	rs.monitor.rpc.requests.With(field).Add(1)
+	h := rs.alloc.delete(rs.logger, rs.storage, rs.monitor.rpc)
+	h.monitor.requests.Add(1)
 
-	expireAtFrom := req.ExpireAtFrom.Time()
-	expireAtTo := req.ExpireAtTo.Time()
-
-	count, err := rs.storage.Delete(req.Token, &expireAtFrom, &expireAtTo)
+	affected, err := h.delete(ctx, req)
 	if err != nil {
-		return nil, rs.error(err, field, req)
+		h.monitor.errors.Add(1)
+		sklog.Error(h.logger, err)
+
+		return nil, rs.error(err)
 	}
 
-	sklog.Debug(rs.logger, "session(s) has been deleted", append(req.Context(), "count", count))
+	sklog.Debug(h.logger, "session value has been deleted")
 
 	return &mnemosyne.DeleteResponse{
-		Count: count,
-	}, err
+		Count: affected,
+	}, nil
 }
 
-func (rs *rpcServer) error(err error, field metrics.Field, ctx sklog.Contexter) error {
+func (rs *rpcServer) error(err error) error {
 	if err == nil {
 		return nil
 	}
-
-	rs.monitor.rpc.errors.With(field).Add(1)
 
 	switch err {
 	case errSessionNotFound:
 		return mnemosyne.ErrSessionNotFound
 	default:
-		sklog.Error(rs.logger, err, ctx.Context()...)
 		return grpc.Errorf(codes.Internal, err.Error())
 	}
 }

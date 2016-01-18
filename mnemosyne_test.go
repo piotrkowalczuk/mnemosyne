@@ -43,14 +43,15 @@ func TestToken_Value(t *testing.T) {
 
 func TestDecodeTokenString(t *testing.T) {
 	success := map[string]Token{
-		hex.EncodeToString([]byte("1:1")):  Token{Key: []byte("1"), Hash: []byte("1")},
-		hex.EncodeToString([]byte("1")):    Token{Key: nil, Hash: []byte("1")},
-		hex.EncodeToString([]byte(":1")):   Token{Key: nil, Hash: []byte("1")},
-		hex.EncodeToString([]byte("1:")):   Token{Key: nil, Hash: []byte("1")},
-		hex.EncodeToString([]byte(":")):    Token{Key: nil, Hash: nil},
-		hex.EncodeToString([]byte("")):     Token{Key: nil, Hash: nil},
-		hex.EncodeToString([]byte(":   ")): Token{Key: nil, Hash: nil},
-		hex.EncodeToString([]byte("   :")): Token{Key: nil, Hash: nil},
+		hex.EncodeToString([]byte("1:5234532534523")): Token{Key: []byte("1"), Hash: []byte("5234532534523")},
+		hex.EncodeToString([]byte("1:1")):             Token{Key: []byte("1"), Hash: []byte("1")},
+		hex.EncodeToString([]byte("1")):               Token{Key: nil, Hash: []byte("1")},
+		hex.EncodeToString([]byte(":1")):              Token{Key: nil, Hash: []byte("1")},
+		hex.EncodeToString([]byte("1:")):              Token{Key: nil, Hash: []byte("1")},
+		hex.EncodeToString([]byte(":")):               Token{Key: nil, Hash: nil},
+		hex.EncodeToString([]byte("")):                Token{Key: nil, Hash: nil},
+		hex.EncodeToString([]byte(":   ")):            Token{Key: nil, Hash: nil},
+		hex.EncodeToString([]byte("   :")):            Token{Key: nil, Hash: nil},
 	}
 
 	for given, expected := range success {

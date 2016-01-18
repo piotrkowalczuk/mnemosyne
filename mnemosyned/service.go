@@ -61,13 +61,16 @@ func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Label
 			monitoringPostgresLabels,
 		)
 
-		m := &monitoring{}
-		m.rpc.requests = rpcRequests
-		m.rpc.errors = rpcErrors
-		m.postgres.queries = postgresQueries
-		m.postgres.errors = postgresErrors
-
-		return m, nil
+		return &monitoring{
+			rpc: monitoringRPC{
+				requests: rpcRequests,
+				errors:   rpcErrors,
+			},
+			postgres: monitoringPostgres{
+				queries: postgresQueries,
+				errors:  postgresErrors,
+			},
+		}, nil
 	}
 }
 

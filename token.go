@@ -3,10 +3,24 @@ package mnemosyne
 import (
 	"bytes"
 	"database/sql/driver"
+	"encoding/hex"
 	"errors"
 
 	"golang.org/x/crypto/sha3"
+	"golang.org/x/net/context"
 )
+
+// NewTokenContext returns a new Context that carries Token value.
+func NewTokenContext(ctx context.Context, t Token) context.Context {
+	return context.WithValue(ctx, TokenContextKey, t)
+}
+
+// TokenFromContext returns the Token value stored in context, if any.
+func TokenFromContext(ctx context.Context) (Token, bool) {
+	t, ok := ctx.Value(TokenContextKey).(Token)
+
+	return t, ok
+}
 
 // Encode ...
 func (t *Token) Encode() string {
@@ -18,12 +32,13 @@ func (t *Token) Bytes() []byte {
 	if len(t.Key) < 10 {
 		return t.Hash
 	}
+
 	return append(t.Key[:10], t.Hash...)
 }
 
 // DecodeToken parse string and allocates new token instance if ok. Expected token has format <key(10)><hash(n)>.
 func DecodeToken(s []byte) (t Token) {
-	if len(s) < 11 {
+	if len(s) < 10 {
 		return
 	}
 
@@ -64,13 +79,14 @@ func RandomToken(generator RandomBytesGenerator, key []byte) (t Token, err error
 	hash := make([]byte, 64)
 	// Compute a 64-byte hash of buf and put it in h.
 	sha3.ShakeSum256(hash, buf)
-
-	return NewToken(key, hash), nil
+	hash2 := make([]byte, hex.EncodedLen(len(hash)))
+	hex.Encode(hash2, hash)
+	return NewToken(key, hash2), nil
 }
 
 // Value implements driver.Valuer interface.
 func (t Token) Value() (driver.Value, error) {
-	return t.Bytes(), nil
+	return string(t.Bytes()), nil
 }
 
 // Scan implements sql.Scanner interface.

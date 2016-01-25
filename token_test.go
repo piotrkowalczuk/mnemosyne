@@ -34,8 +34,15 @@ func TestToken_Value(t *testing.T) {
 	for expected, given := range successTokens {
 		v, err := given.Value()
 		if assert.NoError(t, err) {
-			assert.Equal(t, expected, string(v.([]uint8)))
+			assert.Equal(t, expected, v.(string))
 		}
+	}
+}
+
+func TestToken_Bytes(t *testing.T) {
+	for expected, given := range successTokens {
+		v := given.Bytes()
+		assert.Equal(t, expected, string(v))
 	}
 }
 
@@ -63,7 +70,7 @@ func TestRandomToken(t *testing.T) {
 	token, err := RandomToken(&SystemRandomBytesGenerator{}, []byte("abc"))
 
 	if assert.NoError(t, err) {
-		assert.Len(t, token.Hash, 64)
+		assert.Len(t, token.Hash, 128)
 		assert.Len(t, token.Key, 10)
 		assert.Equal(t, token.Key, []byte("0000000abc"))
 	}

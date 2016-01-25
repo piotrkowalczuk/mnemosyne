@@ -39,6 +39,7 @@ func (rs *rpcServer) Context(ctx context.Context, req *mnemosyne.Empty) (*mnemos
 	}
 
 	sklog.Debug(h.logger, "session has been retrieved (by context)")
+
 	return ses, nil
 }
 

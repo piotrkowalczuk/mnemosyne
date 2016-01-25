@@ -1,13 +1,6 @@
 package mnemosyne
 
 import (
-	"bytes"
-	"database/sql/driver"
-	"encoding/hex"
-	"errors"
-	"time"
-
-	"golang.org/x/crypto/sha3"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -227,125 +220,6 @@ func (dr *DeleteRequest) Context() []interface{} {
 		"expire_at_from", dr.ExpireAtFrom,
 		"expire_at_to", dr.ExpireAtTo,
 	}
-}
-
-// ParseTime ...
-func ParseTime(s string) (time.Time, error) {
-	return time.Parse(time.RFC3339, s)
-}
-
-// EncodeToken ...
-func EncodeToken(key, hash []byte) Token {
-	if len(hash) == 0 {
-		return Token{}
-	}
-
-	t := Token{
-		Key:  make([]byte, hex.EncodedLen(len(key))),
-		Hash: make([]byte, hex.EncodedLen(len(hash))),
-	}
-	hex.Encode(t.Key, key)
-	hex.Encode(t.Hash, hash)
-
-	return t
-}
-
-// EncodeTokenString ...
-func EncodeTokenString(key, hash string) (t Token) {
-	return EncodeToken([]byte(key), []byte(hash))
-}
-
-// DecodeToken parse string and allocates new token instance if ok. Expected token has format <key>:<hash>.
-// If given string does not satisfy such pattern,
-// entire string (excluding extremely situated colons) will be threaten like a hash.
-func DecodeToken(s []byte) (t Token) {
-	parts := bytes.Split(s, []byte(":"))
-
-	if len(parts) == 1 {
-		return Token{
-			Hash: bytes.TrimSpace(parts[0]),
-		}
-	}
-
-	if len(parts[1]) == 0 {
-		return Token{
-			Hash: bytes.TrimSpace(parts[0]),
-		}
-	}
-
-	return Token{
-		Key:  bytes.TrimSpace(parts[0]),
-		Hash: bytes.TrimSpace(parts[1]),
-	}
-}
-
-// DecodeTokenString ...
-func DecodeTokenString(s string) (Token, error) {
-	hx, err := hex.DecodeString(s)
-	if err != nil {
-		return Token{}, err
-	}
-
-	return DecodeToken(hx), nil
-}
-
-// RandomToken ...
-func RandomToken(g RandomBytesGenerator, k []byte) (t Token, err error) {
-	var buf []byte
-	buf, err = g.GenerateRandomBytes(128)
-	if err != nil {
-		return
-	}
-
-	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
-	hash := make([]byte, 64)
-	// Compute a 64-byte hash of buf and put it in h.
-	sha3.ShakeSum256(hash, buf)
-
-	t = EncodeToken(k, hash)
-	return
-}
-
-// Value implements driver.Valuer interface.
-func (t Token) Value() (driver.Value, error) {
-	return t.Bytes(), nil
-}
-
-// Scan implements sql.Scanner interface.
-func (t *Token) Scan(src interface{}) error {
-	var (
-		token Token
-		err   error
-	)
-
-	switch s := src.(type) {
-	case []byte:
-		token = DecodeToken(s)
-	case string:
-		if token, err = DecodeTokenString(s); err != nil {
-			return err
-		}
-
-	default:
-		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
-	}
-
-	*t = token
-
-	return nil
-}
-
-// Bytes ...
-func (t *Token) Bytes() []byte {
-	return append(append(t.Key, ':'), t.Hash...)
-}
-
-// IsEmpty
-func (t *Token) IsEmpty() bool {
-	if t == nil {
-		return true
-	}
-	return len(t.Hash) == 0
 }
 
 //// TokenContextMiddleware puts token taken from header into current context.

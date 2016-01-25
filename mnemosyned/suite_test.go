@@ -33,7 +33,7 @@ var (
 )
 
 func init() {
-	tk := mnemosyne.EncodeTokenString("", "fake")
+	tk := mnemosyne.NewToken([]byte(""), []byte("fake"))
 	notExistsToken = &tk
 }
 
@@ -176,7 +176,7 @@ func testStorage_Start(t *testing.T, s Storage) {
 	session, err := s.Start(subjectID, bag)
 
 	if assert.NoError(t, err) {
-		assert.Len(t, session.Token.Hash, 128)
+		assert.Len(t, session.Token.Hash, 64)
 		assert.Equal(t, subjectID, session.SubjectId)
 		assert.Equal(t, bag, session.Bag)
 	}

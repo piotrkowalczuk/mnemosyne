@@ -18,6 +18,7 @@ service RPC {
 }
 
 message Empty {}
+
 // Token represents identifier of single session. It consist of partition key and a hash.
 message Token {
     bytes key = 1;

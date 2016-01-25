@@ -37,7 +37,7 @@ var _ = Describe("RPCServer", func() {
 		expectedErr = nil
 		subjectID = "subject_id"
 		bag = map[string]string{"key": "value"}
-		tk := mnemosyne.EncodeTokenString("key", "hash")
+		tk := mnemosyne.NewToken([]byte("key"), []byte("hash"))
 		token = &tk
 	})
 	Describe("Start", func() {

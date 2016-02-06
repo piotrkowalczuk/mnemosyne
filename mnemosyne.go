@@ -65,7 +65,7 @@ func New(conn *grpc.ClientConn, options MnemosyneOpts) Mnemosyne {
 
 // FromContext implements Mnemosyne interface.
 func (m *mnemosyne) FromContext(ctx context.Context) (*Session, error) {
-	return m.client.Context(ctx, nil)
+	return m.client.Context(ctx, &Empty{})
 }
 
 // Get implements Mnemosyne interface.

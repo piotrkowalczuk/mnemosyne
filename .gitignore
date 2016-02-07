@@ -4,6 +4,7 @@ mnemosyne.iml
 mnemosyned/mnemosyned
 run.sh
 test.sh
+coverage.txt
 *.sublime-project
 *.sublime-workspace
 .vscode

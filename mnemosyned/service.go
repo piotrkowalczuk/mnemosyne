@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics/prometheus"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"github.com/piotrkowalczuk/sklog"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -134,7 +135,21 @@ func initStorage(fn func() (Storage, error), logger log.Logger) Storage {
 
 	err = s.Setup()
 	if err != nil {
-		sklog.Fatal(logger, fmt.Errorf("mnemosyned: storage setup failure: %s", err.Error()))
+		switch e := err.(type) {
+		case *pq.Error:
+			sklog.Fatal(logger, fmt.Errorf("mnemosyned: storage setup failure: %s", e.Error()),
+				"code", e.Code,
+				"constraint", e.Constraint,
+				"internal_query", e.InternalQuery,
+				"column", e.Column,
+				"detail", e.Detail,
+				"hint", e.Hint,
+				"line", e.Line,
+				"schema", e.Schema,
+			)
+		default:
+			sklog.Fatal(logger, fmt.Errorf("mnemosyned: storage setup failure: %s", e.Error()))
+		}
 	}
 
 	return s

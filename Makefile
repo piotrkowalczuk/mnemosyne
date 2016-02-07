@@ -2,6 +2,7 @@ PROTOC=/usr/local/bin/protoc
 SERVICE=mnemosyne
 PACKAGE=github.com/piotrkowalczuk/mnemosyne
 PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
+PACKAGE_TEST=$(PACKAGE)/$(SERVICE)test
 BINARY=${SERVICE}d/${SERVICE}d
 
 FLAGS=-host=$(MNEMOSYNE_HOST) \
@@ -16,6 +17,8 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
           	    -sp.connectionstring=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
           	    -sp.tablename=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME)
 
+CMD_TEST=go test -v
+
 .PHONY:	all proto build build-daemon run test test-unit test-postgres
 
 all: proto build test run
@@ -28,6 +31,9 @@ proto:
 	    ${SERVICE}.proto
 	@ls -al | grep "pb.go"
 
+mocks:
+	@mockery -all -output=${SERVICE}test -output_file=mocks.go -output_pkg_name=mnemosynetest
+
 build: build-daemon
 
 build-daemon:
@@ -36,14 +42,20 @@ build-daemon:
 run:
 	@${BINARY} ${FLAGS}
 
-test: test-lib test-daemon
+test: test-lib test-test test-daemon
 
 test-lib:
-	@go test -v ${PACKAGE}
+	@${CMD_TEST} ${PACKAGE}
+
+test-test:
+	@${CMD_TEST} ${PACKAGE_TEST}
 
 test-daemon:
-	@go test -v -tags=unit ${PACKAGE_DAEMON}
-	@go test -v -tags=postgres ${PACKAGE_DAEMON} -- ${FLAGS}
+	@${CMD_TEST} -tags=unit ${PACKAGE_DAEMON}
+	@${CMD_TEST} -tags=postgres ${PACKAGE_DAEMON} -- ${FLAGS}
 
 get:
-	@go get ${PACKAGE_DAEMON}
+	@go get github.com/stretchr/testify/...
+	@go get github.com/onsi/ginkgo
+	@go get github.com/onsi/gomega
+	@go get ./...

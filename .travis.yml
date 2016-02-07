@@ -1,6 +1,6 @@
 language: go
 addons:
-  postgresql: '9.3'
+  postgresql: '9.4.5'
 env:
   MNEMOSYNE_HOST: localhost
   MNEMOSYNE_PORT: 9001
@@ -13,12 +13,11 @@ env:
   MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING: postgres://postgres:@localhost/travis_ci_test?sslmode=disable
   MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME: session
   MNEMOSYNE_STORAGE_POSTGRES_RETRY: 10
+  MNEMOSYNE_SUBSYSTEM: "mnemosyne_travis"
+  MNEMOSYNE_NAMESPACE: "mnemosyne_travis"
 go:
 - tip
 install:
-- go get github.com/stretchr/testify/...
-- go get github.com/onsi/ginkgo
-- go get github.com/onsi/gomega
 - make get
 before_script:
 - psql -c 'create database travis_ci_test;' -U postgres
@@ -30,5 +29,5 @@ notifications:
   slack:
     secure: rESrYeV8CmkavyOq7K5i3LySax3BMK+ZGlUVpq7+ikBCO+kYJWty0CmyAPn2b9zG2PLy1wjWt1oEiDeBaDfR2RZU7rlYv1OcVkPARzN3JgR5+6LlC62SeokvopKWOORVxOwsnTZUyc3MRUU2AxG6BWwm5lPDkvngvthw/g7FNQ3hje4em+ovVTcGpEdF5p2kYT1zYDliJuOUTHkd9MaqjJVuyQbwzWxpvVNUy+xydS7q+sKtUcxSqus9ljySKFXAzUkK7Hlq2kKImpoXvt2v8T4zbYrZHKFnDHZL+6c6g8bkszrlsCkCvJzKK5m4iA8R2s6WsEZQkHBrLXaKHFmBzS9Iua0eLt5zwgzmJ6PqaEZmafo2uXpOWhCu1tpwjvOesdkBx4XJ3yI+kVzA40SlFxKwzV18NRT0yHWkBiOF8FNq1DHmXmpzG1+KcIVv1SvD5z8mpqKKUWV3+d40R1iicNJDqNYFxwJdVGkFhuVHuxSM3JagleysEKNMU591d0WXUuGqLdXH280ephlL92epeE5b5Wk6rLomSxaJIrTiQXSwbvWuAChtk/Uch7Oe04uYA5nDkrYcbHO/CW958xMonA9Buv6tSVcGX0j61m7LRUFOO2p877RBhADgCgb/uv9XgjOhjlsCUEVsdnVg1GaMyV+l3LM3g6sGH2MGyIivCGM=
 addons:
-    code_climate:
-        repo_token: 6e0f648267827e942b80676d93220b191a0cd2122e87a24be5a9eb45c680bbda
+  code_climate:
+    repo_token: 6e0f648267827e942b80676d93220b191a0cd2122e87a24be5a9eb45c680bbda

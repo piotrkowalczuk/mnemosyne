@@ -1,6 +1,12 @@
 package main
 
-import "flag"
+import (
+	"flag"
+	"fmt"
+	"os"
+)
+
+const VERSION="0.0.1"
 
 type configuration struct {
 	host      string
@@ -43,7 +49,12 @@ func (c *configuration) init() {
 }
 
 func (c *configuration) parse() {
+	ver := flag.Bool("version", false, "Print version and exit")
 	if !flag.Parsed() {
 		flag.Parse()
+	}
+	if *ver {
+		fmt.Printf("%s", VERSION)
+		os.Exit(0)
 	}
 }

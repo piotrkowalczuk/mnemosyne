@@ -23,3 +23,10 @@ Documentation is available on [mnemosyne.readme.io](http://mnemosyne.readme.io).
 		- [x] TearDown
 	- [ ] RAM
 	- [ ] Redis
+
+## Building
+
+Increment version in `mnemosynd/config.go`. Execute `make package`.
+
+Changes to flags or flag value defaults should be into 
+`scripts/mnemosyne.service` and `mnemosyne.env`.

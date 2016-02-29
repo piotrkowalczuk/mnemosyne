@@ -17,6 +17,8 @@ coverage.txt
 # Folders
 _obj
 _test
+.vagrant
+/temp
 
 # Architecture specific extensions/prefixes
 *.[568vq]

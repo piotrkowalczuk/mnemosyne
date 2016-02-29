@@ -1,0 +1,21 @@
+[Unit]
+Description=mnemosyne
+
+[Service]
+EnvironmentFile=/etc/mnemosyne.env
+ExecStart=/usr/bin/mnemosyne \
+    -host=${MNEMOSYNE_HOST} \
+    -port=${MNEMOSYNE_PORT} \
+    -subsystem=${MNEMOSYNE_SUBSYSTEM} \
+    -namespace=${MNEMOSYNE_NAMESPACE} \
+    -l.format=${MNEMOSYNE_LOGGER_FORMAT} \
+    -l.adapter=${MNEMOSYNE_LOGGER_ADAPTER} \
+    -l.level=${MNEMOSYNE_LOGGER_LEVEL} \
+    -m.engine=${MNEMOSYNE_MONITORING_ENGINE} \
+    -s.engine=${MNEMOSYNE_STORAGE_ENGINE} \
+    -sp.connectionstring=${MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING} \
+    -sp.tablename=${MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME}
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

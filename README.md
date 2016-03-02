@@ -35,16 +35,16 @@ $ go install github.com/piotrkowalczuk/mnemosyne/mnemosyned
 
 | Name | Flag | Default | Type |
 | --- | --- | --- | --- |
-| host | -host | 127.0.0.1 | string |
-| port | -port | 8080 |int |
-| logger format | -l.format | json | enum(json, humane, logfmt) |
-| logger adapter | -l.adapter | stdout | enum(stdout) |
-|namespace|-namespace|string|subsystem|
-|-subsystem| mnemosyne|string|
-|monitoring engine|-m.engine|prometheus|enum(prometheus)|
-|storage engine|-s.engine|postgres|enum(postgres)|
-|storage postgres connection string|-sp.connectionstring|postgres://localhost:5432?sslmode=disable|string|
-|storage postgres table name|-sp.tablename|mnemosyne_session|string|
+| host | `-host` | 127.0.0.1 | string |
+| port | `-port` | 8080 |int |
+| logger format | `-l.format` | json | enum(json, humane, logfmt) |
+| logger adapter | `-l.adapter` | stdout | enum(stdout) |
+|namespace|`-namespace`|string||
+|subsystem|`-subsystem`| mnemosyne|string|
+|monitoring engine|`-m.engine`|prometheus|enum(prometheus)|
+|storage engine|`-s.engine`|postgres|enum(postgres)|
+|storage postgres connection string|`-sp.connectionstring`|postgres://localhost:5432?sslmode=disable|string|
+|storage postgres table name|`-sp.tablename`|mnemosyne_session|string|
 
 ### Running
 

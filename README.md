@@ -2,13 +2,10 @@
 
 ## Introduction
 
-[Mnemosyne](http://github.com/piotrkowalczuk/mnemosyne) is an open-source self-hosted session management service. It's written in Go, making it easy to build and deploy as static binary.
+[Mnemosyne](http://github.com/piotrkowalczuk/mnemosyne) is an open-source self-hosted session management service. It's written in Go, making it easy to build and deploy as a static binary.
 
 ### Storage Engine
-Goal is to ultimately support multiple storages, like [PostgreSQL](http://www.postgresql.org/), [Redis](http://redis.io) or [MongoDB](https://www.mongodb.org).
-
-Currently supported:
-* [PostgreSQL](http://www.postgresql.org/)
+Goal is to support multiple storages, like [PostgreSQL](http://www.postgresql.org/), [Redis](http://redis.io) or [MongoDB](https://www.mongodb.org). Nevertheless currently supported is only [PostgreSQL](http://www.postgresql.org/).
 
 ### Remote Procedure Call API
 For communication, Mnemosyne is exposing RPC API that uses [protocol buffers](https://developers.google.com/protocol-buffers/), Google’s mature open source mechanism for serializing structured data.
@@ -25,16 +22,16 @@ For communication, Mnemosyne is exposing RPC API that uses [protocol buffers](ht
 
 Mnemosyne can be installed in two ways, from source and using `deb` package that can be found in dist directory.
 
-### Using go toolchain
+### From source
 
-You can directly use the go tool to download and install the mnemosyned binary into your [GOPATH](https://github.com/golang/go/wiki/GOPATH). Go in version 1.6 is required.
+You can directly use the go tool to download and install the **mnemosyned** binary into your [GOPATH](https://github.com/golang/go/wiki/GOPATH). Go in version 1.6 is required.
 
 ```
 $ go install github.com/piotrkowalczuk/mnemosyne/mnemosyned
 ```
 
 ### Configuration
-mnemosyned accepts command line arguments to control its behavior. Possible options are is listed below.
+**mnemosyned** accepts command line arguments to control its behavior. Possible options are is listed below.
 
 | Name | Flag | Default | Type |
 | --- | --- | --- | --- |

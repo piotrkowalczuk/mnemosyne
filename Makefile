@@ -46,6 +46,8 @@ build: build-daemon
 build-daemon:
 	@go build -o ${BINARY} ${PACKAGE_DAEMON}
 
+rebuild: proto mocks build
+
 run:
 	@${BINARY} ${FLAGS}
 

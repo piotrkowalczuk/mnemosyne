@@ -5,7 +5,7 @@
 [Mnemosyne](http://github.com/piotrkowalczuk/mnemosyne) is an open-source self-hosted session management service. It's written in Go, making it easy to build and deploy as a static binary.
 
 ### Storage Engine
-Goal is to support multiple storages, like [PostgreSQL](http://www.postgresql.org/), [Redis](http://redis.io) or [MongoDB](https://www.mongodb.org). Nevertheless currently supported is only [PostgreSQL](http://www.postgresql.org/).
+Goal is to support multiple storage's, like [PostgreSQL](http://www.postgresql.org/), [Redis](http://redis.io) or [MongoDB](https://www.mongodb.org). Nevertheless currently supported is only [PostgreSQL](http://www.postgresql.org/).
 
 ### Remote Procedure Call API
 For communication, Mnemosyne is exposing RPC API that uses [protocol buffers](https://developers.google.com/protocol-buffers/), Google’s mature open source mechanism for serializing structured data.
@@ -48,13 +48,13 @@ $ go install github.com/piotrkowalczuk/mnemosyne/mnemosyned
 
 ### Running
 
-As we know, mnemosyne can be configured in many ways. For the begining we can start simple:
+As we know, mnemosyne can be configured in many ways. For the beginning we can start simple:
 
 ```bash
 $ mnemosyned -namespace=acme -sp.connectionstring="postgres://localhost/test?sslmode=disable"
 ```
 
-Mnemosyne will automaticaly create all required tables/indexes for specified database.
+Mnemosyne will automatically create all required tables/indexes for specified database.
 
 ## Contribution
 

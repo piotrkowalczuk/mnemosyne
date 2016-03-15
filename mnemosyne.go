@@ -1,7 +1,10 @@
 package mnemosyne
 
 import (
+	"net/url"
+
 	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
@@ -22,17 +25,26 @@ var (
 	ErrMissingSubjectID = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing subject id")
 )
 
-//// NewTokenContext returns a new Context that carries Token value.
-//func NewTokenContext(ctx context.Context, t Token) context.Context {
-//	return context.WithValue(ctx, TokenContextKey, t)
-//}
-//
-//// TokenFromContext returns the Token value stored in context, if any.
-//func TokenFromContext(ctx context.Context) (Token, bool) {
-//	t, ok := ctx.Value(TokenContextKey).(Token)
-//
-//	return t, ok
-//}
+// Token implements oauth2.TokenSource interface.
+func (s *Session) Token() (*oauth2.Token, error) {
+	token := &oauth2.Token{
+		AccessToken: s.AccessToken.Encode(),
+		Expiry:      s.ExpireAt.Time(),
+	}
+	if s.Bag != nil && len(s.Bag) > 0 {
+		token = token.WithExtra(bagToURLValues(s.Bag))
+	}
+
+	return token, nil
+}
+
+func bagToURLValues(b map[string]string) url.Values {
+	r := make(map[string][]string, len(b))
+	for k, v := range b {
+		r[k] = []string{v}
+	}
+	return url.Values(r)
+}
 
 // Mnemosyne ...
 type Mnemosyne interface {

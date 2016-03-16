@@ -18,7 +18,7 @@ const (
 			access_token BYTEA PRIMARY KEY,
 			subject_id TEXT NOT NULL,
 			bag bytea NOT NULL,
-			expire_at timestamp with time zone NOT NULL
+			expire_at TIMESTAMPTZ NOT NULL
 		)
     `
 )

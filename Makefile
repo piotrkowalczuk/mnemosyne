@@ -55,11 +55,15 @@ test: test-unit test-postgres
 
 test-unit:
 	@${CMD_TEST} ${PACKAGE}
+	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} ${PACKAGE_TEST}
+	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} -tags=unit ${PACKAGE_DAEMON}
+	@cat profile.out >> coverage.txt && rm profile.out
 
 test-postgres:
 	@${CMD_TEST} -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
+	@cat profile.out >> coverage.txt && rm profile.out
 
 get:
 	@go get github.com/smartystreets/goconvey/...

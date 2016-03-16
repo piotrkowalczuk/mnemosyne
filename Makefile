@@ -62,6 +62,7 @@ test-postgres:
 	@${CMD_TEST} -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
 
 get:
+	@go get github.com/smartystreets/goconvey/...
 	@go get ./...
 
 install: build

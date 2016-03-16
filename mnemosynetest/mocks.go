@@ -8,6 +8,7 @@ import (
 import "github.com/stretchr/testify/mock"
 
 import "golang.org/x/net/context"
+
 import "google.golang.org/grpc"
 
 type Mnemosyne struct {
@@ -38,11 +39,11 @@ func (_m *Mnemosyne) FromContext(_a0 context.Context) (*mnemosyne.Session, error
 }
 
 // Get provides a mock function with given fields: _a0, _a1
-func (_m *Mnemosyne) Get(_a0 context.Context, _a1 mnemosyne.Token) (*mnemosyne.Session, error) {
+func (_m *Mnemosyne) Get(_a0 context.Context, _a1 mnemosyne.AccessToken) (*mnemosyne.Session, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 *mnemosyne.Session
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.Token) *mnemosyne.Session); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.AccessToken) *mnemosyne.Session); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
@@ -51,7 +52,7 @@ func (_m *Mnemosyne) Get(_a0 context.Context, _a1 mnemosyne.Token) (*mnemosyne.S
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, mnemosyne.Token) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, mnemosyne.AccessToken) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -61,18 +62,18 @@ func (_m *Mnemosyne) Get(_a0 context.Context, _a1 mnemosyne.Token) (*mnemosyne.S
 }
 
 // Exists provides a mock function with given fields: _a0, _a1
-func (_m *Mnemosyne) Exists(_a0 context.Context, _a1 mnemosyne.Token) (bool, error) {
+func (_m *Mnemosyne) Exists(_a0 context.Context, _a1 mnemosyne.AccessToken) (bool, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.Token) bool); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.AccessToken) bool); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, mnemosyne.Token) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, mnemosyne.AccessToken) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -105,11 +106,11 @@ func (_m *Mnemosyne) Start(_a0 context.Context, _a1 string, _a2 map[string]strin
 }
 
 // Abandon provides a mock function with given fields: _a0, _a1
-func (_m *Mnemosyne) Abandon(_a0 context.Context, _a1 mnemosyne.Token) error {
+func (_m *Mnemosyne) Abandon(_a0 context.Context, _a1 mnemosyne.AccessToken) error {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.Token) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.AccessToken) error); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		r0 = ret.Error(0)
@@ -119,11 +120,11 @@ func (_m *Mnemosyne) Abandon(_a0 context.Context, _a1 mnemosyne.Token) error {
 }
 
 // SetValue provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *Mnemosyne) SetValue(_a0 context.Context, _a1 mnemosyne.Token, _a2 string, _a3 string) (map[string]string, error) {
+func (_m *Mnemosyne) SetValue(_a0 context.Context, _a1 mnemosyne.AccessToken, _a2 string, _a3 string) (map[string]string, error) {
 	ret := _m.Called(_a0, _a1, _a2, _a3)
 
 	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.Token, string, string) map[string]string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, mnemosyne.AccessToken, string, string) map[string]string); ok {
 		r0 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		if ret.Get(0) != nil {
@@ -132,7 +133,7 @@ func (_m *Mnemosyne) SetValue(_a0 context.Context, _a1 mnemosyne.Token, _a2 stri
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, mnemosyne.Token, string, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, mnemosyne.AccessToken, string, string) error); ok {
 		r1 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		r1 = ret.Error(1)
@@ -573,18 +574,18 @@ func (_m *Storage) Start(_a0 string, _a1 map[string]string) (*mnemosyne.Session,
 }
 
 // Abandon provides a mock function with given fields: _a0
-func (_m *Storage) Abandon(_a0 *mnemosyne.Token) (bool, error) {
+func (_m *Storage) Abandon(_a0 *mnemosyne.AccessToken) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(*mnemosyne.Token) bool); ok {
+	if rf, ok := ret.Get(0).(func(*mnemosyne.AccessToken) bool); ok {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*mnemosyne.Token) error); ok {
+	if rf, ok := ret.Get(1).(func(*mnemosyne.AccessToken) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -594,11 +595,11 @@ func (_m *Storage) Abandon(_a0 *mnemosyne.Token) (bool, error) {
 }
 
 // Get provides a mock function with given fields: _a0
-func (_m *Storage) Get(_a0 *mnemosyne.Token) (*mnemosyne.Session, error) {
+func (_m *Storage) Get(_a0 *mnemosyne.AccessToken) (*mnemosyne.Session, error) {
 	ret := _m.Called(_a0)
 
 	var r0 *mnemosyne.Session
-	if rf, ok := ret.Get(0).(func(*mnemosyne.Token) *mnemosyne.Session); ok {
+	if rf, ok := ret.Get(0).(func(*mnemosyne.AccessToken) *mnemosyne.Session); ok {
 		r0 = rf(_a0)
 	} else {
 		if ret.Get(0) != nil {
@@ -607,7 +608,7 @@ func (_m *Storage) Get(_a0 *mnemosyne.Token) (*mnemosyne.Session, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*mnemosyne.Token) error); ok {
+	if rf, ok := ret.Get(1).(func(*mnemosyne.AccessToken) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -640,18 +641,18 @@ func (_m *Storage) List(_a0 int64, _a1 int64, _a2 *time.Time, _a3 *time.Time) ([
 }
 
 // Exists provides a mock function with given fields: _a0
-func (_m *Storage) Exists(_a0 *mnemosyne.Token) (bool, error) {
+func (_m *Storage) Exists(_a0 *mnemosyne.AccessToken) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(*mnemosyne.Token) bool); ok {
+	if rf, ok := ret.Get(0).(func(*mnemosyne.AccessToken) bool); ok {
 		r0 = rf(_a0)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*mnemosyne.Token) error); ok {
+	if rf, ok := ret.Get(1).(func(*mnemosyne.AccessToken) error); ok {
 		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
@@ -661,18 +662,18 @@ func (_m *Storage) Exists(_a0 *mnemosyne.Token) (bool, error) {
 }
 
 // Delete provides a mock function with given fields: _a0, _a1, _a2
-func (_m *Storage) Delete(_a0 *mnemosyne.Token, _a1 *time.Time, _a2 *time.Time) (int64, error) {
+func (_m *Storage) Delete(_a0 *mnemosyne.AccessToken, _a1 *time.Time, _a2 *time.Time) (int64, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 int64
-	if rf, ok := ret.Get(0).(func(*mnemosyne.Token, *time.Time, *time.Time) int64); ok {
+	if rf, ok := ret.Get(0).(func(*mnemosyne.AccessToken, *time.Time, *time.Time) int64); ok {
 		r0 = rf(_a0, _a1, _a2)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*mnemosyne.Token, *time.Time, *time.Time) error); ok {
+	if rf, ok := ret.Get(1).(func(*mnemosyne.AccessToken, *time.Time, *time.Time) error); ok {
 		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
@@ -682,11 +683,11 @@ func (_m *Storage) Delete(_a0 *mnemosyne.Token, _a1 *time.Time, _a2 *time.Time) 
 }
 
 // SetValue provides a mock function with given fields: _a0, _a1, _a2
-func (_m *Storage) SetValue(_a0 *mnemosyne.Token, _a1 string, _a2 string) (map[string]string, error) {
+func (_m *Storage) SetValue(_a0 *mnemosyne.AccessToken, _a1 string, _a2 string) (map[string]string, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(*mnemosyne.Token, string, string) map[string]string); ok {
+	if rf, ok := ret.Get(0).(func(*mnemosyne.AccessToken, string, string) map[string]string); ok {
 		r0 = rf(_a0, _a1, _a2)
 	} else {
 		if ret.Get(0) != nil {
@@ -695,7 +696,7 @@ func (_m *Storage) SetValue(_a0 *mnemosyne.Token, _a1 string, _a2 string) (map[s
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(*mnemosyne.Token, string, string) error); ok {
+	if rf, ok := ret.Get(1).(func(*mnemosyne.AccessToken, string, string) error); ok {
 		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)

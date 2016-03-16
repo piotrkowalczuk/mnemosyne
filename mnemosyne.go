@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	// TokenContextKey is used by Mnemosyne internally to retrieve session token from context.Context.
-	TokenContextKey = "mnemosyne_token"
-	// TokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
-	TokenMetadataKey = "mnemosyne_token"
+	// AccessTokenContextKey is used by Mnemosyne internally to retrieve session token from context.Context.
+	AccessTokenContextKey = "mnemosyne_token"
+	// AccessTokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
+	AccessTokenMetadataKey = "mnemosyne_token"
 )
 
 var (
@@ -49,11 +49,11 @@ func bagToURLValues(b map[string]string) url.Values {
 // Mnemosyne ...
 type Mnemosyne interface {
 	FromContext(context.Context) (*Session, error)
-	Get(context.Context, Token) (*Session, error)
-	Exists(context.Context, Token) (bool, error)
+	Get(context.Context, AccessToken) (*Session, error)
+	Exists(context.Context, AccessToken) (bool, error)
 	Start(context.Context, string, map[string]string) (*Session, error)
-	Abandon(context.Context, Token) error
-	SetValue(context.Context, Token, string, string) (map[string]string, error)
+	Abandon(context.Context, AccessToken) error
+	SetValue(context.Context, AccessToken, string, string) (map[string]string, error)
 	//	DeleteValue(context.Context, string) (*Session, error)
 	//	Clear(context.Context) error
 }
@@ -81,8 +81,8 @@ func (m *mnemosyne) FromContext(ctx context.Context) (*Session, error) {
 }
 
 // Get implements Mnemosyne interface.
-func (m *mnemosyne) Get(ctx context.Context, token Token) (*Session, error) {
-	res, err := m.client.Get(ctx, &GetRequest{Token: &token})
+func (m *mnemosyne) Get(ctx context.Context, token AccessToken) (*Session, error) {
+	res, err := m.client.Get(ctx, &GetRequest{AccessToken: &token})
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ func (m *mnemosyne) Get(ctx context.Context, token Token) (*Session, error) {
 }
 
 // Exists implements Mnemosyne interface.
-func (m *mnemosyne) Exists(ctx context.Context, token Token) (bool, error) {
-	res, err := m.client.Exists(ctx, &ExistsRequest{Token: &token})
+func (m *mnemosyne) Exists(ctx context.Context, token AccessToken) (bool, error) {
+	res, err := m.client.Exists(ctx, &ExistsRequest{AccessToken: &token})
 
 	if err != nil {
 		return false, err
@@ -115,18 +115,18 @@ func (m *mnemosyne) Start(ctx context.Context, subjectID string, data map[string
 }
 
 // Abandon implements Mnemosyne interface.
-func (m *mnemosyne) Abandon(ctx context.Context, token Token) error {
-	_, err := m.client.Abandon(ctx, &AbandonRequest{Token: &token})
+func (m *mnemosyne) Abandon(ctx context.Context, token AccessToken) error {
+	_, err := m.client.Abandon(ctx, &AbandonRequest{AccessToken: &token})
 
 	return err
 }
 
 // SetData implements Mnemosyne interface.
-func (m *mnemosyne) SetValue(ctx context.Context, token Token, key, value string) (map[string]string, error) {
+func (m *mnemosyne) SetValue(ctx context.Context, token AccessToken, key, value string) (map[string]string, error) {
 	res, err := m.client.SetValue(ctx, &SetValueRequest{
-		Token: &token,
-		Key:   key,
-		Value: value,
+		AccessToken: &token,
+		Key:         key,
+		Value:       value,
 	})
 
 	if err != nil {
@@ -167,7 +167,7 @@ func (m *mnemosyne) SetValue(ctx context.Context, token Token, key, value string
 
 // Context implements sklog.Contexter interface.
 func (gr *GetRequest) Context() []interface{} {
-	return []interface{}{"token", gr.Token.Bytes()}
+	return []interface{}{"token", gr.AccessToken.Bytes()}
 }
 
 // Context implements sklog.Contexter interface.
@@ -182,7 +182,7 @@ func (lr *ListRequest) Context() []interface{} {
 
 // Context implements sklog.Contexter interface.
 func (er *ExistsRequest) Context() []interface{} {
-	return []interface{}{"token", er.Token.Bytes()}
+	return []interface{}{"token", er.AccessToken.Bytes()}
 }
 
 // Context implements sklog.Contexter interface.
@@ -197,14 +197,14 @@ func (er *StartRequest) Context() (ctx []interface{}) {
 // Context implements sklog.Contexter interface.
 func (ar *AbandonRequest) Context() []interface{} {
 	return []interface{}{
-		"token", ar.Token.Bytes(),
+		"token", ar.AccessToken.Bytes(),
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (svr *SetValueRequest) Context() []interface{} {
 	return []interface{}{
-		"token", svr.Token.Bytes(),
+		"token", svr.AccessToken.Bytes(),
 		"bag_key", svr.Key,
 		"bag_value", svr.Value,
 	}
@@ -213,7 +213,7 @@ func (svr *SetValueRequest) Context() []interface{} {
 // Context implements sklog.Contexter interface.
 func (dvr *DeleteValueRequest) Context() []interface{} {
 	return []interface{}{
-		"token", dvr.Token.Bytes(),
+		"token", dvr.AccessToken.Bytes(),
 		"bag_key", dvr.Key,
 	}
 }
@@ -221,14 +221,14 @@ func (dvr *DeleteValueRequest) Context() []interface{} {
 // Context implements sklog.Contexter interface.
 func (cr *ClearRequest) Context() []interface{} {
 	return []interface{}{
-		"token", cr.Token.Bytes(),
+		"token", cr.AccessToken.Bytes(),
 	}
 }
 
 // Context implements sklog.Contexter interface.
 func (dr *DeleteRequest) Context() []interface{} {
 	return []interface{}{
-		"token", dr.Token.Bytes(),
+		"token", dr.AccessToken.Bytes(),
 		"expire_at_from", dr.ExpireAtFrom,
 		"expire_at_to", dr.ExpireAtTo,
 	}

@@ -11,64 +11,64 @@ import (
 )
 
 // NewTokenContext returns a new Context that carries Token value.
-func NewTokenContext(ctx context.Context, t Token) context.Context {
-	return context.WithValue(ctx, TokenContextKey, t)
+func NewTokenContext(ctx context.Context, at AccessToken) context.Context {
+	return context.WithValue(ctx, AccessTokenContextKey, at)
 }
 
 // TokenFromContext returns the Token value stored in context, if any.
-func TokenFromContext(ctx context.Context) (Token, bool) {
-	t, ok := ctx.Value(TokenContextKey).(Token)
+func TokenFromContext(ctx context.Context) (AccessToken, bool) {
+	at, ok := ctx.Value(AccessTokenContextKey).(AccessToken)
 
-	return t, ok
+	return at, ok
 }
 
 // Encode ...
-func (t *Token) Encode() string {
-	return string(t.Bytes())
+func (at *AccessToken) Encode() string {
+	return string(at.Bytes())
 }
 
 // Bytes ...
-func (t *Token) Bytes() []byte {
-	if len(t.Key) < 10 {
-		return t.Hash
+func (at *AccessToken) Bytes() []byte {
+	if len(at.Key) < 10 {
+		return at.Hash
 	}
 
-	return append(t.Key[:10], t.Hash...)
+	return append(at.Key[:10], at.Hash...)
 }
 
-// DecodeToken parse string and allocates new token instance if ok. Expected token has format <key(10)><hash(n)>.
-func DecodeToken(s []byte) (t Token) {
+// DecodeAccessToken parse string and allocates new token instance if ok. Expected token has format <key(10)><hash(n)>.
+func DecodeAccessToken(s []byte) (at AccessToken) {
 	if len(s) < 10 {
 		return
 	}
 
-	return Token{
+	return AccessToken{
 		Key:  bytes.TrimSpace(s[:10]),
 		Hash: bytes.TrimSpace(s[10:]),
 	}
 }
 
-// DecodeTokenString works like DecodeToken but accepts string.
-func DecodeTokenString(s string) Token {
-	return DecodeToken([]byte(s))
+// DecodeAccessTokenString works like DecodeToken but accepts string.
+func DecodeAccessTokenString(s string) AccessToken {
+	return DecodeAccessToken([]byte(s))
 }
 
-// NewToken ...
-func NewToken(key, hash []byte) Token {
+// NewAccessToken ...
+func NewAccessToken(key, hash []byte) AccessToken {
 	if len(key) < 10 {
-		return Token{
+		return AccessToken{
 			Key:  append([]byte("0000000000")[:10-len(key)], key...),
 			Hash: hash,
 		}
 	}
-	return Token{
+	return AccessToken{
 		Key:  key[:10],
 		Hash: hash,
 	}
 }
 
-// RandomToken ...
-func RandomToken(generator RandomBytesGenerator, key []byte) (t Token, err error) {
+// RandomAccessToken ...
+func RandomAccessToken(generator RandomBytesGenerator, key []byte) (at AccessToken, err error) {
 	var buf []byte
 	buf, err = generator.GenerateRandomBytes(128)
 	if err != nil {
@@ -81,38 +81,38 @@ func RandomToken(generator RandomBytesGenerator, key []byte) (t Token, err error
 	sha3.ShakeSum256(hash, buf)
 	hash2 := make([]byte, hex.EncodedLen(len(hash)))
 	hex.Encode(hash2, hash)
-	return NewToken(key, hash2), nil
+	return NewAccessToken(key, hash2), nil
 }
 
 // Value implements driver.Valuer interface.
-func (t Token) Value() (driver.Value, error) {
-	return string(t.Bytes()), nil
+func (at AccessToken) Value() (driver.Value, error) {
+	return string(at.Bytes()), nil
 }
 
 // Scan implements sql.Scanner interface.
-func (t *Token) Scan(src interface{}) error {
+func (at *AccessToken) Scan(src interface{}) error {
 	var (
-		token Token
+		token AccessToken
 	)
 
 	switch s := src.(type) {
 	case []byte:
-		token = DecodeToken(s)
+		token = DecodeAccessToken(s)
 	case string:
-		token = DecodeTokenString(s)
+		token = DecodeAccessTokenString(s)
 	default:
 		return errors.New("mnemosyne: token supports scan only from slice of bytes and string")
 	}
 
-	*t = token
+	*at = token
 
 	return nil
 }
 
 // IsEmpty ...
-func (t *Token) IsEmpty() bool {
-	if t == nil {
+func (at *AccessToken) IsEmpty() bool {
+	if at == nil {
 		return true
 	}
-	return len(t.Hash) == 0
+	return len(at.Hash) == 0
 }

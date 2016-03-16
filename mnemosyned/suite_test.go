@@ -1,31 +1,29 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net"
-	"os"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
 
+	"io/ioutil"
+
 	"github.com/go-kit/kit/log"
-	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/reporters"
-	. "github.com/onsi/gomega"
 	"github.com/piotrkowalczuk/mnemosyne"
-	"github.com/piotrkowalczuk/protot"
 	"github.com/piotrkowalczuk/sklog"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 )
 
 var (
-	notExistsToken *mnemosyne.Token
+	notExistsToken *mnemosyne.AccessToken
 )
 
 var (
@@ -33,55 +31,47 @@ var (
 )
 
 func init() {
-	tk := mnemosyne.NewToken([]byte(""), []byte("fake"))
+	tk := mnemosyne.NewAccessToken([]byte(""), []byte("fake"))
 	notExistsToken = &tk
 }
 
-func TestPackage(t *testing.T) {
-	config.parse()
-
-	RegisterFailHandler(Fail)
-
-	suiteName := "mnemosyned"
-
-	if metricsSpace := os.Getenv("METRICSSPACE"); metricsSpace != "" {
-		junitReporter := reporters.NewJUnitReporter(metricsSpace + "/junit.xml")
-		RunSpecsWithDefaultAndCustomReporters(t, suiteName, []Reporter{junitReporter})
-	} else {
-		RunSpecs(t, suiteName)
+func ShouldBeGRPCError(actual interface{}, expected ...interface{}) (s string) {
+	if len(expected) != 2 {
+		return fmt.Sprintf("This assertion requires exactly 2 comparison values (you provided %d).", len(expected))
 	}
+
+	e, ok := actual.(error)
+	if !ok {
+		return "The given value must implement error interface."
+	}
+	if s = convey.ShouldEqual(grpc.Code(e), expected[0]); s != "" {
+		return
+	}
+	if s = convey.ShouldEqual(grpc.ErrorDesc(e), expected[1]); s != "" {
+		return
+	}
+	return
 }
+func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) {
+	if len(expected) != 0 {
+		return fmt.Sprintf("This assertion requires exactly 0 comparison values (you provided %d).", len(expected))
+	}
 
-func AssertTimestamp(t *protot.Timestamp) (b bool) {
-	b = Expect(t).ToNot(BeNil())
-	if !b {
+	if s = convey.ShouldNotBeNil(actual); s != "" {
 		return
 	}
-	b = Expect(t.Nanos).ToNot(BeZero())
-	if !b {
+	if s = convey.ShouldHaveSameTypeAs(actual, &mnemosyne.AccessToken{}); s != "" {
 		return
 	}
-	return Expect(t.Seconds).ToNot(BeZero())
-}
 
-func AssertGRPCError(err error, code codes.Code, desc string) bool {
-	r1 := Expect(err).ToNot(BeNil())
-	r2 := Expect(grpc.Code(err)).To(Equal(code))
-	r3 := Expect(grpc.ErrorDesc(err)).To(Equal(desc))
-
-	return r1 && r2 && r3
-}
-
-func AssertToken(t *mnemosyne.Token) (b bool) {
-	b = Expect(t).ToNot(BeNil())
-	if !b {
+	t := actual.(*mnemosyne.AccessToken)
+	if s = convey.ShouldNotBeEmpty(t.Key); s != "" {
 		return
 	}
-	b = Expect(t.Key).ToNot(BeEmpty())
-	if !b {
+	if s = convey.ShouldNotBeEmpty(t.Hash); s != "" {
 		return
 	}
-	return Expect(t.Hash).ToNot(BeEmpty())
+	return
 }
 
 type integrationSuite struct {
@@ -94,7 +84,7 @@ type integrationSuite struct {
 }
 
 func newIntegrationSuite(store Storage) *integrationSuite {
-	logger := sklog.NewHumaneLogger(GinkgoWriter, sklog.DefaultHTTPFormatter)
+	logger := sklog.NewHumaneLogger(ioutil.Discard, sklog.DefaultHTTPFormatter)
 	monitor := initMonitoring(initPrometheus("mnemosyne_test", "mnemosyne", stdprometheus.Labels{"server": "test"}), logger)
 
 	return &integrationSuite{
@@ -162,7 +152,7 @@ func (is *integrationSuite) teardown() (err error) {
 		err = c.Close()
 	}
 
-	//	close(is.serviceConn)
+	close(is.serviceConn)
 	close(is.listener)
 
 	return
@@ -176,7 +166,7 @@ func testStorage_Start(t *testing.T, s Storage) {
 	session, err := s.Start(subjectID, bag)
 
 	if assert.NoError(t, err) {
-		assert.Len(t, session.Token.Hash, 128)
+		assert.Len(t, session.AccessToken.Hash, 128)
 		assert.Equal(t, subjectID, session.SubjectId)
 		assert.Equal(t, bag, session.Bag)
 	}
@@ -189,9 +179,9 @@ func testStorage_Get(t *testing.T, s Storage) {
 	require.NoError(t, err)
 
 	// Check for existing Token
-	got, err := s.Get(ses.Token)
+	got, err := s.Get(ses.AccessToken)
 	require.NoError(t, err)
-	assert.Equal(t, ses.Token, got.Token)
+	assert.Equal(t, ses.AccessToken, got.AccessToken)
 	assert.Equal(t, ses.Bag, got.Bag)
 	assert.Equal(t, ses.ExpireAt, got.ExpireAt)
 
@@ -215,7 +205,7 @@ func testStorage_List(t *testing.T, s Storage) {
 	if assert.NoError(t, err) {
 		assert.Len(t, sessions, nb)
 		for i, s := range sessions {
-			assert.NotEmpty(t, s.Token)
+			assert.NotEmpty(t, s.AccessToken)
 			assert.NotEmpty(t, s.ExpireAt)
 			assert.Equal(t, s.Bag[key], strconv.FormatInt(int64(i+1), 10))
 		}
@@ -229,7 +219,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 	require.NoError(t, err)
 
 	// Check for existing Token
-	exists, err := s.Exists(new.Token)
+	exists, err := s.Exists(new.AccessToken)
 	require.NoError(t, err)
 	assert.True(t, exists)
 
@@ -247,12 +237,12 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	require.NoError(t, err)
 
 	// Check for existing Token
-	ok2, err2 := s.Abandon(new.Token)
+	ok2, err2 := s.Abandon(new.AccessToken)
 	assert.True(t, ok2)
 	require.NoError(t, err2)
 
 	// Check for already abondond session
-	ok3, err3 := s.Abandon(new.Token)
+	ok3, err3 := s.Abandon(new.AccessToken)
 	assert.False(t, ok3)
 	assert.EqualError(t, err3, errSessionNotFound.Error())
 
@@ -269,14 +259,14 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	require.NoError(t, err)
 
 	// Check for existing Token
-	got, err2 := s.SetValue(new.Token, "email", "fake@email.com")
+	got, err2 := s.SetValue(new.AccessToken, "email", "fake@email.com")
 	require.NoError(t, err2)
 	assert.Equal(t, 2, len(got))
 	assert.Equal(t, "fake@email.com", got["email"])
 	assert.Equal(t, "test", got["username"])
 
 	// Check for overwritten field
-	bag2, err2 := s.SetValue(new.Token, "email", "morefakethanbefore@email.com")
+	bag2, err2 := s.SetValue(new.AccessToken, "email", "morefakethanbefore@email.com")
 	require.NoError(t, err2)
 	assert.Equal(t, 2, len(bag2))
 	assert.Equal(t, "morefakethanbefore@email.com", bag2["email"])
@@ -293,7 +283,7 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 		defer wg.Done()
 
 		// Check for overwritten field
-		_, err := s.SetValue(new.Token, key, value)
+		_, err := s.SetValue(new.AccessToken, key, value)
 
 		assert.NoError(t, err)
 	}
@@ -322,9 +312,9 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 
 	wg.Wait()
 
-	got4, err4 := s.Get(new.Token)
+	got4, err4 := s.Get(new.AccessToken)
 	if assert.NoError(t, err4) {
-		assert.Equal(t, new.Token, got4.Token)
+		assert.Equal(t, new.AccessToken, got4.AccessToken)
 		assert.Equal(t, 22, len(got4.Bag))
 	}
 }
@@ -380,13 +370,13 @@ DataLoop:
 		}
 
 		var (
-			id            *mnemosyne.Token
+			id            *mnemosyne.AccessToken
 			expiredAtTo   *time.Time
 			expiredAtFrom *time.Time
 		)
 
 		if args.id {
-			id = new.Token
+			id = new.AccessToken
 		}
 
 		if args.expiredAtFrom {

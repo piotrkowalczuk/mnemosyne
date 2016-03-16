@@ -3,6 +3,8 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"io"
+	"io/ioutil"
 	stdlog "log"
 	"os"
 
@@ -97,25 +99,34 @@ func initMonitoring(fn func() (*monitoring, error), logger log.Logger) *monitori
 
 const (
 	loggerAdapterStdOut = "stdout"
+	loggerAdapterNone   = "none"
 	loggerFormatJSON    = "json"
 	loggerFormatHumane  = "humane"
 	loggerFormatLogFmt  = "logfmt"
 )
 
 func initLogger(adapter, format string, level int, context ...interface{}) log.Logger {
-	var l log.Logger
+	var (
+		l log.Logger
+		a io.Writer
+	)
 
-	if adapter != loggerAdapterStdOut {
+	switch adapter {
+	case loggerAdapterStdOut:
+		a = os.Stdout
+	case loggerAdapterNone:
+		a = ioutil.Discard
+	default:
 		stdlog.Fatal("service: unsupported logger adapter")
 	}
 
 	switch format {
 	case loggerFormatHumane:
-		l = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
+		l = sklog.NewHumaneLogger(a, sklog.DefaultHTTPFormatter)
 	case loggerFormatJSON:
-		l = log.NewJSONLogger(os.Stdout)
+		l = log.NewJSONLogger(a)
 	case loggerFormatLogFmt:
-		l = log.NewLogfmtLogger(os.Stdout)
+		l = log.NewLogfmtLogger(a)
 	default:
 		stdlog.Fatal("mnemosyned: unsupported logger format")
 	}

@@ -7,6 +7,8 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 )
 
 type rpcServer struct {
@@ -27,7 +29,7 @@ type rpcServer struct {
 
 // Get implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Context(ctx context.Context, req *mnemosyne.Empty) (*mnemosyne.Session, error) {
-	h := rs.alloc.context(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.context(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	ses, err := h.context(ctx)
@@ -45,7 +47,7 @@ func (rs *rpcServer) Context(ctx context.Context, req *mnemosyne.Empty) (*mnemos
 
 // Get implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyne.GetResponse, error) {
-	h := rs.alloc.get(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.get(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	ses, err := h.get(ctx, req)
@@ -65,7 +67,7 @@ func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemo
 
 // List implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mnemosyne.ListResponse, error) {
-	h := rs.alloc.list(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.list(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	sessions, err := h.list(ctx, req)
@@ -85,7 +87,7 @@ func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mne
 
 // Start implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.StartResponse, error) {
-	h := rs.alloc.start(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.start(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	ses, err := h.start(ctx, req)
@@ -105,7 +107,7 @@ func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*m
 
 // Exists implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Exists(ctx context.Context, req *mnemosyne.ExistsRequest) (*mnemosyne.ExistsResponse, error) {
-	h := rs.alloc.exists(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.exists(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	exists, err := h.exists(ctx, req)
@@ -125,7 +127,7 @@ func (rs *rpcServer) Exists(ctx context.Context, req *mnemosyne.ExistsRequest) (
 
 // Abandon implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (*mnemosyne.AbandonResponse, error) {
-	h := rs.alloc.abandon(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.abandon(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	abandoned, err := h.abandon(ctx, req)
@@ -145,7 +147,7 @@ func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest)
 
 // SetValue implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueRequest) (*mnemosyne.SetValueResponse, error) {
-	h := rs.alloc.setValue(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.setValue(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	bag, err := h.setValue(ctx, req)
@@ -165,7 +167,7 @@ func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueReques
 
 // Delete implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (*mnemosyne.DeleteResponse, error) {
-	h := rs.alloc.delete(rs.logger, rs.storage, rs.monitor.rpc)
+	h := rs.alloc.delete(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	h.monitor.requests.Add(1)
 
 	affected, err := h.delete(ctx, req)
@@ -194,4 +196,19 @@ func (rs *rpcServer) error(err error) error {
 	default:
 		return grpc.Errorf(codes.Internal, err.Error())
 	}
+}
+
+func (rs *rpcServer) loggerBackground(ctx context.Context, keyval ...interface{}) log.Logger {
+	l := log.NewContext(rs.logger).With(keyval...)
+	if md, ok := metadata.FromContext(ctx); ok {
+		if rid, ok := md["request_id"]; ok && len(rid) >= 1 {
+			l = l.With("request_id", rid[0])
+		}
+	}
+
+	if p, ok := peer.FromContext(ctx); ok {
+		l = l.With("peer_address", p.Addr.String())
+	}
+
+	return l
 }

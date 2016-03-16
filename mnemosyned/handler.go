@@ -40,25 +40,25 @@ func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
 		return nil, errors.New("mnemosyned: missing metadata in context, session token cannot be retrieved")
 	}
 
-	if len(md[mnemosyne.TokenMetadataKey]) == 0 {
+	if len(md[mnemosyne.AccessTokenMetadataKey]) == 0 {
 		return nil, errors.New("mnemosyned: missing sesion token in metadata")
 	}
 
-	token := mnemosyne.DecodeToken([]byte(md[mnemosyne.TokenMetadataKey][0]))
+	token := mnemosyne.DecodeAccessToken([]byte(md[mnemosyne.AccessTokenMetadataKey][0]))
 
-	h.logger = log.NewContext(h.logger).With("token", token.String())
+	h.logger = log.NewContext(h.logger).With("access_token", token.Encode())
 
 	return h.storage.Get(&token)
 }
 
 func (h *handler) get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyne.Session, error) {
-	if req.Token == nil {
+	if req.AccessToken == nil {
 		return nil, mnemosyne.ErrMissingToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("token", req.Token.String())
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
 
-	return h.storage.Get(req.Token)
+	return h.storage.Get(req.AccessToken)
 }
 
 func (h *handler) list(ctx context.Context, req *mnemosyne.ListRequest) ([]*mnemosyne.Session, error) {
@@ -87,19 +87,19 @@ func (h *handler) start(ctx context.Context, req *mnemosyne.StartRequest) (*mnem
 		return nil, err
 	}
 
-	h.logger = log.NewContext(h.logger).With("token", ses.Token, "expire_at", ses.ExpireAt.Time().Format(time.RFC3339))
+	h.logger = log.NewContext(h.logger).With("access_token", ses.AccessToken.Encode(), "expire_at", ses.ExpireAt.Time().Format(time.RFC3339))
 
 	return ses, nil
 }
 
 func (h *handler) exists(ctx context.Context, req *mnemosyne.ExistsRequest) (bool, error) {
-	if req.Token == nil {
+	if req.AccessToken == nil {
 		return false, mnemosyne.ErrMissingToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("token", req.Token)
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 
-	exists, err := h.storage.Exists(req.Token)
+	exists, err := h.storage.Exists(req.AccessToken)
 	if err != nil {
 		return false, err
 	}
@@ -110,33 +110,31 @@ func (h *handler) exists(ctx context.Context, req *mnemosyne.ExistsRequest) (boo
 }
 
 func (h *handler) abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (bool, error) {
-	if req.Token == nil {
+	if req.AccessToken == nil {
 		return false, mnemosyne.ErrMissingToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("token", req.Token)
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
 
-	abandoned, err := h.storage.Abandon(req.Token)
+	abandoned, err := h.storage.Abandon(req.AccessToken)
 	if err != nil {
 		return false, err
 	}
-
-	h.logger = log.NewContext(h.logger).With("token", req.Token)
 
 	return abandoned, nil
 }
 
 func (h *handler) setValue(ctx context.Context, req *mnemosyne.SetValueRequest) (map[string]string, error) {
 	switch {
-	case req.Token == nil:
+	case req.AccessToken == nil:
 		return nil, mnemosyne.ErrMissingToken
 	case req.Key == "":
 		return nil, grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing bag key")
 	}
 
-	h.logger = log.NewContext(h.logger).With("token", req.Token, "key", req.Key, "value", req.Value)
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode(), "key", req.Key, "value", req.Value)
 
-	bag, err := h.storage.SetValue(req.Token, req.Key, req.Value)
+	bag, err := h.storage.SetValue(req.AccessToken, req.Key, req.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -148,9 +146,9 @@ func (h *handler) delete(ctx context.Context, req *mnemosyne.DeleteRequest) (int
 	expireAtFrom := req.ExpireAtFrom.Time()
 	expireAtTo := req.ExpireAtTo.Time()
 
-	h.logger = log.NewContext(h.logger).With("token", req.Token, "expire_at_from", expireAtFrom, "expire_at_to", expireAtTo)
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode(), "expire_at_from", expireAtFrom, "expire_at_to", expireAtTo)
 
-	affected, err := h.storage.Delete(req.Token, &expireAtFrom, &expireAtTo)
+	affected, err := h.storage.Delete(req.AccessToken, &expireAtFrom, &expireAtTo)
 	if err != nil {
 		return 0, err
 	}

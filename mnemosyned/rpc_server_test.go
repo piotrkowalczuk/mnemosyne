@@ -1,20 +1,22 @@
+// +build unit,!postgres
+
 package main
 
 import (
 	"errors"
+	"testing"
 
 	"github.com/lib/pq"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/protot"
+	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 )
 
-var _ = Describe("RPCServer", func() {
+func TestRPCServer(t *testing.T) {
 	var (
 		err         error
 		suite       *integrationSuite
@@ -23,101 +25,106 @@ var _ = Describe("RPCServer", func() {
 		subjectID   string
 		bag         map[string]string
 		session     *mnemosyne.Session
-		token       *mnemosyne.Token
+		token       *mnemosyne.AccessToken
 	)
-	BeforeSuite(func() {
-		storage = &storageMock{}
-		suite = newIntegrationSuite(storage)
-		suite.serve(grpc.WithInsecure())
-	})
-	AfterSuite(func() {
-		Expect(suite.teardown()).ToNot(HaveOccurred())
-	})
-	BeforeEach(func() {
-		expectedErr = nil
-		subjectID = "subject_id"
-		bag = map[string]string{"key": "value"}
-		tk := mnemosyne.NewToken([]byte("key"), []byte("hash"))
-		token = &tk
-	})
-	Describe("Start", func() {
-		var (
-			req *mnemosyne.StartRequest
-			res *mnemosyne.StartResponse
-		)
 
-		itSuccess := func() {
-			It("should not return any error", func() {
-				Expect(err).ToNot(HaveOccurred())
-			})
-			It("should return session with same bag", func() {
-				Expect(res.Session.Bag).To(Equal(req.Bag))
-			})
-			It("should return session with same subject id", func() {
-				Expect(res.Session.SubjectId).To(Equal(req.SubjectId))
-			})
-			It("should return session with expire at timestamp", func() {
-				AssertTimestamp(res.Session.ExpireAt)
-			})
-			It("should return session with token", func() {
-				AssertToken(res.Session.Token)
-			})
-		}
-		JustBeforeEach(func() {
-			res, err = suite.service.Start(context.Background(), req)
-		})
-		Context("with subject id and bag", func() {
-			BeforeEach(func() {
-				req = &mnemosyne.StartRequest{SubjectId: subjectID, Bag: bag}
-				session = &mnemosyne.Session{Token: token, SubjectId: subjectID, Bag: bag, ExpireAt: protot.Now()}
-			})
-			Context("without storage error", func() {
-				BeforeEach(func() {
-					storage.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
-						Return(session, expectedErr).
-						Once()
+	storage = &storageMock{}
+	suite = newIntegrationSuite(storage)
+	if err = suite.serve(grpc.WithInsecure()); err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	Convey("RPCServer", t, func() {
+		Convey("Start", func() {
+			var (
+				req *mnemosyne.StartRequest
+				res *mnemosyne.StartResponse
+			)
+
+			expectedErr = nil
+			subjectID = "subject_id"
+			bag = map[string]string{"key": "value"}
+			tk := mnemosyne.NewAccessToken([]byte("key"), []byte("hash"))
+			token = &tk
+
+			itSuccess := func() {
+				Convey("Not return any error", func() {
+					So(err, ShouldBeNil)
 				})
-				itSuccess()
-			})
-			Context("with storage postgres error", func() {
-				BeforeEach(func() {
+				Convey("Return session with same bag", func() {
+					So(res.Session.Bag, ShouldResemble, req.Bag)
+				})
+				Convey("Return session with same subject id", func() {
+					So(res.Session, ShouldNotBeNil)
+					So(res.Session.SubjectId, ShouldEqual, req.SubjectId)
+				})
+				Convey("Return session with expire at timestamp", func() {
+					So(res.Session.ExpireAt, ShouldNotBeNil)
+					So(res.Session.ExpireAt.Nanos, ShouldNotEqual, 0)
+					So(res.Session.ExpireAt.Seconds, ShouldNotEqual, 0)
+				})
+				Convey("Return session with token", func() {
+					So(res.Session.AccessToken, ShouldBeValidToken)
+				})
+			}
+
+			Convey("With subject id and bag", func() {
+				req = &mnemosyne.StartRequest{SubjectId: subjectID, Bag: bag}
+				session = &mnemosyne.Session{AccessToken: token, SubjectId: subjectID, Bag: bag, ExpireAt: protot.Now()}
+
+				Convey("Without storage error", func() {
+					storage.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+						Once().
+						Return(session, expectedErr)
+
+					res, err = suite.service.Start(context.Background(), req)
+
+					Convey("Should", itSuccess)
+				})
+				Convey("With storage postgres error", func() {
 					expectedErr = pq.Error{Message: "fake postgres error"}
 					storage.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
-						Return(nil, expectedErr).
-						Once()
-				})
-				It("should return grpc error with code 13", func() {
-					AssertGRPCError(err, codes.Internal, expectedErr.Error())
-				})
-				It("should return an nil response", func() {
-					Expect(res).To(BeNil())
+						Once().
+						Return(nil, expectedErr)
+
+					res, err = suite.service.Start(context.Background(), req)
+
+					Convey("Should return grpc error with code 13", func() {
+						So(err, ShouldBeGRPCError, codes.Internal, expectedErr.Error())
+					})
+					Convey("Should return an nil response", func() {
+						So(res, ShouldBeNil)
+					})
 				})
 			})
-		})
-		Context("with subject and without bag", func() {
-			BeforeEach(func() {
+			Convey("With subject and without bag", func() {
 				req = &mnemosyne.StartRequest{SubjectId: subjectID}
-				session = &mnemosyne.Session{Token: token, SubjectId: subjectID, ExpireAt: protot.Now()}
+				session = &mnemosyne.Session{AccessToken: token, SubjectId: subjectID, ExpireAt: protot.Now()}
 				storage.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
-					Return(session, expectedErr).
-					Once()
+					Once().
+					Return(session, expectedErr)
+
+				res, err = suite.service.Start(context.Background(), req)
+
+				Convey("Should", itSuccess)
 			})
-			itSuccess()
-		})
-		Context("without subject and with bag", func() {
-			BeforeEach(func() {
+			Convey("Without subject and with bag", func() {
 				req = &mnemosyne.StartRequest{Bag: bag}
 				expectedErr = errors.New("mnemosyned: session cannot be started, subject id is missing")
 				storage.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
-					Return(session, expectedErr).
-					Once()
-			})
-			It("should return an error", func() {
-				Expect(err).ToNot(Equal(expectedErr))
-			})
-			It("should return an nil response", func() {
-				Expect(res).To(BeNil())
+					Once().
+					Return(session, expectedErr)
+
+				res, err = suite.service.Start(context.Background(), req)
+
+				Convey("Should return an error", func() {
+					So(err, ShouldNotEqual, expectedErr)
+				})
+				Convey("Should return an nil response", func() {
+					So(res, ShouldBeNil)
+				})
 			})
 		})
 	})
-})
+
+	suite.teardown()
+}

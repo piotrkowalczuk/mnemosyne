@@ -24,7 +24,7 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 	-sp.connectionstring=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
 	-sp.tablename=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME)
 
-CMD_TEST=go test -v
+CMD_TEST=go test -v -coverprofile=profile.out -covermode=atomic
 
 .PHONY:	all proto build build-daemon run test test-unit test-postgres install package
 
@@ -51,22 +51,17 @@ rebuild: proto mocks build
 run:
 	@${BINARY} ${FLAGS}
 
-test: test-lib test-test test-daemon
+test: test-unit test-postgres
 
-test-lib:
+test-unit:
 	@${CMD_TEST} ${PACKAGE}
-
-test-test:
 	@${CMD_TEST} ${PACKAGE_TEST}
-
-test-daemon:
 	@${CMD_TEST} -tags=unit ${PACKAGE_DAEMON}
-	@${CMD_TEST} -tags=postgres ${PACKAGE_DAEMON} -- ${FLAGS}
+
+test-postgres:
+	@${CMD_TEST} -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
 
 get:
-	@go get github.com/stretchr/testify/...
-	@go get github.com/onsi/ginkgo
-	@go get github.com/onsi/gomega
 	@go get ./...
 
 install: build
@@ -78,7 +73,6 @@ install: build
 	install -Dm 755 scripts/${SERVICE}.service ${DESTDIR}/etc/systemd/system/${SERVICE}.service
 
 package:
-
 	# export DIST_PACKAGE_TYPE to vary package type (e.g. deb, tar, rpm)
 	@if [ -z "$(shell which fpm 2>/dev/null)" ]; then \
 		echo "error:\nPackaging requires effing package manager (fpm) to run.\nsee https://github.com/jordansissel/fpm\n"; \

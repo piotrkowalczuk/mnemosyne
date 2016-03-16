@@ -19,21 +19,21 @@ service RPC {
 
 message Empty {}
 
-// Token represents identifier of single session. It consist of partition key and a hash.
-message Token {
+// AccessToken represents identifier of single session. It consist of partition key and a hash.
+message AccessToken {
     bytes key = 1;
     bytes hash = 2;
 }
 
 message Session {
-    Token token = 1;
+    AccessToken access_token = 1;
     string subject_id = 2;
     map<string, string> bag = 3;
     protot.Timestamp expire_at = 4;
 }
 
 message GetRequest {
-    Token token = 1;
+    AccessToken access_token = 1;
 }
 message GetResponse {
     Session session = 1;
@@ -50,7 +50,7 @@ message ListResponse {
 }
 
 message ExistsRequest {
-    Token token = 1;
+    AccessToken access_token = 1;
 }
 message ExistsResponse {
     bool exists = 1;
@@ -65,14 +65,14 @@ message StartResponse {
 }
 
 message AbandonRequest {
-    Token token = 1;
+    AccessToken access_token = 1;
 }
 message AbandonResponse {
     bool abandoned = 1;
 }
 
 message SetValueRequest {
-    Token token = 1;
+    AccessToken access_token = 1;
     string key = 2;
     string value = 3;
 }
@@ -81,7 +81,7 @@ message SetValueResponse {
 }
 
 message DeleteValueRequest {
-    Token token = 1;
+    AccessToken access_token = 1;
     string key = 2;
 }
 message DeleteValueResponse {
@@ -89,13 +89,13 @@ message DeleteValueResponse {
 }
 
 message ClearRequest {
-    Token token = 1;
+    AccessToken access_token = 1;
 }
 message ClearResponse {
 }
 
 message DeleteRequest {
-    Token token = 1;
+    AccessToken access_token = 1;
     protot.Timestamp expire_at_from = 2;
     protot.Timestamp expire_at_to = 3;
 }

@@ -24,15 +24,15 @@ type Storage interface {
 	TearDown() error
 
 	Start(string, map[string]string) (*mnemosyne.Session, error)
-	Abandon(*mnemosyne.Token) (bool, error)
-	Get(*mnemosyne.Token) (*mnemosyne.Session, error)
+	Abandon(*mnemosyne.AccessToken) (bool, error)
+	Get(*mnemosyne.AccessToken) (*mnemosyne.Session, error)
 	List(int64, int64, *time.Time, *time.Time) ([]*mnemosyne.Session, error)
-	Exists(*mnemosyne.Token) (bool, error)
-	Delete(*mnemosyne.Token, *time.Time, *time.Time) (int64, error)
+	Exists(*mnemosyne.AccessToken) (bool, error)
+	Delete(*mnemosyne.AccessToken, *time.Time, *time.Time) (int64, error)
 
-	SetValue(*mnemosyne.Token, string, string) (map[string]string, error)
-	//	DeleteValue(*mnemosyne.Token, string) (*mnemosyne.Session, error)
-	//	Clear(*mnemosyne.Token) (*mnemosyne.Session, error)
+	SetValue(*mnemosyne.AccessToken, string, string) (map[string]string, error)
+	//	DeleteValue(*mnemosyne.AccessToken, string) (*mnemosyne.Session, error)
+	//	Clear(*mnemosyne.AccessToken) (*mnemosyne.Session, error)
 }
 
 type storageMock struct {
@@ -51,14 +51,14 @@ func (sm *storageMock) Start(subjectID string, bag map[string]string) (*mnemosyn
 }
 
 // Ąbandon implements Storage interface.
-func (sm *storageMock) Abandon(token *mnemosyne.Token) (bool, error) {
+func (sm *storageMock) Abandon(token *mnemosyne.AccessToken) (bool, error) {
 	args := sm.Called(token)
 
 	return args.Bool(0), args.Error(1)
 }
 
 // Get implements Storage interface.
-func (sm *storageMock) Get(token *mnemosyne.Token) (*mnemosyne.Session, error) {
+func (sm *storageMock) Get(token *mnemosyne.AccessToken) (*mnemosyne.Session, error) {
 	args := sm.Called(token)
 
 	ses, ok := args.Get(0).(*mnemosyne.Session)
@@ -80,21 +80,21 @@ func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.
 }
 
 // Exists implements Storage interface.
-func (sm *storageMock) Exists(token *mnemosyne.Token) (bool, error) {
+func (sm *storageMock) Exists(token *mnemosyne.AccessToken) (bool, error) {
 	args := sm.Called(token)
 
 	return args.Bool(0), args.Error(1)
 }
 
 // Delete implements Storage interface.
-func (sm *storageMock) Delete(token *mnemosyne.Token, expireAtFrom, expireAtTo *time.Time) (int64, error) {
+func (sm *storageMock) Delete(token *mnemosyne.AccessToken, expireAtFrom, expireAtTo *time.Time) (int64, error) {
 	args := sm.Called(token, expireAtFrom, expireAtTo)
 
 	return args.Get(0).(int64), args.Error(1)
 }
 
 // SetValue implements Storage interface.
-func (sm *storageMock) SetValue(token *mnemosyne.Token, key, value string) (map[string]string, error) {
+func (sm *storageMock) SetValue(token *mnemosyne.AccessToken, key, value string) (map[string]string, error) {
 	args := sm.Called(token, key, value)
 
 	return args.Get(0).(map[string]string), args.Error(1)

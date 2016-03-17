@@ -10,13 +10,13 @@ import (
 	"golang.org/x/net/context"
 )
 
-// NewTokenContext returns a new Context that carries Token value.
-func NewTokenContext(ctx context.Context, at AccessToken) context.Context {
+// NewAccessTokenContext returns a new Context that carries Token value.
+func NewAccessTokenContext(ctx context.Context, at AccessToken) context.Context {
 	return context.WithValue(ctx, AccessTokenContextKey, at)
 }
 
-// TokenFromContext returns the Token value stored in context, if any.
-func TokenFromContext(ctx context.Context) (AccessToken, bool) {
+// AccessTokenFromContext returns the Token value stored in context, if any.
+func AccessTokenFromContext(ctx context.Context) (AccessToken, bool) {
 	at, ok := ctx.Value(AccessTokenContextKey).(AccessToken)
 
 	return at, ok

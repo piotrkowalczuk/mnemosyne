@@ -1,0 +1,8 @@
+application {
+	name = "mnemosyne"
+	type = "go"
+}
+
+customization {
+  go_version = "1.6"
+}

@@ -1,8 +1,9 @@
 application {
-	name = "mnemosyne"
-	type = "go"
+  name = "mnemosyne"
+  type = "go"
 }
 
 customization {
   go_version = "1.6"
+  go_import_path = "github.com/piotrkowalczuk/mnemosyne"
 }

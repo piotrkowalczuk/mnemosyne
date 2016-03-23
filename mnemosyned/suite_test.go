@@ -27,7 +27,7 @@ var (
 )
 
 var (
-	address = "127.0.0.1:12345"
+	testAddress = "127.0.0.1:12345"
 )
 
 func init() {
@@ -117,7 +117,7 @@ func newIntegrationSuite(store Storage) *integrationSuite {
 }
 
 func (is *integrationSuite) serve(dialOpts ...grpc.DialOption) (err error) {
-	is.listener, err = net.Listen("tcp", address)
+	is.listener, err = net.Listen("tcp", testAddress)
 	if err != nil {
 		return
 	}
@@ -130,7 +130,7 @@ func (is *integrationSuite) serve(dialOpts ...grpc.DialOption) (err error) {
 
 	go is.server.Serve(is.listener)
 
-	is.serviceConn, err = grpc.Dial(address, dialOpts...)
+	is.serviceConn, err = grpc.Dial(testAddress, dialOpts...)
 	if err != nil {
 		return err
 	}

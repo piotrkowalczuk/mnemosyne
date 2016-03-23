@@ -3,6 +3,8 @@ package main
 import (
 	"errors"
 	"net"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"strconv"
 
@@ -102,5 +104,8 @@ func main() {
 
 	sklog.Info(logger, "rpc api is running", "host", config.host, "port", config.port, "subsystem", config.subsystem, "namespace", config.namespace)
 
+	go func() {
+		sklog.Fatal(logger, http.ListenAndServe(address(config.host, config.port+1), nil))
+	}()
 	gRPCServer.Serve(listen)
 }

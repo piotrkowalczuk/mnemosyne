@@ -28,6 +28,11 @@ type configuration struct {
 			tableName        string
 		}
 	}
+	tls struct {
+		enabled  bool
+		certFile string
+		keyFile  string
+	}
 }
 
 func (c *configuration) init() {
@@ -46,6 +51,9 @@ func (c *configuration) init() {
 	flag.StringVar(&c.storage.engine, "s.engine", storageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.storage.postgres.connectionString, "sp.connectionstring", "postgres://localhost:5432?sslmode=disable", "storage postgres connection string")
 	flag.StringVar(&c.storage.postgres.tableName, "sp.tablename", "mnemosyne_session", "storage postgres table name")
+	flag.BoolVar(&c.tls.enabled, "tls", false, "tls enable flag")
+	flag.StringVar(&c.tls.certFile, "tls.certfile", "", "path to tls cert file")
+	flag.StringVar(&c.tls.keyFile, "tls.keyfile", "", "path to tls key file")
 }
 
 func (c *configuration) parse() {

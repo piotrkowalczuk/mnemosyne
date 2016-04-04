@@ -12,6 +12,7 @@ import (
 	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
 )
 
@@ -66,13 +67,13 @@ func main() {
 	}
 
 	var opts []grpc.ServerOption
-	//	if *tls {
-	//		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
-	//		if err != nil {
-	//			grpclog.Fatalf("Failed to generate credentials %v", err)
-	//		}
-	//		opts = []grpc.ServerOption{grpc.Creds(creds)}
-	//	}
+	if config.tls.enabled {
+		creds, err := credentials.NewServerTLSFromFile(config.tls.certFile, config.tls.keyFile)
+		if err != nil {
+			sklog.Fatal(logger, err)
+		}
+		opts = []grpc.ServerOption{grpc.Creds(creds)}
+	}
 	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
 	gRPCServer := grpc.NewServer(opts...)
 	mnemosyneServer := newRPCServer(logger, storage, monitor)

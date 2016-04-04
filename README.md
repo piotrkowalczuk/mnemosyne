@@ -45,6 +45,9 @@ $ go install github.com/piotrkowalczuk/mnemosyne/mnemosyned
 |storage engine|`-s.engine`|postgres|enum(postgres)|
 |storage postgres connection string|`-sp.connectionstring`|postgres://localhost:5432?sslmode=disable|string|
 |storage postgres table name|`-sp.tablename`|mnemosyne_session|string|
+|tls |`-tls`|false|boolean|
+|tls certificate file |`-tls.certfile`| |string|
+|tls key file |`-tls.keyfile`| |string|
 
 ### Running
 

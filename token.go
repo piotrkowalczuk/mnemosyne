@@ -36,7 +36,8 @@ func (at *AccessToken) Bytes() []byte {
 	return append(at.Key[:10], at.Hash...)
 }
 
-// DecodeAccessToken parse string and allocates new token instance if ok. Expected token has format <key(10)><hash(n)>.
+// DecodeAccessToken parse string and allocates new token instance if ok.
+// Expected token has format <key(10)><hash(n)>.
 func DecodeAccessToken(s []byte) (at AccessToken) {
 	if len(s) < 10 {
 		return

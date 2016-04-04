@@ -27,6 +27,33 @@ type rpcServer struct {
 	}
 }
 
+func newRPCServer(l log.Logger, s Storage, m *monitoring) *rpcServer {
+	return &rpcServer{
+		alloc: struct {
+			abandon  handlerFunc
+			context  handlerFunc
+			delete   handlerFunc
+			exists   handlerFunc
+			get      handlerFunc
+			list     handlerFunc
+			setValue handlerFunc
+			start    handlerFunc
+		}{
+			abandon:  newHandlerFunc("abandon"),
+			context:  newHandlerFunc("context"),
+			delete:   newHandlerFunc("delete"),
+			exists:   newHandlerFunc("exists"),
+			get:      newHandlerFunc("get"),
+			list:     newHandlerFunc("list"),
+			setValue: newHandlerFunc("set_value"),
+			start:    newHandlerFunc("start"),
+		},
+		logger:  l,
+		storage: s,
+		monitor: m,
+	}
+}
+
 // Get implements mnemosyne.RPCServer interface.
 func (rs *rpcServer) Context(ctx context.Context, req *mnemosyne.Empty) (*mnemosyne.Session, error) {
 	h := rs.alloc.context(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)

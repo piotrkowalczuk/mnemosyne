@@ -75,31 +75,7 @@ func main() {
 	//	}
 	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
 	gRPCServer := grpc.NewServer(opts...)
-
-	mnemosyneServer := &rpcServer{
-		alloc: struct {
-			abandon  handlerFunc
-			context  handlerFunc
-			delete   handlerFunc
-			exists   handlerFunc
-			get      handlerFunc
-			list     handlerFunc
-			setValue handlerFunc
-			start    handlerFunc
-		}{
-			abandon:  newHandlerFunc("abandon"),
-			context:  newHandlerFunc("context"),
-			delete:   newHandlerFunc("delete"),
-			exists:   newHandlerFunc("exists"),
-			get:      newHandlerFunc("get"),
-			list:     newHandlerFunc("list"),
-			setValue: newHandlerFunc("set_value"),
-			start:    newHandlerFunc("start"),
-		},
-		logger:  logger,
-		storage: storage,
-		monitor: monitor,
-	}
+	mnemosyneServer := newRPCServer(logger, storage, monitor)
 	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
 
 	sklog.Info(logger, "rpc api is running", "host", config.host, "port", config.port, "subsystem", config.subsystem, "namespace", config.namespace)

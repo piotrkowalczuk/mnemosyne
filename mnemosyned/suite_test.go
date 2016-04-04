@@ -88,31 +88,8 @@ func newIntegrationSuite(store Storage) *integrationSuite {
 	monitor := initMonitoring(initPrometheus("mnemosyne_test", "mnemosyne", stdprometheus.Labels{"server": "test"}), logger)
 
 	return &integrationSuite{
-		logger: logger,
-		serviceServer: &rpcServer{
-			alloc: struct {
-				abandon  handlerFunc
-				context  handlerFunc
-				delete   handlerFunc
-				exists   handlerFunc
-				get      handlerFunc
-				list     handlerFunc
-				setValue handlerFunc
-				start    handlerFunc
-			}{
-				abandon:  newHandlerFunc("abandon"),
-				context:  newHandlerFunc("context"),
-				delete:   newHandlerFunc("delete"),
-				exists:   newHandlerFunc("exists"),
-				get:      newHandlerFunc("get"),
-				list:     newHandlerFunc("list"),
-				setValue: newHandlerFunc("set_value"),
-				start:    newHandlerFunc("start"),
-			},
-			logger:  logger,
-			storage: store,
-			monitor: monitor,
-		},
+		logger:        logger,
+		serviceServer: newRPCServer(logger, store, monitor),
 	}
 }
 

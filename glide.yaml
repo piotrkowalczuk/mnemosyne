@@ -1,0 +1,37 @@
+package: github.com/piotrkowalczuk/mnemosyne
+import:
+- package: github.com/go-kit/kit
+  subpackages:
+  - log
+  - metrics
+  - metrics/prometheus
+- package: github.com/golang/protobuf
+  subpackages:
+  - proto
+  - ptypes
+  - ptypes/timestamp
+- package: github.com/lib/pq
+- package: github.com/golang/protobuf
+  subpackages:
+  - ptypes
+- package: github.com/piotrkowalczuk/sklog
+- package: github.com/prometheus/client_golang
+  subpackages:
+  - prometheus
+- package: github.com/stretchr/testify
+  subpackages:
+  - mock
+- package: golang.org/x/crypto
+  subpackages:
+  - sha3
+- package: golang.org/x/net
+  subpackages:
+  - context
+- package: golang.org/x/oauth2
+- package: google.golang.org/grpc
+  subpackages:
+  - codes
+  - credentials
+  - grpclog
+  - metadata
+  - peer

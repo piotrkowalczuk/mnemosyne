@@ -6,19 +6,7 @@ addons:
   code_climate:
     repo_token: 6e0f648267827e942b80676d93220b191a0cd2122e87a24be5a9eb45c680bbda
 env:
-  MNEMOSYNE_HOST: localhost
-  MNEMOSYNE_PORT: 9001
-  MNEMOSYNE_SUBSYSTEM: mnemosyne_travis
-  MNEMOSYNE_LOGGER_FORMAT: humane
-  MNEMOSYNE_LOGGER_ADAPTER: stdout
-  MNEMOSYNE_LOGGER_LEVEL: 6
-  MNEMOSYNE_MONITORING_ENGINE: prometheus
-  MNEMOSYNE_STORAGE_ENGINE: postgres
-  MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING: postgres://postgres:@localhost/travis_ci_test?sslmode=disable
-  MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME: session
-  MNEMOSYNE_STORAGE_POSTGRES_RETRY: 10
-  MNEMOSYNE_SUBSYSTEM: "mnemosyne_travis"
-  MNEMOSYNE_NAMESPACE: "mnemosyne_travis"
+  MNEMOSYNE_STORAGE_POSTGRES_ADDRESS: postgres://postgres:@localhost/travis_ci_test?sslmode=disable
 install:
 - make get
 before_script:

@@ -1,9 +1,9 @@
 PROTOC=/usr/local/bin/protoc
 SERVICE=mnemosyne
 PACKAGE=github.com/piotrkowalczuk/mnemosyne
-PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
 PACKAGE_TEST=$(PACKAGE)/$(SERVICE)test
-BINARY=${SERVICE}d/${SERVICE}d
+PACKAGE_CMD_DAEMON=$(PACKAGE)/cmd/$(SERVICE)d
+BINARY_CMD_DAEMON=cmd/${SERVICE}d/${SERVICE}d
 
 #packaging
 DIST_PACKAGE_BUILD_DIR=temp
@@ -21,20 +21,19 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 	-l.level=$(MNEMOSYNE_LOGGER_LEVEL) \
 	-m.engine=$(MNEMOSYNE_MONITORING_ENGINE) \
 	-s.engine=$(MNEMOSYNE_STORAGE_ENGINE) \
-	-sp.connectionstring=$(MNEMOSYNE_STORAGE_POSTGRES_CONNECTION_STRING) \
-	-sp.tablename=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE_NAME)
+	-s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS) \
+	-s.p.table=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE)
 
-CMD_TEST=go test -v -coverprofile=profile.out -covermode=atomic
+CMD_TEST=go test -coverprofile=profile.out -covermode=atomic
 
-.PHONY:	all proto build build-daemon run test test-unit test-postgres install package
+.PHONY:	all proto build build-daemon run test test-short install package
 
 all: proto build test run
 
 proto:
 	@${PROTOC} --proto_path=${GOPATH}/src \
 	    --proto_path=. \
-	    --proto_path=${GOPATH}/src/github.com/piotrkowalczuk/protot \
-	    --go_out=Mprotot.proto=github.com/piotrkowalczuk/protot,plugins=grpc:. \
+	    --go_out=plugins=grpc:. \
 	    ${SERVICE}.proto
 	@ls -al | grep "pb.go"
 
@@ -44,25 +43,23 @@ mocks:
 build: build-daemon
 
 build-daemon:
-	@go build -o ${BINARY} ${PACKAGE_DAEMON}
+	@go build -o ${BINARY_CMD_DAEMON} ${PACKAGE_CMD_DAEMON}
 
 rebuild: proto mocks build
 
 run:
-	@${BINARY} ${FLAGS}
+	@${BINARY_CMD_DAEMON} ${FLAGS}
 
-test: test-unit test-postgres
-
-test-unit:
-	@${CMD_TEST} ${PACKAGE}
+test-short:
+	@${CMD_TEST} -short ${PACKAGE}
 	@cat profile.out >> coverage.txt && rm profile.out
-	@${CMD_TEST} -tags=unit ${PACKAGE_DAEMON}
+	@${CMD_TEST} -short ${PACKAGE_TEST}
+
+test:
+	@${CMD_TEST} ${PACKAGE} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
 	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} ${PACKAGE_TEST}
 
-test-postgres:
-	@${CMD_TEST} -tags=postgres ${PACKAGE_DAEMON} ${FLAGS}
-	@cat profile.out >> coverage.txt && rm profile.out
 
 get:
 	@go get github.com/smartystreets/goconvey/...
@@ -79,7 +76,7 @@ install: build
 package:
 	# export DIST_PACKAGE_TYPE to vary package type (e.g. deb, tar, rpm)
 	@if [ -z "$(shell which fpm 2>/dev/null)" ]; then \
-		echo "error:\nPackaging requires effing package manager (fpm) to run.\nsee https://github.com/jordansissel/fpm\n"; \
+		echo "error:\nPackagings requires effing package manager (fpm) to run.\nsee https://github.com/jordansissel/fpm\n"; \
 		exit 1; \
 	fi
 

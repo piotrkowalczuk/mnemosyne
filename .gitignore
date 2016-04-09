@@ -1,10 +1,12 @@
 # Project
 .idea
-mnemosyned/.otto
-mnemosyne.iml
-mnemosyned/mnemosyned
+glide.yml
+vendor
+*.iml
+cmd/mnemosyned/mnemosyned
 run.sh
 test.sh
+profile.out
 coverage.txt
 *.sublime-project
 *.sublime-workspace

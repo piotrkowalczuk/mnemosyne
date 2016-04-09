@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package mnemosyne;
 
-import "protot.proto";
+import "github.com/golang/protobuf/ptypes/timestamp/timestamp.proto";
 
 service RPC {
     rpc Context(Empty) returns (Session) {};
@@ -29,7 +29,7 @@ message Session {
     AccessToken access_token = 1;
     string subject_id = 2;
     map<string, string> bag = 3;
-    protot.Timestamp expire_at = 4;
+    google.protobuf.Timestamp expire_at = 4;
 }
 
 message GetRequest {
@@ -42,8 +42,8 @@ message GetResponse {
 message ListRequest {
     int64 offset = 1;
     int64 limit = 2;
-    protot.Timestamp expire_at_from = 3;
-    protot.Timestamp expire_at_to = 4;
+    google.protobuf.Timestamp expire_at_from = 3;
+    google.protobuf.Timestamp expire_at_to = 4;
 }
 message ListResponse {
     repeated Session sessions = 1;
@@ -96,8 +96,8 @@ message ClearResponse {
 
 message DeleteRequest {
     AccessToken access_token = 1;
-    protot.Timestamp expire_at_from = 2;
-    protot.Timestamp expire_at_to = 3;
+    google.protobuf.Timestamp expire_at_from = 2;
+    google.protobuf.Timestamp expire_at_to = 3;
 }
 message DeleteResponse {
     int64 count = 1;

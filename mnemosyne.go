@@ -2,6 +2,9 @@ package mnemosyne
 
 import (
 	"net/url"
+	"time"
+
+	"github.com/golang/protobuf/ptypes"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -10,26 +13,38 @@ import (
 )
 
 const (
+	// TokenContextKey ...
+	TokenContextKey = "mnemosyne_token"
 	// AccessTokenContextKey is used by Mnemosyne internally to retrieve session token from context.Context.
-	AccessTokenContextKey = "mnemosyne_token"
+	AccessTokenContextKey = "mnemosyne_access_token"
 	// AccessTokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
-	AccessTokenMetadataKey = "mnemosyne_token"
+	AccessTokenMetadataKey = "authorization"
 )
 
 var (
 	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
 	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyne: session not found")
-	// ErrMissingToken can be returned by any endpoint that expects token in request.
-	ErrMissingToken = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing token")
+	// ErrMissingAccessToken can be returned by any endpoint that expects access token in request.
+	ErrMissingAccessToken = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing access token")
 	// ErrMissingSubjectID can be returned by start endpoint if subject was not provided.
 	ErrMissingSubjectID = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing subject id")
 )
 
 // Token implements oauth2.TokenSource interface.
 func (s *Session) Token() (*oauth2.Token, error) {
+	var (
+		err      error
+		expireAt time.Time
+	)
+	if s.ExpireAt != nil {
+		expireAt, err = ptypes.Timestamp(s.ExpireAt)
+		if err != nil {
+			return nil, err
+		}
+	}
 	token := &oauth2.Token{
 		AccessToken: s.AccessToken.Encode(),
-		Expiry:      s.ExpireAt.Time(),
+		Expiry:      expireAt,
 	}
 	if s.Bag != nil && len(s.Bag) > 0 {
 		token = token.WithExtra(bagToURLValues(s.Bag))

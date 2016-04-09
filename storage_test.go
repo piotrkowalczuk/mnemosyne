@@ -1,139 +1,15 @@
-package main
+package mnemosyne
 
 import (
-	"fmt"
-	"io"
-	"net"
 	"strconv"
 	"sync"
 	"testing"
 	"time"
 
-	"io/ioutil"
-
-	"github.com/go-kit/kit/log"
-	"github.com/piotrkowalczuk/mnemosyne"
-	"github.com/piotrkowalczuk/sklog"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
-	"github.com/smartystreets/goconvey/convey"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/grpclog"
 )
-
-var (
-	notExistsToken *mnemosyne.AccessToken
-)
-
-var (
-	testAddress = "127.0.0.1:12345"
-)
-
-func init() {
-	tk := mnemosyne.NewAccessToken([]byte(""), []byte("fake"))
-	notExistsToken = &tk
-}
-
-func ShouldBeGRPCError(actual interface{}, expected ...interface{}) (s string) {
-	if len(expected) != 2 {
-		return fmt.Sprintf("This assertion requires exactly 2 comparison values (you provided %d).", len(expected))
-	}
-
-	e, ok := actual.(error)
-	if !ok {
-		return "The given value must implement error interface."
-	}
-	if s = convey.ShouldEqual(grpc.Code(e), expected[0]); s != "" {
-		return
-	}
-	if s = convey.ShouldEqual(grpc.ErrorDesc(e), expected[1]); s != "" {
-		return
-	}
-	return
-}
-func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) {
-	if len(expected) != 0 {
-		return fmt.Sprintf("This assertion requires exactly 0 comparison values (you provided %d).", len(expected))
-	}
-
-	if s = convey.ShouldNotBeNil(actual); s != "" {
-		return
-	}
-	if s = convey.ShouldHaveSameTypeAs(actual, &mnemosyne.AccessToken{}); s != "" {
-		return
-	}
-
-	t := actual.(*mnemosyne.AccessToken)
-	if s = convey.ShouldNotBeEmpty(t.Key); s != "" {
-		return
-	}
-	if s = convey.ShouldNotBeEmpty(t.Hash); s != "" {
-		return
-	}
-	return
-}
-
-type integrationSuite struct {
-	logger        log.Logger
-	listener      net.Listener
-	server        *grpc.Server
-	service       mnemosyne.RPCClient
-	serviceConn   *grpc.ClientConn
-	serviceServer mnemosyne.RPCServer
-}
-
-func newIntegrationSuite(store Storage) *integrationSuite {
-	logger := sklog.NewHumaneLogger(ioutil.Discard, sklog.DefaultHTTPFormatter)
-	monitor := initMonitoring(initPrometheus("mnemosyne_test", "mnemosyne", stdprometheus.Labels{"server": "test"}), logger)
-
-	return &integrationSuite{
-		logger:        logger,
-		serviceServer: newRPCServer(logger, store, monitor),
-	}
-}
-
-func (is *integrationSuite) serve(dialOpts ...grpc.DialOption) (err error) {
-	is.listener, err = net.Listen("tcp", testAddress)
-	if err != nil {
-		return
-	}
-
-	grpclog.SetLogger(sklog.NewGRPCLogger(is.logger))
-	var opts []grpc.ServerOption
-	is.server = grpc.NewServer(opts...)
-
-	mnemosyne.RegisterRPCServer(is.server, is.serviceServer)
-
-	go is.server.Serve(is.listener)
-
-	is.serviceConn, err = grpc.Dial(testAddress, dialOpts...)
-	if err != nil {
-		return err
-	}
-	is.service = mnemosyne.NewRPCClient(is.serviceConn)
-
-	return
-}
-
-func (is *integrationSuite) teardown() (err error) {
-	close := func(c io.Closer) {
-		if err != nil {
-			return
-		}
-
-		if c == nil {
-			return
-		}
-
-		err = c.Close()
-	}
-
-	close(is.serviceConn)
-	close(is.listener)
-
-	return
-}
 
 func testStorage_Start(t *testing.T, s Storage) {
 	subjectID := "subjectID"
@@ -163,7 +39,7 @@ func testStorage_Get(t *testing.T, s Storage) {
 	assert.Equal(t, ses.ExpireAt, got.ExpireAt)
 
 	// Check for non existing Token
-	got2, err2 := s.Get(notExistsToken)
+	got2, err2 := s.Get(&AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	assert.Error(t, err2)
 	assert.EqualError(t, err2, errSessionNotFound.Error())
 	assert.Nil(t, got2)
@@ -172,19 +48,28 @@ func testStorage_Get(t *testing.T, s Storage) {
 func testStorage_List(t *testing.T, s Storage) {
 	nb := 10
 	key := "index"
+	sid := "subjectID"
 
 	for i := 1; i <= nb; i++ {
-		_, err := s.Start("subjectID", map[string]string{key: strconv.FormatInt(int64(i), 10)})
-		require.NoError(t, err)
+		_, err := s.Start(sid, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		if err != nil {
+			t.Fatalf("unexpected error on session start: %s", err.Error())
+		}
 	}
 
 	sessions, err := s.List(2, int64(nb), nil, nil)
+	if len(sessions) != nb-2 {
+		t.Fatalf("wrong number of sessions returned: expected %d but got %d", nb, len(sessions))
+	}
+
 	if assert.NoError(t, err) {
-		assert.Len(t, sessions, nb)
+		assert.Len(t, sessions, nb-2)
 		for i, s := range sessions {
 			assert.NotEmpty(t, s.AccessToken)
 			assert.NotEmpty(t, s.ExpireAt)
-			assert.Equal(t, s.Bag[key], strconv.FormatInt(int64(i+1), 10))
+			assert.Equal(t, s.SubjectId, sid)
+
+			assert.Equal(t, s.Bag[key], strconv.FormatInt(int64(i+3), 10))
 		}
 	}
 }
@@ -201,7 +86,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 	assert.True(t, exists)
 
 	// Check for non existing Token
-	exists2, err2 := s.Exists(notExistsToken)
+	exists2, err2 := s.Exists(&AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	if assert.NoError(t, err2) {
 		assert.False(t, exists2)
 	}
@@ -224,7 +109,7 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	assert.EqualError(t, err3, errSessionNotFound.Error())
 
 	// Check for session that never exists
-	ok4, err4 := s.Abandon(notExistsToken)
+	ok4, err4 := s.Abandon(&AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	assert.False(t, ok4)
 	assert.EqualError(t, err4, errSessionNotFound.Error())
 }
@@ -233,7 +118,12 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	new, err := s.Start("subjectID", map[string]string{
 		"username": "test",
 	})
-	require.NoError(t, err)
+	if err != nil {
+		t.Fatalf("unexpected error on session start: %s", err.Error())
+	}
+	if s == nil {
+		t.Fatalf("storage is nil")
+	}
 
 	// Check for existing Token
 	got, err2 := s.SetValue(new.AccessToken, "email", "fake@email.com")
@@ -250,7 +140,7 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	assert.Equal(t, "test", bag2["username"])
 
 	// Check for non existing Token
-	bag3, err3 := s.SetValue(notExistsToken, "email", "fake@email.com")
+	bag3, err3 := s.SetValue(&AccessToken{Key: []byte("key"), Hash: []byte("hash")}, "email", "fake@email.com")
 	require.Error(t, err3, errSessionNotFound.Error())
 	assert.Nil(t, bag3)
 
@@ -297,11 +187,22 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 }
 
 func testStorage_Delete(t *testing.T, s Storage) {
+	nb := int64(10)
+	key := "index"
+	sid := "subjectID"
+
+	for i := int64(1); i <= nb; i++ {
+		_, err := s.Start(sid, map[string]string{key: strconv.FormatInt(i, 10)})
+		if err != nil {
+			t.Fatalf("unexpected error on session start: %s", err.Error())
+		}
+	}
+
 	expiredAtTo := time.Now().Add(35 * time.Minute)
 
 	affected, err := s.Delete(nil, nil, &expiredAtTo)
 	if assert.NoError(t, err) {
-		assert.Equal(t, int64(14), affected)
+		assert.Equal(t, nb, affected)
 	}
 
 	data := []struct {
@@ -347,7 +248,7 @@ DataLoop:
 		}
 
 		var (
-			id            *mnemosyne.AccessToken
+			id            *AccessToken
 			expiredAtTo   *time.Time
 			expiredAtFrom *time.Time
 		)
@@ -357,11 +258,19 @@ DataLoop:
 		}
 
 		if args.expiredAtFrom {
-			eaf := new.ExpireAt.Time().Add(-29 * time.Minute)
+			expireAtFrom, err := ptypes.Timestamp(new.ExpireAt)
+			if assert.NoError(t, err) {
+				continue DataLoop
+			}
+			eaf := expireAtFrom.Add(-29 * time.Minute)
 			expiredAtFrom = &eaf
 		}
 		if args.expiredAtTo {
-			eat := new.ExpireAt.Time().Add(29 * time.Minute)
+			expireAtTo, err := ptypes.Timestamp(new.ExpireAt)
+			if assert.NoError(t, err) {
+				continue DataLoop
+			}
+			eat := expireAtTo.Add(29 * time.Minute)
 			expiredAtTo = &eat
 		}
 

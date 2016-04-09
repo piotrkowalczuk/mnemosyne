@@ -24,10 +24,13 @@ Mnemosyne can be installed in two ways, from source and using `deb` package that
 
 ### From source
 
-You can directly use the go tool to download and install the **mnemosyned** binary into your [GOPATH](https://github.com/golang/go/wiki/GOPATH). Go in version 1.6 is required.
+To install from source both go tools and [glide](github.com/Masterminds/glide) is required. 
 
 ```
-$ go install github.com/piotrkowalczuk/mnemosyne/mnemosyned
+$ go get -d github.com/piotrkowalczuk/mnemosyne/...
+$ cd $GOPATH/src/github.com/piotrkowalczuk/mnemosyne
+$ glide install
+$ go install
 ```
 
 ### Configuration
@@ -43,8 +46,8 @@ $ go install github.com/piotrkowalczuk/mnemosyne/mnemosyned
 |subsystem|`-subsystem`| mnemosyne|string|
 |monitoring engine|`-m.engine`|prometheus|enum(prometheus)|
 |storage engine|`-s.engine`|postgres|enum(postgres)|
-|storage postgres connection string|`-sp.connectionstring`|postgres://localhost:5432?sslmode=disable|string|
-|storage postgres table name|`-sp.tablename`|mnemosyne_session|string|
+|storage postgres connection string|`-s.p.address`|postgres://localhost:5432?sslmode=disable|string|
+|storage postgres table name|`-s.p.table`|mnemosyne_session|string|
 |tls |`-tls`|false|boolean|
 |tls certificate file |`-tls.certfile`| |string|
 |tls key file |`-tls.keyfile`| |string|
@@ -54,7 +57,7 @@ $ go install github.com/piotrkowalczuk/mnemosyne/mnemosyned
 As we know, mnemosyne can be configured in many ways. For the beginning we can start simple:
 
 ```bash
-$ mnemosyned -namespace=acme -sp.connectionstring="postgres://localhost/test?sslmode=disable"
+$ mnemosyned -namespace=acme -s.p.address="postgres://localhost/test?sslmode=disable"
 ```
 
 Mnemosyne will automatically create all required tables/indexes for specified database.

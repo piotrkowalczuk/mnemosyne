@@ -2,12 +2,18 @@ package mnemosyne
 
 import (
 	"testing"
-
 	"time"
 
-	"github.com/piotrkowalczuk/protot"
+	"github.com/golang/protobuf/ptypes"
+	tspb "github.com/golang/protobuf/ptypes/timestamp"
 	"golang.org/x/oauth2"
 )
+
+func testTimestampProtoDate(year int, month time.Month, day, hour, min, sec, nsec int, loc *time.Location) *tspb.Timestamp {
+	t, _ := ptypes.TimestampProto(time.Date(year, month, day, hour, min, sec, nsec, loc))
+
+	return t
+}
 
 func TestSession_Token(t *testing.T) {
 	cases := []struct {
@@ -17,7 +23,7 @@ func TestSession_Token(t *testing.T) {
 		{
 			given: &Session{
 				AccessToken: &AccessToken{Key: []byte("0000000001"), Hash: []byte("abc")},
-				ExpireAt:    protot.TimeToTimestamp(time.Date(2007, time.January, 1, 0, 0, 0, 0, time.UTC)),
+				ExpireAt:    testTimestampProtoDate(2007, time.January, 1, 0, 0, 0, 0, time.UTC),
 			},
 			expected: oauth2.Token{
 				AccessToken: "0000000001abc",
@@ -34,7 +40,6 @@ func TestSession_Token(t *testing.T) {
 			},
 			expected: oauth2.Token{
 				AccessToken: "0000000001999999999999",
-				Expiry:      time.Unix(0, 0).UTC(),
 			},
 		},
 	}

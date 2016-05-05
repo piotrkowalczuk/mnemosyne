@@ -103,7 +103,7 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	assert.True(t, ok2)
 	require.NoError(t, err2)
 
-	// Check for already abondond session
+	// Check for already abandoned session
 	ok3, err3 := s.Abandon(new.AccessToken)
 	assert.False(t, ok3)
 	assert.EqualError(t, err3, errSessionNotFound.Error())

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 )
 
 const VERSION = "0.2.1"
@@ -46,11 +46,11 @@ func (c *configuration) init() {
 	flag.IntVar(&c.port, "port", 8080, "port")
 	flag.StringVar(&c.namespace, "namespace", "", "namespace")
 	flag.StringVar(&c.subsystem, "subsystem", "mnemosyne", "subsystem")
-	flag.StringVar(&c.logger.adapter, "l.adapter", mnemosyne.LoggerAdapterStdOut, "logger adapter")
-	flag.StringVar(&c.logger.format, "l.format", mnemosyne.LoggerFormatJSON, "logger format")
+	flag.StringVar(&c.logger.adapter, "l.adapter", mnemosyned.LoggerAdapterStdOut, "logger adapter")
+	flag.StringVar(&c.logger.format, "l.format", mnemosyned.LoggerFormatJSON, "logger format")
 	flag.IntVar(&c.logger.level, "l.level", 6, "logger level")
-	flag.StringVar(&c.monitoring.engine, "m.engine", mnemosyne.MonitoringEnginePrometheus, "monitoring engine")
-	flag.StringVar(&c.storage.engine, "s.engine", mnemosyne.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
+	flag.StringVar(&c.monitoring.engine, "m.engine", mnemosyned.MonitoringEnginePrometheus, "monitoring engine")
+	flag.StringVar(&c.storage.engine, "s.engine", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.storage.postgres.address, "s.p.address", "postgres://localhost:5432?sslmode=disable", "storage postgres connection string")
 	flag.StringVar(&c.storage.postgres.table, "s.p.table", "session", "storage postgres table name")
 	flag.BoolVar(&c.tls.enabled, "tls", false, "tls enable flag")

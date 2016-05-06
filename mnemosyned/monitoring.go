@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyned
 
 import "github.com/go-kit/kit/metrics"
 

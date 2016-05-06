@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"log"
@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
@@ -15,9 +16,9 @@ type integrationSuite struct {
 	logger        log.Logger
 	listener      net.Listener
 	server        *grpc.Server
-	service       RPCClient
+	service       mnemosyne.RPCClient
 	serviceConn   *grpc.ClientConn
-	serviceServer RPCServer
+	serviceServer mnemosyne.RPCServer
 	store         *storageMock
 }
 
@@ -36,7 +37,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 	is.server = grpc.NewServer()
 	is.serviceServer = newRPCServer(logger, is.store, monitor)
 
-	RegisterRPCServer(is.server, is.serviceServer)
+	mnemosyne.RegisterRPCServer(is.server, is.serviceServer)
 
 	go is.server.Serve(is.listener)
 	is.serviceConn, err = grpc.Dial(
@@ -48,7 +49,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	is.service = NewRPCClient(is.serviceConn)
+	is.service = mnemosyne.NewRPCClient(is.serviceConn)
 }
 
 func (is *integrationSuite) teardown(t *testing.T) {

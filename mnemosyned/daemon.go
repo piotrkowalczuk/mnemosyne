@@ -1,17 +1,21 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"database/sql"
 	"errors"
+	"io"
 	"net"
 	"net/http"
 	"os"
+	"testing"
 
 	"github.com/go-kit/kit/log"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/grpclog"
 )
 
 // DaemonOpts ...
@@ -29,6 +33,11 @@ type DaemonOpts struct {
 	RPCOptions             []grpc.ServerOption
 	RPCListener            net.Listener
 	DebugListener          net.Listener
+}
+
+// TestDaemonOpts ...
+type TestDaemonOpts struct {
+	StoragePostgresAddress string
 }
 
 // Daemon ...
@@ -61,6 +70,30 @@ func NewDaemon(opts *DaemonOpts) *Daemon {
 	return d
 }
 
+// TestDaemon returns address of fully started in-memory daemon and closer to close it.
+func TestDaemon(t *testing.T, opts *TestDaemonOpts) (net.Addr, io.Closer) {
+	l, err := net.Listen("tcp", "127.0.0.1:0") // any available address
+	if err != nil {
+		t.Fatalf("mnemosyne daemon tcp listener setup error: %s", err.Error())
+	}
+
+	logger := sklog.NewTestLogger(t)
+	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
+
+	d := NewDaemon(&DaemonOpts{
+		Namespace:              "mnemosyne-test",
+		MonitoringEngine:       MonitoringEnginePrometheus,
+		Logger:                 logger,
+		StoragePostgresAddress: opts.StoragePostgresAddress,
+		RPCListener:            l,
+	})
+	if err := d.Run(); err != nil {
+		t.Fatalf("mnemosyne daemon start error: %s", err.Error())
+	}
+
+	return d.Addr(), d
+}
+
 func (d *Daemon) Run() (err error) {
 	if err = d.initMonitoring(); err != nil {
 		return
@@ -77,15 +110,17 @@ func (d *Daemon) Run() (err error) {
 		d.rpcOptions = append(d.rpcOptions, grpc.Creds(creds))
 	}
 
+	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
 	gRPCServer := grpc.NewServer(d.rpcOptions...)
 	mnemosyneServer := newRPCServer(d.logger, d.storage, d.monitor)
-	RegisterRPCServer(gRPCServer, mnemosyneServer)
+	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
 
 	go func() {
 		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String(), "subsystem", d.opts.Subsystem, "namespace", d.opts.Namespace)
 
 		if err := gRPCServer.Serve(d.rpcListener); err != nil {
 			if err == grpc.ErrServerStopped {
+				sklog.Info(d.logger, "grpc server has been stoped")
 				return
 			}
 

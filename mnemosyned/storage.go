@@ -1,9 +1,10 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"errors"
 	"time"
 
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -14,7 +15,7 @@ const (
 )
 
 var (
-	errSessionNotFound = errors.New("mnemosyne: session not found")
+	SessionNotFound = errors.New("mnemosyne: session not found")
 )
 
 // Storage combines API that needs to be implemented by any storage to be replaceable.
@@ -22,16 +23,16 @@ type Storage interface {
 	Setup() error
 	TearDown() error
 
-	Start(string, map[string]string) (*Session, error)
-	Abandon(*AccessToken) (bool, error)
-	Get(*AccessToken) (*Session, error)
-	List(int64, int64, *time.Time, *time.Time) ([]*Session, error)
-	Exists(*AccessToken) (bool, error)
-	Delete(*AccessToken, *time.Time, *time.Time) (int64, error)
+	Start(string, map[string]string) (*mnemosyne.Session, error)
+	Abandon(*mnemosyne.AccessToken) (bool, error)
+	Get(*mnemosyne.AccessToken) (*mnemosyne.Session, error)
+	List(int64, int64, *time.Time, *time.Time) ([]*mnemosyne.Session, error)
+	Exists(*mnemosyne.AccessToken) (bool, error)
+	Delete(*mnemosyne.AccessToken, *time.Time, *time.Time) (int64, error)
 
-	SetValue(*AccessToken, string, string) (map[string]string, error)
-	//	DeleteValue(*AccessToken, string) (*Session, error)
-	//	Clear(*AccessToken) (*Session, error)
+	SetValue(*mnemosyne.AccessToken, string, string) (map[string]string, error)
+	//	DeleteValue(*mnemosyne.AccessToken, string) (*mnemosyne.Session, error)
+	//	Clear(*mnemosyne.AccessToken) (*mnemosyne.Session, error)
 }
 
 type storageMock struct {
@@ -39,10 +40,10 @@ type storageMock struct {
 }
 
 // Start implements Storage interface.
-func (sm *storageMock) Start(subjectID string, bag map[string]string) (*Session, error) {
+func (sm *storageMock) Start(subjectID string, bag map[string]string) (*mnemosyne.Session, error) {
 	args := sm.Called(subjectID, bag)
 
-	ses, ok := args.Get(0).(*Session)
+	ses, ok := args.Get(0).(*mnemosyne.Session)
 	if !ok {
 		return nil, args.Error(1)
 	}
@@ -50,17 +51,17 @@ func (sm *storageMock) Start(subjectID string, bag map[string]string) (*Session,
 }
 
 // Ąbandon implements Storage interface.
-func (sm *storageMock) Abandon(token *AccessToken) (bool, error) {
+func (sm *storageMock) Abandon(token *mnemosyne.AccessToken) (bool, error) {
 	args := sm.Called(token)
 
 	return args.Bool(0), args.Error(1)
 }
 
 // Get implements Storage interface.
-func (sm *storageMock) Get(token *AccessToken) (*Session, error) {
+func (sm *storageMock) Get(token *mnemosyne.AccessToken) (*mnemosyne.Session, error) {
 	args := sm.Called(token)
 
-	ses, ok := args.Get(0).(*Session)
+	ses, ok := args.Get(0).(*mnemosyne.Session)
 	if !ok {
 		return nil, args.Error(1)
 	}
@@ -68,10 +69,10 @@ func (sm *storageMock) Get(token *AccessToken) (*Session, error) {
 }
 
 // List implements Storage interface.
-func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.Time) ([]*Session, error) {
+func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.Time) ([]*mnemosyne.Session, error) {
 	args := sm.Called(offset, limit, expireAtFrom, expireAtTo)
 
-	ses, ok := args.Get(0).([]*Session)
+	ses, ok := args.Get(0).([]*mnemosyne.Session)
 	if !ok {
 		return nil, args.Error(1)
 	}
@@ -79,21 +80,21 @@ func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.
 }
 
 // Exists implements Storage interface.
-func (sm *storageMock) Exists(token *AccessToken) (bool, error) {
+func (sm *storageMock) Exists(token *mnemosyne.AccessToken) (bool, error) {
 	args := sm.Called(token)
 
 	return args.Bool(0), args.Error(1)
 }
 
 // Delete implements Storage interface.
-func (sm *storageMock) Delete(token *AccessToken, expireAtFrom, expireAtTo *time.Time) (int64, error) {
+func (sm *storageMock) Delete(token *mnemosyne.AccessToken, expireAtFrom, expireAtTo *time.Time) (int64, error) {
 	args := sm.Called(token, expireAtFrom, expireAtTo)
 
 	return args.Get(0).(int64), args.Error(1)
 }
 
 // SetValue implements Storage interface.
-func (sm *storageMock) SetValue(token *AccessToken, key, value string) (map[string]string, error) {
+func (sm *storageMock) SetValue(token *mnemosyne.AccessToken, key, value string) (map[string]string, error) {
 	args := sm.Called(token, key, value)
 
 	return args.Get(0).(map[string]string), args.Error(1)

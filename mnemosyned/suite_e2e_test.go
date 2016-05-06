@@ -1,10 +1,11 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"net"
 	"testing"
 	"time"
 
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	. "github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
@@ -13,7 +14,7 @@ import (
 type e2eSuite struct {
 	listener   net.Listener
 	daemon     *Daemon
-	client     RPCClient
+	client     mnemosyne.RPCClient
 	clientConn *grpc.ClientConn
 }
 
@@ -52,7 +53,7 @@ func (es *e2eSuite) setup(t *testing.T) {
 		t.Fatalf("unexpected client conn error: %s", err.Error())
 	}
 
-	es.client = NewRPCClient(es.clientConn)
+	es.client = mnemosyne.NewRPCClient(es.clientConn)
 }
 
 func (es *e2eSuite) teardown(t *testing.T) {

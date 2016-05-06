@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -55,23 +56,23 @@ func (h *handler) error(err error) error {
 	return grpc.Errorf(codes.Internal, err.Error())
 }
 
-func (h *handler) context(ctx context.Context) (*Session, error) {
+func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
 		return nil, errors.New("mnemosyne: missing metadata in context, session token cannot be retrieved")
 	}
 
-	if len(md[AccessTokenMetadataKey]) == 0 {
+	if len(md[mnemosyne.AccessTokenMetadataKey]) == 0 {
 		return nil, errors.New("mnemosyne: missing sesion token in metadata")
 	}
 
-	token := DecodeAccessToken([]byte(md[AccessTokenMetadataKey][0]))
+	token := mnemosyne.DecodeAccessToken([]byte(md[mnemosyne.AccessTokenMetadataKey][0]))
 
 	h.logger = log.NewContext(h.logger).With("access_token", token.Encode())
 
 	ses, err := h.storage.Get(&token)
 	if err != nil {
-		if err == errSessionNotFound {
+		if err == SessionNotFound {
 			return nil, grpc.Errorf(codes.NotFound, "mnemosyne: session (context) with access token %s does not exists", token)
 		}
 		return nil, err
@@ -79,16 +80,16 @@ func (h *handler) context(ctx context.Context) (*Session, error) {
 	return ses, nil
 }
 
-func (h *handler) get(ctx context.Context, req *GetRequest) (*Session, error) {
+func (h *handler) get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyne.Session, error) {
 	if req.AccessToken == nil {
-		return nil, ErrMissingAccessToken
+		return nil, mnemosyne.ErrMissingAccessToken
 	}
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
 
 	ses, err := h.storage.Get(req.AccessToken)
 	if err != nil {
-		if err == errSessionNotFound {
+		if err == SessionNotFound {
 			return nil, grpc.Errorf(codes.NotFound, "mnemosyne: session (get) with access token %s does not exists", req.AccessToken)
 		}
 		return nil, err
@@ -96,7 +97,7 @@ func (h *handler) get(ctx context.Context, req *GetRequest) (*Session, error) {
 	return ses, nil
 }
 
-func (h *handler) list(ctx context.Context, req *ListRequest) ([]*Session, error) {
+func (h *handler) list(ctx context.Context, req *mnemosyne.ListRequest) ([]*mnemosyne.Session, error) {
 	var (
 		err                      error
 		expireAtFrom, expireAtTo time.Time
@@ -118,9 +119,9 @@ func (h *handler) list(ctx context.Context, req *ListRequest) ([]*Session, error
 	return h.storage.List(req.Offset, req.Limit, &expireAtFrom, &expireAtTo)
 }
 
-func (h *handler) start(ctx context.Context, req *StartRequest) (*Session, error) {
+func (h *handler) start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.Session, error) {
 	if req.SubjectId == "" {
-		return nil, ErrMissingSubjectID
+		return nil, mnemosyne.ErrMissingSubjectID
 	}
 
 	h.logger = log.NewContext(h.logger).With("subject_id", req.SubjectId)
@@ -139,9 +140,9 @@ func (h *handler) start(ctx context.Context, req *StartRequest) (*Session, error
 	return ses, nil
 }
 
-func (h *handler) exists(ctx context.Context, req *ExistsRequest) (bool, error) {
+func (h *handler) exists(ctx context.Context, req *mnemosyne.ExistsRequest) (bool, error) {
 	if req.AccessToken == nil {
-		return false, ErrMissingAccessToken
+		return false, mnemosyne.ErrMissingAccessToken
 	}
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
@@ -156,9 +157,9 @@ func (h *handler) exists(ctx context.Context, req *ExistsRequest) (bool, error) 
 	return exists, nil
 }
 
-func (h *handler) abandon(ctx context.Context, req *AbandonRequest) (bool, error) {
+func (h *handler) abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (bool, error) {
 	if req.AccessToken == nil {
-		return false, ErrMissingAccessToken
+		return false, mnemosyne.ErrMissingAccessToken
 	}
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
@@ -171,10 +172,10 @@ func (h *handler) abandon(ctx context.Context, req *AbandonRequest) (bool, error
 	return abandoned, nil
 }
 
-func (h *handler) setValue(ctx context.Context, req *SetValueRequest) (map[string]string, error) {
+func (h *handler) setValue(ctx context.Context, req *mnemosyne.SetValueRequest) (map[string]string, error) {
 	switch {
 	case req.AccessToken == nil:
-		return nil, ErrMissingAccessToken
+		return nil, mnemosyne.ErrMissingAccessToken
 	case req.Key == "":
 		return nil, grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing bag key")
 	}
@@ -189,7 +190,7 @@ func (h *handler) setValue(ctx context.Context, req *SetValueRequest) (map[strin
 	return bag, nil
 }
 
-func (h *handler) delete(ctx context.Context, req *DeleteRequest) (int64, error) {
+func (h *handler) delete(ctx context.Context, req *mnemosyne.DeleteRequest) (int64, error) {
 	var (
 		err                      error
 		expireAtFrom, expireAtTo time.Time

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -24,7 +25,7 @@ const (
 var (
 	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
 	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyne: session not found")
-	// ErrMissingAccessToken can be returned by any endpoint that expects access token in request.
+	// mnemosyne.ErrMissingAccessToken can be returned by any endpoint that expects access token in request.
 	ErrMissingAccessToken = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing access token")
 	// ErrMissingSubjectID can be returned by start endpoint if subject was not provided.
 	ErrMissingSubjectID = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing subject id")
@@ -92,7 +93,7 @@ func New(conn *grpc.ClientConn, options MnemosyneOpts) Mnemosyne {
 
 // FromContext implements Mnemosyne interface.
 func (m *mnemosyne) FromContext(ctx context.Context) (*Session, error) {
-	return m.client.Context(ctx, &Empty{})
+	return m.client.Context(ctx, &empty.Empty{})
 }
 
 // Get implements Mnemosyne interface.

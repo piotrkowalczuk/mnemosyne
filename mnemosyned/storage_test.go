@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"strconv"
@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -39,9 +40,9 @@ func testStorage_Get(t *testing.T, s Storage) {
 	assert.Equal(t, ses.ExpireAt, got.ExpireAt)
 
 	// Check for non existing Token
-	got2, err2 := s.Get(&AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	got2, err2 := s.Get(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	assert.Error(t, err2)
-	assert.EqualError(t, err2, errSessionNotFound.Error())
+	assert.EqualError(t, err2, SessionNotFound.Error())
 	assert.Nil(t, got2)
 }
 
@@ -86,7 +87,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 	assert.True(t, exists)
 
 	// Check for non existing Token
-	exists2, err2 := s.Exists(&AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	exists2, err2 := s.Exists(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	if assert.NoError(t, err2) {
 		assert.False(t, exists2)
 	}
@@ -106,12 +107,12 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	// Check for already abandoned session
 	ok3, err3 := s.Abandon(new.AccessToken)
 	assert.False(t, ok3)
-	assert.EqualError(t, err3, errSessionNotFound.Error())
+	assert.EqualError(t, err3, SessionNotFound.Error())
 
 	// Check for session that never exists
-	ok4, err4 := s.Abandon(&AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	ok4, err4 := s.Abandon(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	assert.False(t, ok4)
-	assert.EqualError(t, err4, errSessionNotFound.Error())
+	assert.EqualError(t, err4, SessionNotFound.Error())
 }
 
 func testStorage_SetValue(t *testing.T, s Storage) {
@@ -140,8 +141,8 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	assert.Equal(t, "test", bag2["username"])
 
 	// Check for non existing Token
-	bag3, err3 := s.SetValue(&AccessToken{Key: []byte("key"), Hash: []byte("hash")}, "email", "fake@email.com")
-	require.Error(t, err3, errSessionNotFound.Error())
+	bag3, err3 := s.SetValue(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")}, "email", "fake@email.com")
+	require.Error(t, err3, SessionNotFound.Error())
 	assert.Nil(t, bag3)
 
 	wg := sync.WaitGroup{}
@@ -248,7 +249,7 @@ DataLoop:
 		}
 
 		var (
-			id            *AccessToken
+			id            *mnemosyne.AccessToken
 			expiredAtTo   *time.Time
 			expiredAtFrom *time.Time
 		)

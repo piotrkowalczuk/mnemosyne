@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/lib/pq"
+	"github.com/piotrkowalczuk/mnemosyne"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/net/context"
@@ -21,8 +22,8 @@ func TestRPCServer_mockedStore(t *testing.T) {
 		expectedErr error
 		subjectID   string
 		bag         map[string]string
-		session     *Session
-		token       *AccessToken
+		session     *mnemosyne.Session
+		token       *mnemosyne.AccessToken
 	)
 
 	suite = &integrationSuite{}
@@ -31,14 +32,14 @@ func TestRPCServer_mockedStore(t *testing.T) {
 	Convey("RPCServer", t, func() {
 		Convey("Start", func() {
 			var (
-				req *StartRequest
-				res *StartResponse
+				req *mnemosyne.StartRequest
+				res *mnemosyne.StartResponse
 			)
 
 			expectedErr = nil
 			subjectID = "subject_id"
 			bag = map[string]string{"key": "value"}
-			tk := NewAccessToken([]byte("key"), []byte("hash"))
+			tk := mnemosyne.NewAccessToken([]byte("key"), []byte("hash"))
 			token = &tk
 
 			itSuccess := func() {
@@ -66,8 +67,8 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				expireAt, err := ptypes.TimestampProto(time.Now())
 				So(err, ShouldBeNil)
 
-				req = &StartRequest{SubjectId: subjectID, Bag: bag}
-				session = &Session{AccessToken: token, SubjectId: subjectID, Bag: bag, ExpireAt: expireAt}
+				req = &mnemosyne.StartRequest{SubjectId: subjectID, Bag: bag}
+				session = &mnemosyne.Session{AccessToken: token, SubjectId: subjectID, Bag: bag, ExpireAt: expireAt}
 
 				Convey("Without storage error", func() {
 					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
@@ -98,8 +99,8 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				expireAt, err := ptypes.TimestampProto(time.Now())
 				So(err, ShouldBeNil)
 
-				req = &StartRequest{SubjectId: subjectID}
-				session = &Session{AccessToken: token, SubjectId: subjectID, ExpireAt: expireAt}
+				req = &mnemosyne.StartRequest{SubjectId: subjectID}
+				session = &mnemosyne.Session{AccessToken: token, SubjectId: subjectID, ExpireAt: expireAt}
 				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
@@ -109,7 +110,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				Convey("Should", itSuccess)
 			})
 			Convey("Without subject and with bag", func() {
-				req = &StartRequest{Bag: bag}
+				req = &mnemosyne.StartRequest{Bag: bag}
 				expectedErr = errors.New("mnemosyne: session cannot be started, subject id is missing")
 				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
@@ -135,7 +136,7 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 		Convey("With subject id", func() {
 			sid := "entity:1"
 			Convey("Should work", func() {
-				resp, err := s.client.Start(context.Background(), &StartRequest{
+				resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
 					SubjectId: sid,
 				})
 
@@ -145,10 +146,10 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 		})
 		Convey("Without subject id", func() {
 			Convey("Should fail", func() {
-				resp, err := s.client.Start(context.Background(), &StartRequest{})
+				resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingSubjectID))
+				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(mnemosyne.ErrMissingSubjectID))
 			})
 		})
 	}))
@@ -157,12 +158,12 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 func TestRPCServer_Get_postgresStore(t *testing.T) {
 	var (
 		sid string
-		at  *AccessToken
+		at  *mnemosyne.AccessToken
 	)
 	Convey("Get", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
 			sid = "entity:1"
-			resp, err := s.client.Start(context.Background(), &StartRequest{
+			resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
 				SubjectId: sid,
 			})
 
@@ -173,7 +174,7 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 
 			Convey("With proper access token", func() {
 				Convey("Should work", func() {
-					resp, err := s.client.Get(context.Background(), &GetRequest{
+					resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{
 						AccessToken: at,
 					})
 
@@ -183,17 +184,17 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 			})
 			Convey("Without access token", func() {
 				Convey("Should work", func() {
-					resp, err := s.client.Get(context.Background(), &GetRequest{})
+					resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(mnemosyne.ErrMissingAccessToken))
 				})
 			})
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should fail", func() {
-				access := DecodeAccessTokenString("0000000000test")
-				resp, err := s.client.Get(context.Background(), &GetRequest{
+				access := mnemosyne.DecodeAccessTokenString("0000000000test")
+				resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{
 					AccessToken: &access,
 				})
 

@@ -3,13 +3,13 @@ package mnemosynetest
 import (
 	"testing"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/stretchr/testify/mock"
+	"golang.org/x/net/context"
 )
-import "github.com/stretchr/testify/mock"
 
 import "time"
-
-import "golang.org/x/net/context"
 
 import "google.golang.org/grpc"
 
@@ -149,11 +149,11 @@ type RPCClient struct {
 }
 
 // Context provides a mock function with given fields: ctx, in, opts
-func (_m *RPCClient) Context(ctx context.Context, in *mnemosyne.Empty, opts ...grpc.CallOption) (*mnemosyne.Session, error) {
+func (_m *RPCClient) Context(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*mnemosyne.Session, error) {
 	ret := _m.Called(ctx, in, opts)
 
 	var r0 *mnemosyne.Session
-	if rf, ok := ret.Get(0).(func(context.Context, *mnemosyne.Empty, ...grpc.CallOption) *mnemosyne.Session); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *empty.Empty, ...grpc.CallOption) *mnemosyne.Session); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
@@ -162,7 +162,7 @@ func (_m *RPCClient) Context(ctx context.Context, in *mnemosyne.Empty, opts ...g
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *mnemosyne.Empty, ...grpc.CallOption) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *empty.Empty, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -337,11 +337,11 @@ type RPCServer struct {
 }
 
 // Context provides a mock function with given fields: _a0, _a1
-func (_m *RPCServer) Context(_a0 context.Context, _a1 *mnemosyne.Empty) (*mnemosyne.Session, error) {
+func (_m *RPCServer) Context(_a0 context.Context, _a1 *empty.Empty) (*mnemosyne.Session, error) {
 	ret := _m.Called(_a0, _a1)
 
 	var r0 *mnemosyne.Session
-	if rf, ok := ret.Get(0).(func(context.Context, *mnemosyne.Empty) *mnemosyne.Session); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *empty.Empty) *mnemosyne.Session); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
@@ -350,7 +350,7 @@ func (_m *RPCServer) Context(_a0 context.Context, _a1 *mnemosyne.Empty) (*mnemos
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, *mnemosyne.Empty) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *empty.Empty) error); ok {
 		r1 = rf(_a0, _a1)
 	} else {
 		r1 = ret.Error(1)
@@ -513,33 +513,6 @@ func (_m *RPCServer) Delete(_a0 context.Context, _a1 *mnemosyne.DeleteRequest) (
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *mnemosyne.DeleteRequest) error); ok {
 		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-type RandomBytesGenerator struct {
-	mock.Mock
-}
-
-// GenerateRandomBytes provides a mock function with given fields: _a0
-func (_m *RandomBytesGenerator) GenerateRandomBytes(_a0 int) ([]byte, error) {
-	ret := _m.Called(_a0)
-
-	var r0 []byte
-	if rf, ok := ret.Get(0).(func(int) []byte); ok {
-		r0 = rf(_a0)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(int) error); ok {
-		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -746,4 +719,31 @@ func (_m *suite) setup(_a0 testing.T) {
 // teardown provides a mock function with given fields: _a0
 func (_m *suite) teardown(_a0 testing.T) {
 	_m.Called(_a0)
+}
+
+type RandomBytesGenerator struct {
+	mock.Mock
+}
+
+// GenerateRandomBytes provides a mock function with given fields: _a0
+func (_m *RandomBytesGenerator) GenerateRandomBytes(_a0 int) ([]byte, error) {
+	ret := _m.Called(_a0)
+
+	var r0 []byte
+	if rf, ok := ret.Get(0).(func(int) []byte); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(_a0)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }

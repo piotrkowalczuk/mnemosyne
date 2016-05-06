@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"flag"
@@ -6,6 +6,7 @@ import (
 	"net"
 	"testing"
 
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
 )
@@ -36,7 +37,7 @@ func ShouldBeValidStartResponse(actual interface{}, expected ...interface{}) (s 
 		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
 	}
 
-	sr, ok := actual.(*StartResponse)
+	sr, ok := actual.(*mnemosyne.StartResponse)
 	if !ok {
 		return "The given value must be *StartResponse."
 	}
@@ -57,7 +58,7 @@ func ShouldBeValidGetResponse(actual interface{}, expected ...interface{}) (s st
 		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
 	}
 
-	sr, ok := actual.(*GetResponse)
+	sr, ok := actual.(*mnemosyne.GetResponse)
 	if !ok {
 		return "The given value must be *GetResponse."
 	}
@@ -99,11 +100,11 @@ func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) 
 	if s = convey.ShouldNotBeNil(actual); s != "" {
 		return
 	}
-	if s = convey.ShouldHaveSameTypeAs(actual, &AccessToken{}); s != "" {
+	if s = convey.ShouldHaveSameTypeAs(actual, &mnemosyne.AccessToken{}); s != "" {
 		return
 	}
 
-	t := actual.(*AccessToken)
+	t := actual.(*mnemosyne.AccessToken)
 	if s = convey.ShouldNotBeEmpty(t.Key); s != "" {
 		return
 	}

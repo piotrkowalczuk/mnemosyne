@@ -2,8 +2,8 @@
 .idea
 glide.yml
 vendor
+.tmp
 *.iml
-cmd/mnemosyned/mnemosyned
 run.sh
 test.sh
 profile.out

@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-kit/kit/log"
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 	"github.com/piotrkowalczuk/sklog"
 	"google.golang.org/grpc/grpclog"
 )
@@ -24,7 +24,7 @@ func main() {
 	rpcListener := initListener(logger, config.host, config.port)
 	debugListener := initListener(logger, config.host, config.port+1)
 
-	daemon := mnemosyne.NewDaemon(&mnemosyne.DaemonOpts{
+	daemon := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
 		Namespace:              config.namespace,
 		Subsystem:              config.subsystem,
 		TLS:                    config.tls.enabled,

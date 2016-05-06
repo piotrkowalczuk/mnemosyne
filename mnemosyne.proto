@@ -3,9 +3,10 @@ syntax = "proto3";
 package mnemosyne;
 
 import "github.com/golang/protobuf/ptypes/timestamp/timestamp.proto";
+import "github.com/golang/protobuf/ptypes/empty/empty.proto";
 
 service RPC {
-    rpc Context(Empty) returns (Session) {};
+    rpc Context(google.protobuf.Empty) returns (Session) {};
     rpc Get(GetRequest) returns (GetResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
     rpc Exists(ExistsRequest) returns (ExistsResponse) {};
@@ -16,9 +17,6 @@ service RPC {
 //    rpc Clear(ClearRequest) returns (ClearResponse) {};
     rpc Delete(DeleteRequest) returns (DeleteResponse) {};
 }
-
-message Empty {}
-
 // AccessToken represents identifier of single session. It consist of partition key and a hash.
 message AccessToken {
     bytes key = 1;

@@ -1,7 +1,9 @@
-package mnemosyne
+package mnemosyned
 
 import (
 	"github.com/go-kit/kit/log"
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
@@ -52,7 +54,7 @@ func newRPCServer(l log.Logger, s Storage, m *monitoring) *rpcServer {
 }
 
 // Get implements RPCServer interface.
-func (rs *rpcServer) Context(ctx context.Context, req *Empty) (*Session, error) {
+func (rs *rpcServer) Context(ctx context.Context, req *empty.Empty) (*mnemosyne.Session, error) {
 	h := rs.alloc.context(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -69,7 +71,7 @@ func (rs *rpcServer) Context(ctx context.Context, req *Empty) (*Session, error) 
 }
 
 // Get implements RPCServer interface.
-func (rs *rpcServer) Get(ctx context.Context, req *GetRequest) (*GetResponse, error) {
+func (rs *rpcServer) Get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyne.GetResponse, error) {
 	h := rs.alloc.get(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -82,13 +84,13 @@ func (rs *rpcServer) Get(ctx context.Context, req *GetRequest) (*GetResponse, er
 
 	sklog.Debug(h.logger, "session has been retrieved (by token)")
 
-	return &GetResponse{
+	return &mnemosyne.GetResponse{
 		Session: ses,
 	}, nil
 }
 
 // List implements RPCServer interface.
-func (rs *rpcServer) List(ctx context.Context, req *ListRequest) (*ListResponse, error) {
+func (rs *rpcServer) List(ctx context.Context, req *mnemosyne.ListRequest) (*mnemosyne.ListResponse, error) {
 	h := rs.alloc.list(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -101,13 +103,13 @@ func (rs *rpcServer) List(ctx context.Context, req *ListRequest) (*ListResponse,
 
 	sklog.Debug(h.logger, "session list has been retrieved")
 
-	return &ListResponse{
+	return &mnemosyne.ListResponse{
 		Sessions: sessions,
 	}, nil
 }
 
 // Start implements RPCServer interface.
-func (rs *rpcServer) Start(ctx context.Context, req *StartRequest) (*StartResponse, error) {
+func (rs *rpcServer) Start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.StartResponse, error) {
 	h := rs.alloc.start(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -120,13 +122,13 @@ func (rs *rpcServer) Start(ctx context.Context, req *StartRequest) (*StartRespon
 
 	sklog.Debug(h.logger, "session has been started")
 
-	return &StartResponse{
+	return &mnemosyne.StartResponse{
 		Session: ses,
 	}, nil
 }
 
 // Exists implements RPCServer interface.
-func (rs *rpcServer) Exists(ctx context.Context, req *ExistsRequest) (*ExistsResponse, error) {
+func (rs *rpcServer) Exists(ctx context.Context, req *mnemosyne.ExistsRequest) (*mnemosyne.ExistsResponse, error) {
 	h := rs.alloc.exists(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -139,13 +141,13 @@ func (rs *rpcServer) Exists(ctx context.Context, req *ExistsRequest) (*ExistsRes
 
 	sklog.Debug(h.logger, "session presence has been checked")
 
-	return &ExistsResponse{
+	return &mnemosyne.ExistsResponse{
 		Exists: exists,
 	}, nil
 }
 
 // Abandon implements RPCServer interface.
-func (rs *rpcServer) Abandon(ctx context.Context, req *AbandonRequest) (*AbandonResponse, error) {
+func (rs *rpcServer) Abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (*mnemosyne.AbandonResponse, error) {
 	h := rs.alloc.abandon(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -158,13 +160,13 @@ func (rs *rpcServer) Abandon(ctx context.Context, req *AbandonRequest) (*Abandon
 
 	sklog.Debug(h.logger, "session has been abandoned")
 
-	return &AbandonResponse{
+	return &mnemosyne.AbandonResponse{
 		Abandoned: abandoned,
 	}, nil
 }
 
 // SetValue implements RPCServer interface.
-func (rs *rpcServer) SetValue(ctx context.Context, req *SetValueRequest) (*SetValueResponse, error) {
+func (rs *rpcServer) SetValue(ctx context.Context, req *mnemosyne.SetValueRequest) (*mnemosyne.SetValueResponse, error) {
 	h := rs.alloc.setValue(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -177,13 +179,13 @@ func (rs *rpcServer) SetValue(ctx context.Context, req *SetValueRequest) (*SetVa
 
 	sklog.Debug(h.logger, "session bag value has been set")
 
-	return &SetValueResponse{
+	return &mnemosyne.SetValueResponse{
 		Bag: bag,
 	}, nil
 }
 
 // Delete implements RPCServer interface.
-func (rs *rpcServer) Delete(ctx context.Context, req *DeleteRequest) (*DeleteResponse, error) {
+func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (*mnemosyne.DeleteResponse, error) {
 	h := rs.alloc.delete(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -196,7 +198,7 @@ func (rs *rpcServer) Delete(ctx context.Context, req *DeleteRequest) (*DeleteRes
 
 	sklog.Debug(h.logger, "session value has been deleted")
 
-	return &DeleteResponse{
+	return &mnemosyne.DeleteResponse{
 		Count: affected,
 	}, nil
 }

@@ -2,6 +2,7 @@ PROTOC=/usr/local/bin/protoc
 SERVICE=mnemosyne
 PACKAGE=github.com/piotrkowalczuk/mnemosyne
 PACKAGE_TEST=$(PACKAGE)/$(SERVICE)test
+PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
 PACKAGE_CMD_DAEMON=$(PACKAGE)/cmd/$(SERVICE)d
 BINARY_CMD_DAEMON=cmd/${SERVICE}d/${SERVICE}d
 
@@ -43,20 +44,24 @@ mocks:
 build: build-daemon
 
 build-daemon:
-	@go build -o ${BINARY_CMD_DAEMON} ${PACKAGE_CMD_DAEMON}
+	@go build -o .tmp/${SERVICE}d ${PACKAGE_CMD_DAEMON}
 
 rebuild: proto mocks build
 
 run:
-	@${BINARY_CMD_DAEMON} ${FLAGS}
+	@.tmp/${SERVICE}d ${FLAGS}
 
 test-short:
 	@${CMD_TEST} -short ${PACKAGE}
 	@cat profile.out >> coverage.txt && rm profile.out
+	@${CMD_TEST} -short ${PACKAGE_DAEMON}
+	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} -short ${PACKAGE_TEST}
 
 test:
-	@${CMD_TEST} ${PACKAGE} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
+	@${CMD_TEST} ${PACKAGE}
+	@cat profile.out >> coverage.txt && rm profile.out
+	@${CMD_TEST} ${PACKAGE_DAEMON} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
 	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} ${PACKAGE_TEST}
 

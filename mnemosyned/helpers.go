@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyned
 
 import "strconv"
 

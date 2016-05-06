@@ -81,7 +81,7 @@ func TestDaemon(t *testing.T, opts *TestDaemonOpts) (net.Addr, io.Closer) {
 	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
 
 	d := NewDaemon(&DaemonOpts{
-		Namespace:              "mnemosyne-test",
+		Namespace:              "mnemosyne_test",
 		MonitoringEngine:       MonitoringEnginePrometheus,
 		Logger:                 logger,
 		StoragePostgresAddress: opts.StoragePostgresAddress,

@@ -2,8 +2,7 @@
 */*/temp*
 temp?
 .dist
-*.go
-*.md
+**/*.md
 *.o
 *.a
 *.so

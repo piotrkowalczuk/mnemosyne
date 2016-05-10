@@ -8,6 +8,9 @@ WORKDIR /go/src/github.com/piotrkowalczuk/mnemosyne
 
 RUN make get
 RUN go install github.com/piotrkowalczuk/mnemosyne/cmd/mnemosyned
+RUN rm -rf /go/src
 
-ENTRYPOINT /go/bin/mnemosyned
 EXPOSE 8080
+
+ENTRYPOINT ["/go/bin/mnemosyned"]
+CMD ["-namespace=mnemosyne","-s.p.address=postgres://postgres:postgres@postgres/postgres?sslmode=disable"]

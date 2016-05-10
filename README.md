@@ -36,7 +36,7 @@ To install from source both go tools and [glide](github.com/Masterminds/glide) i
 $ go get -d github.com/piotrkowalczuk/mnemosyne/...
 $ cd $GOPATH/src/github.com/piotrkowalczuk/mnemosyne
 $ glide install
-$ go install
+$ go install ./cmd/mnemosyned
 ```
 
 ### Configuration

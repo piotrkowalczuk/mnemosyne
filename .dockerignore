@@ -1,3 +1,9 @@
-.tmp
+*/temp*
+*/*/temp*
+temp?
 .dist
-/go/src/
+*.go
+*.md
+*.o
+*.a
+*.so

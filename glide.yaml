@@ -9,11 +9,9 @@ import:
   subpackages:
   - proto
   - ptypes
+  - ptypes/empty
   - ptypes/timestamp
 - package: github.com/lib/pq
-- package: github.com/golang/protobuf
-  subpackages:
-  - ptypes
 - package: github.com/piotrkowalczuk/sklog
 - package: github.com/prometheus/client_golang
   subpackages:

@@ -1,5 +1,5 @@
-hash: 2c909424b3a5db74049f80f497699f479a5108ec0aad9436ecd1d84047b9c988
-updated: 2016-04-09T18:51:44.993862112+02:00
+hash: 8160d9a38cbe392d8af419a449744d24e21a40caaaa43e1fac3d8386150f2b61
+updated: 2016-05-10T21:23:32.210418119+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 3ac7bf7a47d159a033b107610db8a1b6575507a4
@@ -10,35 +10,34 @@ imports:
   subpackages:
   - spew
 - name: github.com/go-kit/kit
-  version: 1922036729ab67a8d7795c153cf1caa771708d73
+  version: a86152119bc3b92e1e6f3923f0e098224b7ba2cc
   subpackages:
   - log
   - metrics
   - metrics/prometheus
 - name: github.com/go-logfmt/logfmt
-  version: 08ab82a63ef462ac643ec79e659f023891f588f5
+  version: a0ff333161fe5c2daed0ba52d1792bd3d2531b94
 - name: github.com/go-stack/stack
   version: ac4c579c437a23e1a15814c867ccb82122fb383b
 - name: github.com/golang/protobuf
-  version: dda510ac0fd43b39770f22ac6260eb91d377bce3
+  version: 7cc19b78d562895b13596ddce7aafb59dd789318
   subpackages:
   - proto
   - ptypes
+  - ptypes/empty
   - ptypes/timestamp
   - ptypes/any
   - ptypes/duration
-- name: github.com/kr/logfmt
-  version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/lib/pq
-  version: 3cd0097429be7d611bb644ef85b42bfb102ceea4
+  version: 4bb18a681683108f2268fcfad6ba63806df95e4f
   subpackages:
   - oid
 - name: github.com/matttproud/golang_protobuf_extensions
-  version: d0c3fe89de86839aecf2e0579c40ba3bb336a453
+  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
 - name: github.com/piotrkowalczuk/sklog
-  version: 1619def070e6e86c600b572f039e0e7221b92c6f
+  version: 1dfb28055e93823aa111d760eb11a7f3d17d0b4c
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
@@ -52,26 +51,26 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: 40456948a47496dc22168e6af39297a2f8fbf38c
+  version: dd586c1c5abb0be59e60f942c22af711a2008cb4
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: 406e5b7bfd8201a36e2bb5f7bdae0b03380c2ce8
+  version: abf152e5f3e97f2fafac028d2cc06c1feb87ffa5
 - name: github.com/stretchr/objx
   version: cbeaeb16a013161a98496fad62933b1d21786672
 - name: github.com/stretchr/testify
-  version: 0744955171b0b6e1871ff9d7366abc2b7a7fcec0
+  version: 6cb3b85ef5a0efef77caef88363ec4d4b5c0976d
   subpackages:
   - mock
   - assert
 - name: golang.org/x/crypto
-  version: 3fbbcd23f1cb824e69491a5930cfeff09b12f4d2
+  version: b76c864ef1dca1d8f271f917c290cddcce3d9e0d
   subpackages:
   - sha3
 - name: golang.org/x/net
-  version: e45385e9b226f570b1f086bf287b25d3d4117776
+  version: 96dbb961a39ddccf16860cdd355bfa639c497f23
   subpackages:
   - context
   - http2
@@ -79,11 +78,11 @@ imports:
   - http2/hpack
   - internal/timeseries
 - name: golang.org/x/oauth2
-  version: b0e2337fe6ec0c637fa4f123268b972f334504eb
+  version: e86e2718db89775a4604abc10a5d3a5672e7336e
   subpackages:
   - internal
 - name: google.golang.org/appengine
-  version: b67c870a16a2d58b3afa024461dcc51805f52e9d
+  version: e234e71924d4aa52444bc76f2f831f13fa1eca60
   subpackages:
   - urlfetch
   - internal
@@ -93,7 +92,7 @@ imports:
   - internal/log
   - internal/remote_api
 - name: google.golang.org/grpc
-  version: 7834b974e55fbf85a5b01afb5821391c71084efd
+  version: ab0be5212fb225475f2087566eded7da5d727960
   subpackages:
   - codes
   - credentials

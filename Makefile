@@ -27,7 +27,7 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 
 CMD_TEST=go test -coverprofile=profile.out -covermode=atomic
 
-.PHONY:	all proto build build-daemon run test test-short install package
+.PHONY:	all proto build rebuild mocks run test test-short get install package
 
 all: proto build test run
 
@@ -41,9 +41,7 @@ proto:
 mocks:
 	@mockery -all -output=${SERVICE}test -output_file=mocks.go -output_pkg_name=mnemosynetest
 
-build: build-daemon
-
-build-daemon:
+build:
 	@go build -o .tmp/${SERVICE}d ${PACKAGE_CMD_DAEMON}
 
 rebuild: proto mocks build
@@ -67,8 +65,9 @@ test:
 
 
 get:
+	@go get github.com/Masterminds/glide
 	@go get github.com/smartystreets/goconvey/...
-	@go get ./...
+	@glide install
 
 install: build
 	#install binary

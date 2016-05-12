@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	SessionNotFound = errors.New("mnemosyne: session not found")
+	SessionNotFound = errors.New("session not found")
 )
 
 // Storage combines API that needs to be implemented by any storage to be replaceable.

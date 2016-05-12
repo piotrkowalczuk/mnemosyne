@@ -47,23 +47,25 @@ func (h *handler) error(err error) error {
 	if h.monitor.enabled {
 		h.monitor.errors.Add(1)
 	}
-	sklog.Error(h.logger, err)
+	sklog.Error(h.logger, errors.New(grpc.ErrorDesc(err)), "grpc_code", grpc.Code(err))
 
-	if grpc.Code(err) != codes.Unknown {
-		return err
+	code := grpc.Code(err)
+	switch code {
+	case codes.Unknown:
+		return grpc.Errorf(codes.Internal, "mnemosyned: %s", grpc.ErrorDesc(err))
+	default:
+		return grpc.Errorf(code, "mnemosyned: %s", grpc.ErrorDesc(err))
 	}
-
-	return grpc.Errorf(codes.Internal, err.Error())
 }
 
 func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
-		return nil, errors.New("mnemosyne: missing metadata in context, session token cannot be retrieved")
+		return nil, errors.New("missing metadata in context, session token cannot be retrieved")
 	}
 
 	if len(md[mnemosyne.AccessTokenMetadataKey]) == 0 {
-		return nil, errors.New("mnemosyne: missing sesion token in metadata")
+		return nil, errors.New("missing sesion token in metadata")
 	}
 
 	token := mnemosyne.DecodeAccessToken([]byte(md[mnemosyne.AccessTokenMetadataKey][0]))
@@ -73,7 +75,7 @@ func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
 	ses, err := h.storage.Get(&token)
 	if err != nil {
 		if err == SessionNotFound {
-			return nil, grpc.Errorf(codes.NotFound, "mnemosyne: session (context) with access token %s does not exists", token)
+			return nil, grpc.Errorf(codes.NotFound, "session (context) does not exists")
 		}
 		return nil, err
 	}
@@ -90,7 +92,7 @@ func (h *handler) get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyn
 	ses, err := h.storage.Get(req.AccessToken)
 	if err != nil {
 		if err == SessionNotFound {
-			return nil, grpc.Errorf(codes.NotFound, "mnemosyne: session (get) with access token %s does not exists", req.AccessToken)
+			return nil, grpc.Errorf(codes.NotFound, "session (get) does not exists")
 		}
 		return nil, err
 	}
@@ -177,7 +179,7 @@ func (h *handler) setValue(ctx context.Context, req *mnemosyne.SetValueRequest) 
 	case req.AccessToken == nil:
 		return nil, mnemosyne.ErrMissingAccessToken
 	case req.Key == "":
-		return nil, grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing bag key")
+		return nil, grpc.Errorf(codes.InvalidArgument, "missing bag key")
 	}
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode(), "key", req.Key, "value", req.Value)

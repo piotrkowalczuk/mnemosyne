@@ -80,7 +80,7 @@ func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Label
 func initPostgres(connectionString string, logger log.Logger) (*sql.DB, error) {
 	postgres, err := sql.Open("postgres", connectionString)
 	if err != nil {
-		return nil, fmt.Errorf("mnemosyne: postgres connection failure: %s", err.Error())
+		return nil, fmt.Errorf("postgres connection failure: %s", err.Error())
 	}
 
 	sklog.Info(logger, "postgres connected", "address", connectionString)
@@ -108,7 +108,7 @@ func initLogger(adapter, format string, level int, context ...interface{}) log.L
 	case LoggerAdapterNone:
 		a = ioutil.Discard
 	default:
-		stdlog.Fatal("mnemosyne: unsupported logger adapter")
+		stdlog.Fatal("unsupported logger adapter")
 	}
 
 	switch format {
@@ -119,7 +119,7 @@ func initLogger(adapter, format string, level int, context ...interface{}) log.L
 	case LoggerFormatLogFmt:
 		l = log.NewLogfmtLogger(a)
 	default:
-		stdlog.Fatal("mnemosyne: unsupported logger format")
+		stdlog.Fatal("unsupported logger format")
 	}
 
 	l = log.NewContext(l).With(context...)
@@ -137,7 +137,7 @@ func initStorage(s Storage, l log.Logger) (Storage, error) {
 	return s, nil
 	//	switch e := err.(type) {
 	//	case *pq.Error:
-	//		sklog.Fatal(l, fmt.Errorf("mnemosyne: storage setup failure: %s", e.Error()),
+	//		sklog.Fatal(l, fmt.Errorf("storage setup failure: %s", e.Error()),
 	//			"code", e.Code,
 	//			"constraint", e.Constraint,
 	//			"internal_query", e.InternalQuery,
@@ -148,7 +148,7 @@ func initStorage(s Storage, l log.Logger) (Storage, error) {
 	//			"schema", e.Schema,
 	//		)
 	//	default:
-	//		sklog.Fatal(l, fmt.Errorf("mnemosyne: storage setup failure: %s", e.Error()))
+	//		sklog.Fatal(l, fmt.Errorf("storage setup failure: %s", e.Error()))
 	//	}
 	//}
 	//

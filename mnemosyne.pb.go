@@ -35,8 +35,8 @@ package mnemosyne
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf "github.com/golang/protobuf/ptypes/timestamp"
-import google_protobuf1 "github.com/golang/protobuf/ptypes/empty"
+import timestamp "github.com/golang/protobuf/ptypes/timestamp"
+import empty "github.com/golang/protobuf/ptypes/empty"
 
 import (
 	context "golang.org/x/net/context"
@@ -64,10 +64,10 @@ func (*AccessToken) ProtoMessage()               {}
 func (*AccessToken) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 type Session struct {
-	AccessToken *AccessToken               `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
-	SubjectId   string                     `protobuf:"bytes,2,opt,name=subject_id,json=subjectId" json:"subject_id,omitempty"`
-	Bag         map[string]string          `protobuf:"bytes,3,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	ExpireAt    *google_protobuf.Timestamp `protobuf:"bytes,4,opt,name=expire_at,json=expireAt" json:"expire_at,omitempty"`
+	AccessToken *AccessToken         `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	SubjectId   string               `protobuf:"bytes,2,opt,name=subject_id,json=subjectId" json:"subject_id,omitempty"`
+	Bag         map[string]string    `protobuf:"bytes,3,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ExpireAt    *timestamp.Timestamp `protobuf:"bytes,4,opt,name=expire_at,json=expireAt" json:"expire_at,omitempty"`
 }
 
 func (m *Session) Reset()                    { *m = Session{} }
@@ -89,7 +89,7 @@ func (m *Session) GetBag() map[string]string {
 	return nil
 }
 
-func (m *Session) GetExpireAt() *google_protobuf.Timestamp {
+func (m *Session) GetExpireAt() *timestamp.Timestamp {
 	if m != nil {
 		return m.ExpireAt
 	}
@@ -129,10 +129,10 @@ func (m *GetResponse) GetSession() *Session {
 }
 
 type ListRequest struct {
-	Offset       int64                      `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
-	Limit        int64                      `protobuf:"varint,2,opt,name=limit" json:"limit,omitempty"`
-	ExpireAtFrom *google_protobuf.Timestamp `protobuf:"bytes,3,opt,name=expire_at_from,json=expireAtFrom" json:"expire_at_from,omitempty"`
-	ExpireAtTo   *google_protobuf.Timestamp `protobuf:"bytes,4,opt,name=expire_at_to,json=expireAtTo" json:"expire_at_to,omitempty"`
+	Offset       int64                `protobuf:"varint,1,opt,name=offset" json:"offset,omitempty"`
+	Limit        int64                `protobuf:"varint,2,opt,name=limit" json:"limit,omitempty"`
+	ExpireAtFrom *timestamp.Timestamp `protobuf:"bytes,3,opt,name=expire_at_from,json=expireAtFrom" json:"expire_at_from,omitempty"`
+	ExpireAtTo   *timestamp.Timestamp `protobuf:"bytes,4,opt,name=expire_at_to,json=expireAtTo" json:"expire_at_to,omitempty"`
 }
 
 func (m *ListRequest) Reset()                    { *m = ListRequest{} }
@@ -140,14 +140,14 @@ func (m *ListRequest) String() string            { return proto.CompactTextStrin
 func (*ListRequest) ProtoMessage()               {}
 func (*ListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
-func (m *ListRequest) GetExpireAtFrom() *google_protobuf.Timestamp {
+func (m *ListRequest) GetExpireAtFrom() *timestamp.Timestamp {
 	if m != nil {
 		return m.ExpireAtFrom
 	}
 	return nil
 }
 
-func (m *ListRequest) GetExpireAtTo() *google_protobuf.Timestamp {
+func (m *ListRequest) GetExpireAtTo() *timestamp.Timestamp {
 	if m != nil {
 		return m.ExpireAtTo
 	}
@@ -345,9 +345,9 @@ func (*ClearResponse) ProtoMessage()               {}
 func (*ClearResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
 
 type DeleteRequest struct {
-	AccessToken  *AccessToken               `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
-	ExpireAtFrom *google_protobuf.Timestamp `protobuf:"bytes,2,opt,name=expire_at_from,json=expireAtFrom" json:"expire_at_from,omitempty"`
-	ExpireAtTo   *google_protobuf.Timestamp `protobuf:"bytes,3,opt,name=expire_at_to,json=expireAtTo" json:"expire_at_to,omitempty"`
+	AccessToken  *AccessToken         `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	ExpireAtFrom *timestamp.Timestamp `protobuf:"bytes,2,opt,name=expire_at_from,json=expireAtFrom" json:"expire_at_from,omitempty"`
+	ExpireAtTo   *timestamp.Timestamp `protobuf:"bytes,3,opt,name=expire_at_to,json=expireAtTo" json:"expire_at_to,omitempty"`
 }
 
 func (m *DeleteRequest) Reset()                    { *m = DeleteRequest{} }
@@ -362,14 +362,14 @@ func (m *DeleteRequest) GetAccessToken() *AccessToken {
 	return nil
 }
 
-func (m *DeleteRequest) GetExpireAtFrom() *google_protobuf.Timestamp {
+func (m *DeleteRequest) GetExpireAtFrom() *timestamp.Timestamp {
 	if m != nil {
 		return m.ExpireAtFrom
 	}
 	return nil
 }
 
-func (m *DeleteRequest) GetExpireAtTo() *google_protobuf.Timestamp {
+func (m *DeleteRequest) GetExpireAtTo() *timestamp.Timestamp {
 	if m != nil {
 		return m.ExpireAtTo
 	}
@@ -419,7 +419,7 @@ const _ = grpc.SupportPackageIsVersion2
 // Client API for RPC service
 
 type RPCClient interface {
-	Context(ctx context.Context, in *google_protobuf1.Empty, opts ...grpc.CallOption) (*Session, error)
+	Context(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Session, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 	Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error)
@@ -439,7 +439,7 @@ func NewRPCClient(cc *grpc.ClientConn) RPCClient {
 	return &rPCClient{cc}
 }
 
-func (c *rPCClient) Context(ctx context.Context, in *google_protobuf1.Empty, opts ...grpc.CallOption) (*Session, error) {
+func (c *rPCClient) Context(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Session, error) {
 	out := new(Session)
 	err := grpc.Invoke(ctx, "/mnemosyne.RPC/Context", in, out, c.cc, opts...)
 	if err != nil {
@@ -514,7 +514,7 @@ func (c *rPCClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.
 // Server API for RPC service
 
 type RPCServer interface {
-	Context(context.Context, *google_protobuf1.Empty) (*Session, error)
+	Context(context.Context, *empty.Empty) (*Session, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	List(context.Context, *ListRequest) (*ListResponse, error)
 	Exists(context.Context, *ExistsRequest) (*ExistsResponse, error)
@@ -531,7 +531,7 @@ func RegisterRPCServer(s *grpc.Server, srv RPCServer) {
 }
 
 func _RPC_Context_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(google_protobuf1.Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -543,7 +543,7 @@ func _RPC_Context_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: "/mnemosyne.RPC/Context",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).Context(ctx, req.(*google_protobuf1.Empty))
+		return srv.(RPCServer).Context(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

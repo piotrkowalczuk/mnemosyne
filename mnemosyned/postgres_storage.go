@@ -112,7 +112,7 @@ func (ps *postgresStorage) Get(accessToken *mnemosyne.AccessToken) (*mnemosyne.S
 // List implements Storage interface.
 func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosyne.Session, error) {
 	if limit == 0 {
-		return nil, errors.New("mnemosyne: cannot retrieve list of sessions, limit needs to be higher than 0")
+		return nil, errors.New("cannot retrieve list of sessions, limit needs to be higher than 0")
 	}
 
 	args := []interface{}{offset, limit}
@@ -195,7 +195,7 @@ func (ps *postgresStorage) Exists(accessToken *mnemosyne.AccessToken) (exists bo
 
 // Abandon ...
 func (ps *postgresStorage) Abandon(accessToken *mnemosyne.AccessToken) (bool, error) {
-	query := `DELETE FROM mnemosyne.` + ps.table + ` WHERE access_token = $1`
+	query := `DELETE FROM mnemosyne.` + ps.table + ` WHERE access_token = $1 `
 	field := metrics.Field{Key: "query", Value: query}
 
 	result, err := ps.db.Exec(query, *accessToken)
@@ -280,7 +280,7 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosyne.AccessToken, key, val
 // Delete implements Storage interface.
 func (ps *postgresStorage) Delete(accessToken *mnemosyne.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	if accessToken == nil && expiredAtFrom == nil && expiredAtTo == nil {
-		return 0, errors.New("mnemosyne: session cannot be deleted, no where parameter provided")
+		return 0, errors.New("session cannot be deleted, no where parameter provided")
 	}
 
 	where, args := ps.where(accessToken, expiredAtFrom, expiredAtTo)
@@ -334,21 +334,21 @@ func (ps *postgresStorage) incError(field metrics.Field) {
 func (ps *postgresStorage) where(accessToken *mnemosyne.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
 	switch {
 	case accessToken != nil && expiredAtFrom == nil && expiredAtTo == nil:
-		return "access_token = $1", []interface{}{accessToken}
+		return " access_token = $1", []interface{}{accessToken}
 	case accessToken == nil && expiredAtFrom != nil && expiredAtTo == nil:
-		return "expire_at > $1", []interface{}{expiredAtFrom}
+		return " expire_at > $1", []interface{}{expiredAtFrom}
 	case accessToken == nil && expiredAtFrom == nil && expiredAtTo != nil:
-		return "expire_at < $1", []interface{}{expiredAtTo}
+		return " expire_at < $1", []interface{}{expiredAtTo}
 	case accessToken != nil && expiredAtFrom != nil && expiredAtTo == nil:
-		return "access_token = $1 AND expire_at > $2", []interface{}{accessToken, expiredAtFrom}
+		return " access_token = $1 AND expire_at > $2", []interface{}{accessToken, expiredAtFrom}
 	case accessToken != nil && expiredAtFrom == nil && expiredAtTo != nil:
-		return "access_token = $1 AND expire_at < $2", []interface{}{accessToken, expiredAtTo}
+		return " access_token = $1 AND expire_at < $2", []interface{}{accessToken, expiredAtTo}
 	case accessToken == nil && expiredAtFrom != nil && expiredAtTo != nil:
-		return "expire_at > $1 AND expire_at < $2", []interface{}{expiredAtFrom, expiredAtTo}
+		return " expire_at > $1 AND expire_at < $2", []interface{}{expiredAtFrom, expiredAtTo}
 	case accessToken != nil && expiredAtFrom != nil && expiredAtTo != nil:
-		return "access_token = $1 AND expire_at > $2 AND expire_at < $3", []interface{}{accessToken, expiredAtFrom, expiredAtTo}
+		return " access_token = $1 AND expire_at > $2 AND expire_at < $3", []interface{}{accessToken, expiredAtFrom, expiredAtTo}
 	default:
-		return "", nil
+		return " ", nil
 	}
 }
 

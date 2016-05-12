@@ -88,7 +88,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 					res, err = suite.service.Start(context.Background(), req)
 
 					Convey("Should return grpc error with code 13", func() {
-						So(err, ShouldBeGRPCError, codes.Internal, expectedErr.Error())
+						So(err, ShouldBeGRPCError, codes.Internal, "mnemosyned: "+expectedErr.Error())
 					})
 					Convey("Should return an nil response", func() {
 						So(res, ShouldBeNil)
@@ -111,7 +111,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 			})
 			Convey("Without subject and with bag", func() {
 				req = &mnemosyne.StartRequest{Bag: bag}
-				expectedErr = errors.New("mnemosyne: session cannot be started, subject id is missing")
+				expectedErr = errors.New("session cannot be started, subject id is missing")
 				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
@@ -149,7 +149,7 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 				resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(mnemosyne.ErrMissingSubjectID))
+				So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: "+grpc.ErrorDesc(mnemosyne.ErrMissingSubjectID))
 			})
 		})
 	}))
@@ -187,7 +187,7 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 					resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(mnemosyne.ErrMissingAccessToken))
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: "+grpc.ErrorDesc(mnemosyne.ErrMissingAccessToken))
 				})
 			})
 		})
@@ -199,7 +199,7 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 				})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyne: session (get) with access token key:\"0000000000\" hash:\"test\"  does not exists")
+				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session (get) does not exists")
 			})
 		})
 	}))

@@ -160,7 +160,7 @@ func (d *Daemon) initStorage() (err error) {
 
 	switch d.opts.StorageEngine {
 	case StorageEngineInMemory:
-		return errors.New("mnemosyne: in memory storage is not implemented yet")
+		return errors.New("in memory storage is not implemented yet")
 	case StorageEnginePostgres:
 		db, err = initPostgres(
 			d.opts.StoragePostgresAddress,
@@ -174,16 +174,16 @@ func (d *Daemon) initStorage() (err error) {
 		}
 		return
 	case StorageEngineRedis:
-		return errors.New("mnemosyne: redis storage is not implemented yet")
+		return errors.New("redis storage is not implemented yet")
 	default:
-		return errors.New("mnemosyne: unknown storage engine")
+		return errors.New("unknown storage engine")
 	}
 }
 
 func (d *Daemon) initMonitoring() (err error) {
 	hostname, err := os.Hostname()
 	if err != nil {
-		return errors.New("mnemosyne: getting hostname failed")
+		return errors.New("getting hostname failed")
 	}
 
 	switch d.opts.MonitoringEngine {
@@ -194,6 +194,6 @@ func (d *Daemon) initMonitoring() (err error) {
 		d.monitor = initPrometheus(d.opts.Namespace, d.opts.Subsystem, prometheus.Labels{"server": hostname})
 		return
 	default:
-		return errors.New("mnemosyne: unknown monitoring engine")
+		return errors.New("unknown monitoring engine")
 	}
 }

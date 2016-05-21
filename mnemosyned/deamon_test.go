@@ -2,6 +2,7 @@ package mnemosyned
 
 import (
 	"net"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -34,8 +35,8 @@ func TestDaemon_Run(t *testing.T) {
 		SessionTTC:  ttc,
 		RPCListener: l,
 		// Use this logger to debug issues
-		//Logger:                 sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
-		Logger:                 sklog.NewTestLogger(t),
+		Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
+		//Logger:                 sklog.NewTestLogger(t),
 		StoragePostgresAddress: testPostgresAddress,
 	})
 	if err := d.Run(); err != nil {
@@ -67,6 +68,7 @@ func TestDaemon_Run(t *testing.T) {
 	}
 	wg.Wait()
 
+	// BUG: this assertion can fail on travis because of cpu lag.
 	<-time.After(ttl + ttc + ttc)
 
 	for _, at := range ats {

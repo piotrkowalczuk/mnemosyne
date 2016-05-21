@@ -309,7 +309,8 @@ func (ps *postgresStorage) Setup() error {
 
 		);
 		CREATE INDEX ON mnemosyne.%s (subject_id);
-	`, ps.table, int64(ps.ttl.Seconds()), ps.table))
+		CREATE INDEX ON mnemosyne.%s (expire_at DESC);
+	`, ps.table, int64(ps.ttl.Seconds()), ps.table, ps.table))
 
 	return err
 }

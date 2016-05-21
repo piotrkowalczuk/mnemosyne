@@ -54,8 +54,8 @@ func (c *configuration) init() {
 	flag.StringVar(&c.subsystem, "subsystem", "mnemosyne", "subsystem")
 	flag.DurationVar(&c.session.ttl, "ttl", mnemosyned.DefaultTTL, "session time to live, after which session is deleted")
 	flag.DurationVar(&c.session.ttc, "ttc", mnemosyned.DefaultTTC, "session time to cleanup, how offten cleanup will be performed")
-	flag.StringVar(&c.logger.adapter, "l.adapter", mnemosyned.LoggerAdapterStdOut, "logger adapter")
-	flag.StringVar(&c.logger.format, "l.format", mnemosyned.LoggerFormatJSON, "logger format")
+	flag.StringVar(&c.logger.adapter, "l.adapter", loggerAdapterStdOut, "logger adapter")
+	flag.StringVar(&c.logger.format, "l.format", loggerFormatJSON, "logger format")
 	flag.IntVar(&c.logger.level, "l.level", 6, "logger level")
 	flag.StringVar(&c.monitoring.engine, "m.engine", mnemosyned.MonitoringEnginePrometheus, "monitoring engine")
 	flag.StringVar(&c.storage.engine, "s.engine", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented

@@ -3,10 +3,6 @@ package mnemosyned
 import (
 	"database/sql"
 	"fmt"
-	"io"
-	"io/ioutil"
-	stdlog "log"
-	"os"
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics/prometheus"
@@ -99,47 +95,6 @@ func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
 	sklog.Info(logger, "postgres connection has been established", "address", address)
 
 	return postgres, nil
-}
-
-const (
-	LoggerAdapterStdOut = "stdout"
-	LoggerAdapterNone   = "none"
-	LoggerFormatJSON    = "json"
-	LoggerFormatHumane  = "humane"
-	LoggerFormatLogFmt  = "logfmt"
-)
-
-func initLogger(adapter, format string, level int, context ...interface{}) log.Logger {
-	var (
-		l log.Logger
-		a io.Writer
-	)
-
-	switch adapter {
-	case LoggerAdapterStdOut:
-		a = os.Stdout
-	case LoggerAdapterNone:
-		a = ioutil.Discard
-	default:
-		stdlog.Fatal("unsupported logger adapter")
-	}
-
-	switch format {
-	case LoggerFormatHumane:
-		l = sklog.NewHumaneLogger(a, sklog.DefaultHTTPFormatter)
-	case LoggerFormatJSON:
-		l = log.NewJSONLogger(a)
-	case LoggerFormatLogFmt:
-		l = log.NewLogfmtLogger(a)
-	default:
-		stdlog.Fatal("unsupported logger format")
-	}
-
-	l = log.NewContext(l).With(context...)
-
-	sklog.Info(l, "logger has been initialized successfully", "adapter", adapter, "format", format, "level", level)
-
-	return l
 }
 
 func initStorage(env string, s Storage, l log.Logger) (Storage, error) {

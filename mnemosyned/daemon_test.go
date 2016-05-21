@@ -80,3 +80,16 @@ func TestDaemon_Run(t *testing.T) {
 		t.Logf("%d: as expected, session does not exists anymore", i)
 	}
 }
+
+func TestTestDaemon(t *testing.T) {
+	addr, closer := TestDaemon(t, &TestDaemonOpts{
+		StoragePostgresAddress: testPostgresAddress,
+	})
+
+	if addr.String() == "" {
+		t.Errorf("address should not be empty")
+	}
+	if err := closer.Close(); err != nil {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
+}

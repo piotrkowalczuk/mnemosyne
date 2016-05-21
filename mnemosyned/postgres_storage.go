@@ -93,7 +93,7 @@ func (ps *postgresStorage) Get(accessToken *mnemosyne.AccessToken) (*mnemosyne.S
 	if err != nil {
 		ps.incError(field)
 		if err == sql.ErrNoRows {
-			return nil, SessionNotFound
+			return nil, ErrSessionNotFound
 		}
 		return nil, err
 	}
@@ -211,7 +211,7 @@ func (ps *postgresStorage) Abandon(accessToken *mnemosyne.AccessToken) (bool, er
 	}
 
 	if affected == 0 {
-		return false, SessionNotFound
+		return false, ErrSessionNotFound
 	}
 
 	return true, nil
@@ -255,7 +255,7 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosyne.AccessToken, key, val
 		ps.incError(metrics.Field{Key: "query", Value: "set_value_select"})
 		tx.Rollback()
 		if err == sql.ErrNoRows {
-			return nil, SessionNotFound
+			return nil, ErrSessionNotFound
 		}
 		return nil, err
 	}

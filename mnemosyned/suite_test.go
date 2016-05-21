@@ -83,10 +83,10 @@ func ShouldBeGRPCError(actual interface{}, expected ...interface{}) (s string) {
 	if !ok {
 		return "The given value must implement error interface."
 	}
-	if s = convey.ShouldEqual(grpc.Code(e), expected[0]); s != "" {
+	if s = convey.ShouldEqual(grpc.ErrorDesc(e), expected[1]); s != "" {
 		return
 	}
-	if s = convey.ShouldEqual(grpc.ErrorDesc(e), expected[1]); s != "" {
+	if s = convey.ShouldEqual(grpc.Code(e), expected[0]); s != "" {
 		return
 	}
 	return

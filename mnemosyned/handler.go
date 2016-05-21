@@ -78,7 +78,7 @@ func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
 
 	ses, err := h.storage.Get(&token)
 	if err != nil {
-		if err == SessionNotFound {
+		if err == ErrSessionNotFound {
 			return nil, grpc.Errorf(codes.NotFound, "session (context) does not exists")
 		}
 		return nil, err
@@ -95,7 +95,7 @@ func (h *handler) get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyn
 
 	ses, err := h.storage.Get(req.AccessToken)
 	if err != nil {
-		if err == SessionNotFound {
+		if err == ErrSessionNotFound {
 			return nil, grpc.Errorf(codes.NotFound, "session (get) does not exists")
 		}
 		return nil, err

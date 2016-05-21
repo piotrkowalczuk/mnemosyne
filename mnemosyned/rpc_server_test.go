@@ -253,6 +253,55 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 	}))
 }
 
+func TestRPCServer_Abandon_postgresStore(t *testing.T) {
+	var (
+		sid string
+		at  *mnemosyne.AccessToken
+	)
+	Convey("Abandon", t, WithE2ESuite(t, func(s *e2eSuite) {
+		Convey("With existing session", func() {
+			sid = "entity:1"
+			resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
+				SubjectId: sid,
+			})
+
+			So(err, ShouldBeNil)
+			So(resp, ShouldBeValidStartResponse, sid)
+
+			at = resp.Session.AccessToken
+			Convey("With proper access token", func() {
+				Convey("Should return true", func() {
+					resp, err := s.client.Abandon(context.Background(), &mnemosyne.AbandonRequest{
+						AccessToken: at,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp.Abandoned, ShouldBeTrue)
+				})
+			})
+			Convey("Without access token", func() {
+				Convey("Should return invalid argument gRPC error", func() {
+					resp, err := s.client.Abandon(context.Background(), &mnemosyne.AbandonRequest{})
+
+					So(resp, ShouldBeNil)
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
+				})
+			})
+		})
+		Convey("With unknown access token", func() {
+			Convey("Should return not found gRPC error", func() {
+				access := mnemosyne.DecodeAccessTokenString("0000000000test")
+				resp, err := s.client.Abandon(context.Background(), &mnemosyne.AbandonRequest{
+					AccessToken: &access,
+				})
+
+				So(resp, ShouldBeNil)
+				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(ErrSessionNotFound))
+			})
+		})
+	}))
+}
+
 func TestRPCServer_Delete_postgresStore(t *testing.T) {
 	var (
 		sid string

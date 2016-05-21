@@ -2,7 +2,6 @@ package mnemosyned
 
 import (
 	"net"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -17,6 +16,7 @@ import (
 )
 
 func TestDaemon_Run(t *testing.T) {
+	t.SkipNow()
 	if testing.Short() {
 		t.Skip("this test takes to long to run it in short mode")
 	}
@@ -35,8 +35,8 @@ func TestDaemon_Run(t *testing.T) {
 		SessionTTC:  ttc,
 		RPCListener: l,
 		// Use this logger to debug issues
-		Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
-		//Logger:                 sklog.NewTestLogger(t),
+		//Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
+		Logger:                 sklog.NewTestLogger(t),
 		StoragePostgresAddress: testPostgresAddress,
 	})
 	if err := d.Run(); err != nil {
@@ -48,6 +48,7 @@ func TestDaemon_Run(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer conn.Close()
 
 	m := mnemosyne.New(conn, mnemosyne.MnemosyneOpts{})
 	ats := make([]mnemosyne.AccessToken, 0, nb)

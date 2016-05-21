@@ -16,7 +16,6 @@ import (
 )
 
 func TestDaemon_Run(t *testing.T) {
-	t.SkipNow()
 	if testing.Short() {
 		t.Skip("this test takes to long to run it in short mode")
 	}
@@ -35,8 +34,8 @@ func TestDaemon_Run(t *testing.T) {
 		SessionTTC:  ttc,
 		RPCListener: l,
 		// Use this logger to debug issues
-		//Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
-		Logger:                 sklog.NewTestLogger(t),
+		Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
+		//Logger:                 sklog.NewTestLogger(t),
 		StoragePostgresAddress: testPostgresAddress,
 	})
 	if err := d.Run(); err != nil {
@@ -44,7 +43,7 @@ func TestDaemon_Run(t *testing.T) {
 	}
 	defer d.Close()
 
-	conn, err := grpc.Dial(d.Addr().String(), grpc.WithInsecure(), grpc.WithBlock(), grpc.WithTimeout(1*time.Second))
+	conn, err := grpc.Dial(d.Addr().String(), grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,21 +71,23 @@ func TestDaemon_Run(t *testing.T) {
 	// BUG: this assertion can fail on travis because of cpu lag.
 	<-time.After(ttl + ttc + ttc)
 
-	for _, at := range ats {
-		go func(at mnemosyne.AccessToken, wg *sync.WaitGroup) {
+	for i, at := range ats {
+		go func(i int, at mnemosyne.AccessToken, wg *sync.WaitGroup) {
 			wg.Add(1)
 			defer wg.Done()
 
 			ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 			_, err := m.Get(ctx, at)
 			if err == nil {
-				t.Error("missing error")
+				t.Error("%d: missing error", i)
 				return
 			}
 			if grpc.Code(err) != codes.NotFound {
-				t.Errorf("wrong error code, expected %s", codes.NotFound, grpc.Code(err))
+				t.Errorf("%d: wrong error code, expected %s", i, codes.NotFound, grpc.Code(err))
 			}
-		}(at, wg)
+
+			t.Logf("%d: as expected, session does not exists anymore", i)
+		}(i, at, wg)
 	}
 	wg.Wait()
 }

@@ -60,13 +60,13 @@ func (es *e2eSuite) teardown(t *testing.T) {
 	if err := es.clientConn.Close(); err != nil {
 		t.Fatalf("e2e suite client connection unexpected error on close: %s", err.Error())
 	}
+	if err := es.daemon.Close(); err != nil {
+		t.Fatalf("e2e suite daemon unexpected error on close: %s", err.Error())
+	}
 	if err := es.daemon.storage.TearDown(); err != nil {
 		t.Fatalf("e2e suite storage unexpected error on teardown: %s", err.Error())
 	} else {
 		t.Logf("e2e suite storage teardown")
-	}
-	if err := es.daemon.Close(); err != nil {
-		t.Fatalf("e2e suite daemon unexpected error on close: %s", err.Error())
 	}
 }
 

@@ -65,7 +65,6 @@ test:
 	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} ${PACKAGE_TEST}
 
-
 get:
 	@go get github.com/Masterminds/glide
 	@go get github.com/smartystreets/goconvey/...

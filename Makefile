@@ -15,6 +15,8 @@ DIST_BINDIR=${DESTDIR}${DIST_PREFIX}/bin
 
 FLAGS=-host=$(MNEMOSYNE_HOST) \
 	-port=$(MNEMOSYNE_PORT) \
+	-ttl=$(MNEMOSYNE_TTL) \
+	-ttc=$(MNEMOSYNE_TTC) \
 	-subsystem=$(MNEMOSYNE_SUBSYSTEM) \
 	-namespace=$(MNEMOSYNE_NAMESPACE) \
 	-l.format=$(MNEMOSYNE_LOGGER_FORMAT) \

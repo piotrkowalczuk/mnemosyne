@@ -35,7 +35,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 	is.store = &storageMock{}
 	is.listener = listenTCP(t)
 	is.server = grpc.NewServer()
-	is.serviceServer = newRPCServer(logger, is.store, monitor)
+	is.serviceServer = newRPCServer(logger, is.store, monitor, DefaultTTC)
 
 	mnemosyne.RegisterRPCServer(is.server, is.serviceServer)
 

@@ -20,6 +20,16 @@ const (
 )
 
 func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Labels) *monitoring {
+	generalErrors := prometheus.NewCounter(
+		stdprometheus.CounterOpts{
+			Namespace:   namespace,
+			Subsystem:   subsystem,
+			Name:        "general_errors_total",
+			Help:        "Total number of errors that happen during execution (other than grpc and postgres).",
+			ConstLabels: constLabels,
+		},
+		monitoringGeneralLabels,
+	)
 	rpcRequests := prometheus.NewCounter(
 		stdprometheus.CounterOpts{
 			Namespace:   namespace,
@@ -64,6 +74,10 @@ func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Label
 
 	return &monitoring{
 		enabled: true,
+		general: monitoringGeneral{
+			enabled: true,
+			errors:  generalErrors,
+		},
 		rpc: monitoringRPC{
 			enabled:  true,
 			requests: rpcRequests,
@@ -77,13 +91,12 @@ func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Label
 	}
 }
 
-func initPostgres(connectionString string, logger log.Logger) (*sql.DB, error) {
-	postgres, err := sql.Open("postgres", connectionString)
+func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
+	postgres, err := sql.Open("postgres", address)
 	if err != nil {
 		return nil, fmt.Errorf("postgres connection failure: %s", err.Error())
 	}
-
-	sklog.Info(logger, "postgres connected", "address", connectionString)
+	sklog.Info(logger, "postgres connection has been established", "address", address)
 
 	return postgres, nil
 }
@@ -129,7 +142,12 @@ func initLogger(adapter, format string, level int, context ...interface{}) log.L
 	return l
 }
 
-func initStorage(s Storage, l log.Logger) (Storage, error) {
+func initStorage(env string, s Storage, l log.Logger) (Storage, error) {
+	if env == EnvironmentTest {
+		if err := s.TearDown(); err != nil {
+			return nil, err
+		}
+	}
 	if err := s.Setup(); err != nil {
 		return nil, err
 	}

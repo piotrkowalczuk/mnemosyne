@@ -27,6 +27,8 @@ func main() {
 	daemon := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
 		Namespace:              config.namespace,
 		Subsystem:              config.subsystem,
+		SessionTTL:             config.session.ttl,
+		SessionTTC:             config.session.ttc,
 		TLS:                    config.tls.enabled,
 		TLSCertFile:            config.tls.certFile,
 		TLSKeyFile:             config.tls.keyFile,

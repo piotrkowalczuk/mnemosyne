@@ -135,7 +135,7 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 	Convey("Start", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With subject id", func() {
 			sid := "entity:1"
-			Convey("Should work", func() {
+			Convey("Should return newly created session", func() {
 				resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
 					SubjectId: sid,
 				})
@@ -145,7 +145,7 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 			})
 		})
 		Convey("Without subject id", func() {
-			Convey("Should fail", func() {
+			Convey("Should return invalid argument gRPC error", func() {
 				resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{})
 
 				So(resp, ShouldBeNil)
@@ -171,9 +171,8 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 			So(resp, ShouldBeValidStartResponse, sid)
 
 			at = resp.Session.AccessToken
-
 			Convey("With proper access token", func() {
-				Convey("Should work", func() {
+				Convey("Should return corresponding session", func() {
 					resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{
 						AccessToken: at,
 					})
@@ -183,7 +182,7 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 				})
 			})
 			Convey("Without access token", func() {
-				Convey("Should work", func() {
+				Convey("Should return invalid argument gRPC error", func() {
 					resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{})
 
 					So(resp, ShouldBeNil)

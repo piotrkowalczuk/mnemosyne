@@ -3,6 +3,9 @@ package mnemosyned
 import "github.com/go-kit/kit/metrics"
 
 var (
+	monitoringGeneralLabels = []string{
+		"action",
+	}
 	monitoringRPCLabels = []string{
 		"method",
 	}
@@ -13,8 +16,14 @@ var (
 
 type monitoring struct {
 	enabled  bool
+	general  monitoringGeneral
 	rpc      monitoringRPC
 	postgres monitoringPostgres
+}
+
+type monitoringGeneral struct {
+	enabled bool
+	errors  metrics.Counter
 }
 
 type monitoringRPC struct {

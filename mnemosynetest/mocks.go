@@ -84,13 +84,13 @@ func (_m *Mnemosyne) Exists(_a0 context.Context, _a1 mnemosyne.AccessToken) (boo
 	return r0, r1
 }
 
-// Start provides a mock function with given fields: _a0, _a1, _a2
-func (_m *Mnemosyne) Start(_a0 context.Context, _a1 string, _a2 map[string]string) (*mnemosyne.Session, error) {
-	ret := _m.Called(_a0, _a1, _a2)
+// Start provides a mock function with given fields: _a0, _a1, _a2, _a3
+func (_m *Mnemosyne) Start(_a0 context.Context, _a1 string, _a2 string, _a3 map[string]string) (*mnemosyne.Session, error) {
+	ret := _m.Called(_a0, _a1, _a2, _a3)
 
 	var r0 *mnemosyne.Session
-	if rf, ok := ret.Get(0).(func(context.Context, string, map[string]string) *mnemosyne.Session); ok {
-		r0 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, map[string]string) *mnemosyne.Session); ok {
+		r0 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*mnemosyne.Session)
@@ -98,8 +98,8 @@ func (_m *Mnemosyne) Start(_a0 context.Context, _a1 string, _a2 map[string]strin
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, map[string]string) error); ok {
-		r1 = rf(_a0, _a1, _a2)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, map[string]string) error); ok {
+		r1 = rf(_a0, _a1, _a2, _a3)
 	} else {
 		r1 = ret.Error(1)
 	}

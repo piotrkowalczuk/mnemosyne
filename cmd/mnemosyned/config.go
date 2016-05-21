@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"time"
+
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 )
 
@@ -19,6 +21,10 @@ type configuration struct {
 		adapter string
 		format  string
 		level   int
+	}
+	session struct {
+		ttl time.Duration
+		ttc time.Duration
 	}
 	monitoring struct {
 		engine string
@@ -46,6 +52,8 @@ func (c *configuration) init() {
 	flag.IntVar(&c.port, "port", 8080, "port")
 	flag.StringVar(&c.namespace, "namespace", "", "namespace")
 	flag.StringVar(&c.subsystem, "subsystem", "mnemosyne", "subsystem")
+	flag.DurationVar(&c.session.ttl, "ttl", mnemosyned.DefaultTTL, "session time to live, after which session is deleted")
+	flag.DurationVar(&c.session.ttc, "ttc", mnemosyned.DefaultTTC, "session time to cleanup, how offten cleanup will be performed")
 	flag.StringVar(&c.logger.adapter, "l.adapter", mnemosyned.LoggerAdapterStdOut, "logger adapter")
 	flag.StringVar(&c.logger.format, "l.format", mnemosyned.LoggerFormatJSON, "logger format")
 	flag.IntVar(&c.logger.level, "l.level", 6, "logger level")

@@ -1,6 +1,9 @@
 package mnemosyned
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/go-kit/kit/log"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/piotrkowalczuk/mnemosyne"
@@ -10,7 +13,13 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
+const (
+	DefaultTTL = 24 * time.Minute
+	DefaultTTC = 1 * time.Minute
+)
+
 type rpcServer struct {
+	ttc     time.Duration
 	logger  log.Logger
 	monitor *monitoring
 	storage Storage
@@ -26,8 +35,9 @@ type rpcServer struct {
 	}
 }
 
-func newRPCServer(l log.Logger, s Storage, m *monitoring) *rpcServer {
+func newRPCServer(l log.Logger, s Storage, m *monitoring, ttc time.Duration) *rpcServer {
 	return &rpcServer{
+		ttc: ttc,
 		alloc: struct {
 			abandon  handlerFunc
 			context  handlerFunc
@@ -201,6 +211,31 @@ func (rs *rpcServer) Delete(ctx context.Context, req *mnemosyne.DeleteRequest) (
 	return &mnemosyne.DeleteResponse{
 		Count: affected,
 	}, nil
+}
+
+func (rs *rpcServer) cleanup(done chan struct{}) {
+	sklog.Info(rs.logger, "cleanup routing started")
+InfLoop:
+	for {
+		select {
+		case <-time.After(rs.ttc):
+			t := time.Now()
+			sklog.Debug(rs.logger, "session cleanup start", "start_at", t.Format(time.RFC3339))
+			affected, err := rs.storage.Delete(nil, nil, &t)
+			if err != nil {
+				if rs.monitor.enabled {
+					rs.monitor.general.errors.Add(1)
+				}
+				sklog.Error(rs.logger, fmt.Errorf("session cleanup failure: %s", err.Error()), "expire_at_to", t)
+				return
+			}
+
+			sklog.Debug(rs.logger, "session cleanup success", "count", affected, "elapsed", time.Now().Sub(t))
+		case <-done:
+			sklog.Info(rs.logger, "cleanup routing terminated")
+			break InfLoop
+		}
+	}
 }
 
 func (rs *rpcServer) loggerBackground(ctx context.Context, keyval ...interface{}) log.Logger {

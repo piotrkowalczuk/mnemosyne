@@ -9,6 +9,8 @@ import (
 	"os"
 	"testing"
 
+	"time"
+
 	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
@@ -18,10 +20,20 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
+const (
+	// EnvironmentProduction ...
+	EnvironmentProduction = "prod"
+	// EnvironmentTest ...
+	EnvironmentTest = "test"
+)
+
 // DaemonOpts ...
 type DaemonOpts struct {
+	Environment            string
 	Namespace              string
 	Subsystem              string
+	SessionTTL             time.Duration
+	SessionTTC             time.Duration
 	MonitoringEngine       string
 	TLS                    bool
 	TLSCertFile            string
@@ -42,6 +54,7 @@ type TestDaemonOpts struct {
 
 // Daemon ...
 type Daemon struct {
+	done          chan struct{}
 	opts          *DaemonOpts
 	monitor       *monitoring
 	rpcOptions    []grpc.ServerOption
@@ -54,6 +67,7 @@ type Daemon struct {
 // NewDaemon ...
 func NewDaemon(opts *DaemonOpts) *Daemon {
 	d := &Daemon{
+		done:          make(chan struct{}, 0),
 		opts:          opts,
 		logger:        opts.Logger,
 		rpcOptions:    opts.RPCOptions,
@@ -61,6 +75,12 @@ func NewDaemon(opts *DaemonOpts) *Daemon {
 		debugListener: opts.DebugListener,
 	}
 
+	if d.opts.SessionTTL == 0 {
+		d.opts.SessionTTL = DefaultTTL
+	}
+	if d.opts.SessionTTC == 0 {
+		d.opts.SessionTTC = DefaultTTC
+	}
 	if d.opts.StorageEngine == "" {
 		d.opts.StorageEngine = StorageEnginePostgres
 	}
@@ -112,9 +132,10 @@ func (d *Daemon) Run() (err error) {
 
 	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
 	gRPCServer := grpc.NewServer(d.rpcOptions...)
-	mnemosyneServer := newRPCServer(d.logger, d.storage, d.monitor)
+	mnemosyneServer := newRPCServer(d.logger, d.storage, d.monitor, d.opts.SessionTTC)
 	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
 
+	go mnemosyneServer.cleanup(d.done)
 	go func() {
 		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String(), "subsystem", d.opts.Subsystem, "namespace", d.opts.Namespace)
 
@@ -141,6 +162,7 @@ func (d *Daemon) Run() (err error) {
 
 // Close implements io.Closer interface.
 func (d *Daemon) Close() (err error) {
+	d.done <- struct{}{}
 	if err = d.rpcListener.Close(); err != nil {
 		return
 	}
@@ -169,7 +191,11 @@ func (d *Daemon) initStorage() (err error) {
 		if err != nil {
 			return
 		}
-		if d.storage, err = initStorage(newPostgresStorage(d.opts.StoragePostgresTable, db, d.monitor), d.logger); err != nil {
+		if d.storage, err = initStorage(
+			d.opts.Environment,
+			newPostgresStorage(d.opts.StoragePostgresTable, db, d.monitor, d.opts.SessionTTL),
+			d.logger,
+		); err != nil {
 			return
 		}
 		return

@@ -46,17 +46,19 @@ $ go install ./cmd/mnemosyned
 | --- | --- | --- | --- |
 | host | `-host` | 127.0.0.1 | string |
 | port | `-port` | 8080 |int |
+| ttl | `-ttl` | 24m | duration |
+| ttc | `-ttc` | 1m | duration |
 | logger format | `-l.format` | json | enum(json, humane, logfmt) |
 | logger adapter | `-l.adapter` | stdout | enum(stdout) |
-|namespace|`-namespace`|string||
-|subsystem|`-subsystem`| mnemosyne|string|
-|monitoring engine|`-m.engine`|prometheus|enum(prometheus)|
-|storage engine|`-s.engine`|postgres|enum(postgres)|
-|storage postgres connection string|`-s.p.address`|postgres://localhost:5432?sslmode=disable|string|
-|storage postgres table name|`-s.p.table`|mnemosyne_session|string|
-|tls |`-tls`|false|boolean|
-|tls certificate file |`-tls.certfile`| |string|
-|tls key file |`-tls.keyfile`| |string|
+| namespace | `-namespace` | string | |
+| subsystem | `-subsystem` | mnemosyne|string |
+| monitoring engine | `-m.engine` | prometheus | enum(prometheus) |
+| storage engine | `-s.engine` | postgres | enum(postgres) |
+| storage postgres address | `-s.p.address` | postgres://localhost:5432?sslmode=disable | string |
+| storage postgres table name |`-s.p.table` | mnemosyne_session|string|
+| tls | `-tls` | false | boolean |
+| tls certificate file | `-tls.certfile` | | string |
+| tls key file |`-tls.keyfile` | | string |
 
 ### Running
 

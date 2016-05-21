@@ -67,7 +67,7 @@ type Mnemosyne interface {
 	FromContext(context.Context) (*Session, error)
 	Get(context.Context, AccessToken) (*Session, error)
 	Exists(context.Context, AccessToken) (bool, error)
-	Start(context.Context, string, map[string]string) (*Session, error)
+	Start(context.Context, string, string, map[string]string) (*Session, error)
 	Abandon(context.Context, AccessToken) error
 	SetValue(context.Context, AccessToken, string, string) (map[string]string, error)
 	//	DeleteValue(context.Context, string) (*Session, error)
@@ -118,10 +118,11 @@ func (m *mnemosyne) Exists(ctx context.Context, token AccessToken) (bool, error)
 }
 
 // Create implements Mnemosyne interface.
-func (m *mnemosyne) Start(ctx context.Context, subjectID string, data map[string]string) (*Session, error) {
+func (m *mnemosyne) Start(ctx context.Context, subjectID, subjectClient string, data map[string]string) (*Session, error) {
 	res, err := m.client.Start(ctx, &StartRequest{
-		SubjectId: subjectID,
-		Bag:       data,
+		SubjectId:     subjectID,
+		SubjectClient: subjectClient,
+		Bag:           data,
 	})
 	if err != nil {
 		return nil, err

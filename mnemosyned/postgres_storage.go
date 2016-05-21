@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-kit/kit/metrics"
@@ -16,18 +17,30 @@ var (
 )
 
 type postgresStorage struct {
-	db        *sql.DB
-	table     string
-	generator mnemosyne.RandomBytesGenerator
-	monitor   *monitoring
+	db                                             *sql.DB
+	table                                          string
+	ttl                                            time.Duration
+	generator                                      mnemosyne.RandomBytesGenerator
+	monitor                                        *monitoring
+	querySave, queryGet, queryExists, queryAbandon string
 }
 
-func newPostgresStorage(tn string, db *sql.DB, m *monitoring) Storage {
+func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration) Storage {
 	return &postgresStorage{
 		db:        db,
-		table:     tn,
+		table:     tb,
+		ttl:       ttl,
 		generator: &mnemosyne.SystemRandomBytesGenerator{},
 		monitor:   m,
+		querySave: `INSERT INTO mnemosyne.` + tb + ` (access_token, subject_id, bag)
+		VALUES ($1, $2, $3)
+		RETURNING expire_at`,
+		queryGet: `SELECT subject_id, bag, expire_at
+		FROM mnemosyne.` + tb + `
+		WHERE access_token = $1
+		LIMIT 1`,
+		queryExists:  `SELECT EXISTS(SELECT 1 FROM mnemosyne.` + tb + ` WHERE access_token = $1)`,
+		queryAbandon: `DELETE FROM mnemosyne.` + tb + ` WHERE access_token = $1`,
 	}
 }
 
@@ -52,16 +65,10 @@ func (ps *postgresStorage) Start(subjectID string, bag map[string]string) (*mnem
 }
 
 func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
-	query := `
-		INSERT INTO mnemosyne.` + ps.table + ` (access_token, subject_id, bag, expire_at)
-		VALUES ($1, $2, $3, NOW() + '30 minutes'::interval)
-		RETURNING expire_at
-
-	`
-	field := metrics.Field{Key: "query", Value: query}
+	field := metrics.Field{Key: "query", Value: "save"}
 
 	err = ps.db.QueryRow(
-		query,
+		ps.querySave,
 		entity.AccessToken,
 		entity.SubjectID,
 		entity.Bag,
@@ -76,15 +83,9 @@ func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
 // Get implements Storage interface.
 func (ps *postgresStorage) Get(accessToken *mnemosyne.AccessToken) (*mnemosyne.Session, error) {
 	var entity sessionEntity
-	query := `
-		SELECT subject_id, bag, expire_at
-		FROM mnemosyne.` + ps.table + `
-		WHERE access_token = $1
-		LIMIT 1
-	`
-	field := metrics.Field{Key: "query", Value: query}
+	field := metrics.Field{Key: "query", Value: "get"}
 
-	err := ps.db.QueryRow(query, accessToken).Scan(
+	err := ps.db.QueryRow(ps.queryGet, accessToken).Scan(
 		&entity.SubjectID,
 		&entity.Bag,
 		&entity.ExpireAt,
@@ -132,7 +133,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 
 	query += " OFFSET $1 LIMIT $2"
 
-	field := metrics.Field{Key: "query", Value: query}
+	field := metrics.Field{Key: "query", Value: "list"}
 
 	rows, err := ps.db.Query(query, args...)
 	if err != nil {
@@ -179,10 +180,9 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 
 // Exists implements Storage interface.
 func (ps *postgresStorage) Exists(accessToken *mnemosyne.AccessToken) (exists bool, err error) {
-	query := `SELECT EXISTS(SELECT 1 FROM mnemosyne.` + ps.table + ` WHERE access_token = $1)`
-	field := metrics.Field{Key: "query", Value: query}
+	field := metrics.Field{Key: "query", Value: "exists"}
 
-	err = ps.db.QueryRow(query, *accessToken).Scan(
+	err = ps.db.QueryRow(ps.queryExists, *accessToken).Scan(
 		&exists,
 	)
 	if err != nil {
@@ -195,10 +195,9 @@ func (ps *postgresStorage) Exists(accessToken *mnemosyne.AccessToken) (exists bo
 
 // Abandon ...
 func (ps *postgresStorage) Abandon(accessToken *mnemosyne.AccessToken) (bool, error) {
-	query := `DELETE FROM mnemosyne.` + ps.table + ` WHERE access_token = $1 `
-	field := metrics.Field{Key: "query", Value: query}
+	field := metrics.Field{Key: "query", Value: "abandon"}
 
-	result, err := ps.db.Exec(query, *accessToken)
+	result, err := ps.db.Exec(ps.queryAbandon, *accessToken)
 	if err != nil {
 		ps.monitor.postgres.errors.With(field).Add(1)
 		return false, err
@@ -253,24 +252,24 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosyne.AccessToken, key, val
 		&entity.ExpireAt,
 	)
 	if err != nil {
-		ps.incError(metrics.Field{Key: "query", Value: selectQuery})
+		ps.incError(metrics.Field{Key: "query", Value: "set_value_select"})
 		tx.Rollback()
 		if err == sql.ErrNoRows {
 			return nil, SessionNotFound
 		}
 		return nil, err
 	}
-	ps.incQueries(metrics.Field{Key: "query", Value: selectQuery})
+	ps.incQueries(metrics.Field{Key: "query", Value: "set_value_select"})
 
 	entity.Bag.Set(key, value)
 
 	_, err = tx.Exec(updateQuery, *accessToken, entity.Bag)
 	if err != nil {
-		ps.incError(metrics.Field{Key: "query", Value: updateQuery})
+		ps.incError(metrics.Field{Key: "query", Value: "set_value_update"})
 		tx.Rollback()
 		return nil, err
 	}
-	ps.incQueries(metrics.Field{Key: "query", Value: updateQuery})
+	ps.incQueries(metrics.Field{Key: "query", Value: "set_value_update"})
 
 	tx.Commit()
 
@@ -285,7 +284,7 @@ func (ps *postgresStorage) Delete(accessToken *mnemosyne.AccessToken, expiredAtF
 
 	where, args := ps.where(accessToken, expiredAtFrom, expiredAtTo)
 	query := "DELETE FROM mnemosyne." + ps.table + " WHERE " + where
-	field := metrics.Field{Key: "query", Value: query}
+	field := metrics.Field{Key: "query", Value: "delete"}
 
 	result, err := ps.db.Exec(query, args...)
 	if err != nil {
@@ -299,22 +298,25 @@ func (ps *postgresStorage) Delete(accessToken *mnemosyne.AccessToken, expiredAtF
 
 // Setup implements Storage interface.
 func (ps *postgresStorage) Setup() error {
-	_, err := ps.db.Exec(`
+	_, err := ps.db.Exec(fmt.Sprintf(`
 		CREATE SCHEMA IF NOT EXISTS mnemosyne;
-		CREATE TABLE IF NOT EXISTS mnemosyne.` + ps.table + ` (
+		CREATE TABLE IF NOT EXISTS mnemosyne.%s (
 			access_token BYTEA PRIMARY KEY,
 			subject_id TEXT NOT NULL,
+			subject_client TEXT,
 			bag bytea NOT NULL,
-			expire_at TIMESTAMPTZ NOT NULL
+			expire_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + '%d seconds')
+
 		);
-	`)
+		CREATE INDEX ON mnemosyne.%s (subject_id);
+	`, ps.table, int64(ps.ttl.Seconds()), ps.table))
 
 	return err
 }
 
 // TearDown implements Storage interface.
 func (ps *postgresStorage) TearDown() error {
-	_, err := ps.db.Exec(`DROP SCHEMA mnemosyne CASCADE`)
+	_, err := ps.db.Exec(`DROP SCHEMA IF EXISTS mnemosyne CASCADE`)
 
 	return err
 }

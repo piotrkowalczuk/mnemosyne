@@ -2,11 +2,11 @@ package mnemosyned
 
 import (
 	"net"
+	"os"
 	"strconv"
+	"sync"
 	"testing"
 	"time"
-
-	"sync"
 
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"

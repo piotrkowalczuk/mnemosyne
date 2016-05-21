@@ -1,5 +1,5 @@
 comment:
-  layout: header, changes, diff
+  layout: header, diff, changes, uncovered
 coverage:
   ignore:
   - mnemosyne.pb.go

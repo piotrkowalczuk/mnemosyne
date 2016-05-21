@@ -149,7 +149,7 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 				resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: "+grpc.ErrorDesc(mnemosyne.ErrMissingSubjectID))
+				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingSubjectID))
 			})
 		})
 	}))
@@ -186,12 +186,12 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 					resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: "+grpc.ErrorDesc(mnemosyne.ErrMissingAccessToken))
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
 				})
 			})
 		})
 		Convey("With unknown access token", func() {
-			Convey("Should fail", func() {
+			Convey("Should return not found gRPC error", func() {
 				access := mnemosyne.DecodeAccessTokenString("0000000000test")
 				resp, err := s.client.Get(context.Background(), &mnemosyne.GetRequest{
 					AccessToken: &access,
@@ -199,6 +199,55 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 
 				So(resp, ShouldBeNil)
 				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session (get) does not exists")
+			})
+		})
+	}))
+}
+
+func TestRPCServer_Exists_postgresStore(t *testing.T) {
+	var (
+		sid string
+		at  *mnemosyne.AccessToken
+	)
+	Convey("Exists", t, WithE2ESuite(t, func(s *e2eSuite) {
+		Convey("With existing session", func() {
+			sid = "entity:1"
+			resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
+				SubjectId: sid,
+			})
+
+			So(err, ShouldBeNil)
+			So(resp, ShouldBeValidStartResponse, sid)
+
+			at = resp.Session.AccessToken
+			Convey("With proper access token", func() {
+				Convey("Should return true", func() {
+					resp, err := s.client.Exists(context.Background(), &mnemosyne.ExistsRequest{
+						AccessToken: at,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp.Exists, ShouldBeTrue)
+				})
+			})
+			Convey("Without access token", func() {
+				Convey("Should return false", func() {
+					resp, err := s.client.Exists(context.Background(), &mnemosyne.ExistsRequest{})
+
+					So(resp, ShouldBeNil)
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
+				})
+			})
+		})
+		Convey("With unknown access token", func() {
+			Convey("Should return false", func() {
+				access := mnemosyne.DecodeAccessTokenString("0000000000test")
+				resp, err := s.client.Exists(context.Background(), &mnemosyne.ExistsRequest{
+					AccessToken: &access,
+				})
+
+				So(err, ShouldBeNil)
+				So(resp.Exists, ShouldBeFalse)
 			})
 		})
 	}))

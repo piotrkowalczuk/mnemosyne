@@ -9,6 +9,8 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
@@ -16,6 +18,15 @@ import (
 const (
 	DefaultTTL = 24 * time.Minute
 	DefaultTTC = 1 * time.Minute
+)
+
+var (
+	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
+	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyned: session not found")
+	// mnemosyne.ErrMissingAccessToken can be returned by any endpoint that expects access token in request.
+	ErrMissingAccessToken = grpc.Errorf(codes.InvalidArgument, "mnemosyned: missing access token")
+	// ErrMissingSubjectID can be returned by start endpoint if subject was not provided.
+	ErrMissingSubjectID = grpc.Errorf(codes.InvalidArgument, "mnemosyned: missing subject id")
 )
 
 type rpcServer struct {

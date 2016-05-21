@@ -10,7 +10,6 @@ import (
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -20,15 +19,6 @@ const (
 	AccessTokenContextKey = "mnemosyne_access_token"
 	// AccessTokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
 	AccessTokenMetadataKey = "authorization"
-)
-
-var (
-	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
-	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyne: session not found")
-	// mnemosyne.ErrMissingAccessToken can be returned by any endpoint that expects access token in request.
-	ErrMissingAccessToken = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing access token")
-	// ErrMissingSubjectID can be returned by start endpoint if subject was not provided.
-	ErrMissingSubjectID = grpc.Errorf(codes.InvalidArgument, "mnemosyne: missing subject id")
 )
 
 // Token implements oauth2.TokenSource interface.

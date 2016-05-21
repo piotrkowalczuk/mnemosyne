@@ -221,7 +221,7 @@ func (ps *postgresStorage) Abandon(accessToken *mnemosyne.AccessToken) (bool, er
 func (ps *postgresStorage) SetValue(accessToken *mnemosyne.AccessToken, key, value string) (map[string]string, error) {
 	var err error
 	if accessToken == nil {
-		return nil, mnemosyne.ErrMissingAccessToken
+		return nil, ErrMissingAccessToken
 	}
 
 	entity := &sessionEntity{

@@ -231,7 +231,7 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 				})
 			})
 			Convey("Without access token", func() {
-				Convey("Should return false", func() {
+				Convey("Should return invalid argument gRPC error", func() {
 					resp, err := s.client.Exists(context.Background(), &mnemosyne.ExistsRequest{})
 
 					So(resp, ShouldBeNil)
@@ -248,6 +248,55 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 
 				So(err, ShouldBeNil)
 				So(resp.Exists, ShouldBeFalse)
+			})
+		})
+	}))
+}
+
+func TestRPCServer_Delete_postgresStore(t *testing.T) {
+	var (
+		sid string
+		at  *mnemosyne.AccessToken
+	)
+	Convey("Delete", t, WithE2ESuite(t, func(s *e2eSuite) {
+		Convey("With existing session", func() {
+			sid = "entity:1"
+			resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
+				SubjectId: sid,
+			})
+
+			So(err, ShouldBeNil)
+			So(resp, ShouldBeValidStartResponse, sid)
+
+			at = resp.Session.AccessToken
+			Convey("With proper access token", func() {
+				Convey("Should return that one record affected", func() {
+					resp, err := s.client.Delete(context.Background(), &mnemosyne.DeleteRequest{
+						AccessToken: at,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp.Count, ShouldEqual, 1)
+				})
+			})
+			Convey("Without access token", func() {
+				Convey("Should return invalid argument gRPC error", func() {
+					resp, err := s.client.Delete(context.Background(), &mnemosyne.DeleteRequest{})
+
+					So(resp, ShouldBeNil)
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: none of expected arguments was provided")
+				})
+			})
+		})
+		Convey("With unknown access token", func() {
+			Convey("Should return that even single record was affected", func() {
+				access := mnemosyne.DecodeAccessTokenString("0000000000test")
+				resp, err := s.client.Delete(context.Background(), &mnemosyne.DeleteRequest{
+					AccessToken: &access,
+				})
+
+				So(err, ShouldBeNil)
+				So(resp.Count, ShouldEqual, 0)
 			})
 		})
 	}))

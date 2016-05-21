@@ -198,19 +198,32 @@ func (h *handler) setValue(ctx context.Context, req *mnemosyne.SetValueRequest) 
 
 func (h *handler) delete(ctx context.Context, req *mnemosyne.DeleteRequest) (int64, error) {
 	var (
-		err                      error
-		expireAtFrom, expireAtTo time.Time
+		expireAtFrom, expireAtTo *time.Time
 	)
-	if expireAtFrom, err = ptypes.Timestamp(req.ExpireAtFrom); err != nil {
-		return 0, err
+	if req.AccessToken == nil && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
+		return 0, grpc.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}
-	if expireAtTo, err = ptypes.Timestamp(req.ExpireAtTo); err != nil {
-		return 0, err
+	if req.AccessToken != nil {
+		h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
+	}
+	if req.ExpireAtFrom != nil {
+		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
+		if err != nil {
+			return 0, err
+		}
+		expireAtFrom = &eaf
+		h.logger = log.NewContext(h.logger).With("expire_at_from", eaf)
+	}
+	if req.ExpireAtTo != nil {
+		eat, err := ptypes.Timestamp(req.ExpireAtTo)
+		if err != nil {
+			return 0, err
+		}
+		expireAtTo = &eat
+		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode(), "expire_at_from", expireAtFrom, "expire_at_to", expireAtTo)
-
-	affected, err := h.storage.Delete(req.AccessToken, &expireAtFrom, &expireAtTo)
+	affected, err := h.storage.Delete(req.AccessToken, expireAtFrom, expireAtTo)
 	if err != nil {
 		return 0, err
 	}

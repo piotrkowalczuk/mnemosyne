@@ -4,7 +4,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 
@@ -51,46 +50,33 @@ func TestDaemon_Run(t *testing.T) {
 
 	m := mnemosyne.New(conn, mnemosyne.MnemosyneOpts{})
 	ats := make([]mnemosyne.AccessToken, 0, nb)
-	wg1 := &sync.WaitGroup{}
 	for i := 0; i < nb; i++ {
-		go func(i int, wg *sync.WaitGroup) {
-			wg.Add(1)
-			defer wg.Done()
 
-			ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-			ses, err := m.Start(ctx, strconv.Itoa(i), "daemon test client", nil)
-			if err != nil {
-				t.Errorf("session could not be started:", err)
-				return
-			}
-			t.Logf("session created, it expires at: %s", time.Unix(ses.ExpireAt.Seconds, int64(ses.ExpireAt.Nanos)).Format(time.RFC3339))
-			ats = append(ats, *ses.AccessToken)
-		}(i, wg1)
+		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+		ses, err := m.Start(ctx, strconv.Itoa(i), "daemon test client", nil)
+		if err != nil {
+			t.Errorf("session could not be started:", err)
+			return
+		}
+		t.Logf("session created, it expires at: %s", time.Unix(ses.ExpireAt.Seconds, int64(ses.ExpireAt.Nanos)).Format(time.RFC3339))
+		ats = append(ats, *ses.AccessToken)
 	}
-	wg1.Wait()
 
 	// BUG: this assertion can fail on travis because of cpu lag.
 	<-time.After(ttl + ttc + ttc)
 
-	wg2 := &sync.WaitGroup{}
 	for i, at := range ats {
-		go func(i int, at mnemosyne.AccessToken, wg *sync.WaitGroup) {
-			wg.Add(1)
-			defer wg.Done()
+		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+		_, err := m.Get(ctx, at)
+		if err == nil {
+			t.Error("%d: missing error", i)
+			return
+		}
+		if grpc.Code(err) != codes.NotFound {
+			t.Errorf("%d: wrong error code, expected %s", i, codes.NotFound, grpc.Code(err))
+			return
+		}
 
-			ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-			_, err := m.Get(ctx, at)
-			if err == nil {
-				t.Error("%d: missing error", i)
-				return
-			}
-			if grpc.Code(err) != codes.NotFound {
-				t.Errorf("%d: wrong error code, expected %s", i, codes.NotFound, grpc.Code(err))
-				return
-			}
-
-			t.Logf("%d: as expected, session does not exists anymore", i)
-		}(i, at, wg2)
+		t.Logf("%d: as expected, session does not exists anymore", i)
 	}
-	wg2.Wait()
 }

@@ -46,8 +46,8 @@ $ go install ./cmd/mnemosyned
 | --- | --- | --- | --- |
 | host | `-host` | 127.0.0.1 | string |
 | port | `-port` | 8080 |int |
-| ttl | `-ttl` | 24m | duration |
-| ttc | `-ttc` | 1m | duration |
+| time to live | `-ttl` | 24m | duration |
+| time to clear | `-ttc` | 1m | duration |
 | logger format | `-l.format` | json | enum(json, humane, logfmt) |
 | logger adapter | `-l.adapter` | stdout | enum(stdout) |
 | namespace | `-namespace` | string | |

@@ -2,27 +2,43 @@ package mnemosynetest
 
 import (
 	"testing"
+
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/stretchr/testify/mock"
-	"google.golang.org/grpc"
+	"golang.org/x/net/context"
 )
 
-import "golang.org/x/net/context"
+import "github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
+
+import "google.golang.org/grpc"
 
 type Mnemosyne struct {
 	mock.Mock
 }
 
-// FromContext provides a mock function with given fields: _a0
-func (_m *Mnemosyne) FromContext(_a0 context.Context) (*mnemosynerpc.Session, error) {
-	ret := _m.Called(_a0)
+// Close provides a mock function with given fields:
+func (_m *Mnemosyne) Close() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// FromContext provides a mock function with given fields: ctx
+func (_m *Mnemosyne) FromContext(ctx context.Context) (*mnemosynerpc.Session, error) {
+	ret := _m.Called(ctx)
 
 	var r0 *mnemosynerpc.Session
 	if rf, ok := ret.Get(0).(func(context.Context) *mnemosynerpc.Session); ok {
-		r0 = rf(_a0)
+		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*mnemosynerpc.Session)
@@ -31,7 +47,7 @@ func (_m *Mnemosyne) FromContext(_a0 context.Context) (*mnemosynerpc.Session, er
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(_a0)
+		r1 = rf(ctx)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -39,13 +55,13 @@ func (_m *Mnemosyne) FromContext(_a0 context.Context) (*mnemosynerpc.Session, er
 	return r0, r1
 }
 
-// Get provides a mock function with given fields: _a0, _a1
-func (_m *Mnemosyne) Get(_a0 context.Context, _a1 mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error) {
-	ret := _m.Called(_a0, _a1)
+// Get provides a mock function with given fields: ctx, token
+func (_m *Mnemosyne) Get(ctx context.Context, token string) (*mnemosynerpc.Session, error) {
+	ret := _m.Called(ctx, token)
 
 	var r0 *mnemosynerpc.Session
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosynerpc.AccessToken) *mnemosynerpc.Session); ok {
-		r0 = rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(context.Context, string) *mnemosynerpc.Session); ok {
+		r0 = rf(ctx, token)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*mnemosynerpc.Session)
@@ -53,8 +69,8 @@ func (_m *Mnemosyne) Get(_a0 context.Context, _a1 mnemosynerpc.AccessToken) (*mn
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, mnemosynerpc.AccessToken) error); ok {
-		r1 = rf(_a0, _a1)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, token)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -62,34 +78,13 @@ func (_m *Mnemosyne) Get(_a0 context.Context, _a1 mnemosynerpc.AccessToken) (*mn
 	return r0, r1
 }
 
-// Exists provides a mock function with given fields: _a0, _a1
-func (_m *Mnemosyne) Exists(_a0 context.Context, _a1 mnemosynerpc.AccessToken) (bool, error) {
-	ret := _m.Called(_a0, _a1)
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosynerpc.AccessToken) bool); ok {
-		r0 = rf(_a0, _a1)
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, mnemosynerpc.AccessToken) error); ok {
-		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// Start provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *Mnemosyne) Start(_a0 context.Context, _a1 string, _a2 string, _a3 map[string]string) (*mnemosynerpc.Session, error) {
-	ret := _m.Called(_a0, _a1, _a2, _a3)
+// Start provides a mock function with given fields: ctx, subjectID, subjectClient, bag
+func (_m *Mnemosyne) Start(ctx context.Context, subjectID string, subjectClient string, bag map[string]string) (*mnemosynerpc.Session, error) {
+	ret := _m.Called(ctx, subjectID, subjectClient, bag)
 
 	var r0 *mnemosynerpc.Session
 	if rf, ok := ret.Get(0).(func(context.Context, string, string, map[string]string) *mnemosynerpc.Session); ok {
-		r0 = rf(_a0, _a1, _a2, _a3)
+		r0 = rf(ctx, subjectID, subjectClient, bag)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*mnemosynerpc.Session)
@@ -98,7 +93,7 @@ func (_m *Mnemosyne) Start(_a0 context.Context, _a1 string, _a2 string, _a3 map[
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, map[string]string) error); ok {
-		r1 = rf(_a0, _a1, _a2, _a3)
+		r1 = rf(ctx, subjectID, subjectClient, bag)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -106,13 +101,34 @@ func (_m *Mnemosyne) Start(_a0 context.Context, _a1 string, _a2 string, _a3 map[
 	return r0, r1
 }
 
-// Abandon provides a mock function with given fields: _a0, _a1
-func (_m *Mnemosyne) Abandon(_a0 context.Context, _a1 mnemosynerpc.AccessToken) error {
-	ret := _m.Called(_a0, _a1)
+// Exists provides a mock function with given fields: ctx, token
+func (_m *Mnemosyne) Exists(ctx context.Context, token string) (bool, error) {
+	ret := _m.Called(ctx, token)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context, string) bool); ok {
+		r0 = rf(ctx, token)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, token)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Abandon provides a mock function with given fields: ctx, token
+func (_m *Mnemosyne) Abandon(ctx context.Context, token string) error {
+	ret := _m.Called(ctx, token)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosynerpc.AccessToken) error); ok {
-		r0 = rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, token)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -120,13 +136,13 @@ func (_m *Mnemosyne) Abandon(_a0 context.Context, _a1 mnemosynerpc.AccessToken) 
 	return r0
 }
 
-// SetValue provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *Mnemosyne) SetValue(_a0 context.Context, _a1 mnemosynerpc.AccessToken, _a2 string, _a3 string) (map[string]string, error) {
-	ret := _m.Called(_a0, _a1, _a2, _a3)
+// SetValue provides a mock function with given fields: ctx, token, key, value
+func (_m *Mnemosyne) SetValue(ctx context.Context, token string, key string, value string) (map[string]string, error) {
+	ret := _m.Called(ctx, token, key, value)
 
 	var r0 map[string]string
-	if rf, ok := ret.Get(0).(func(context.Context, mnemosynerpc.AccessToken, string, string) map[string]string); ok {
-		r0 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) map[string]string); ok {
+		r0 = rf(ctx, token, key, value)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(map[string]string)
@@ -134,8 +150,35 @@ func (_m *Mnemosyne) SetValue(_a0 context.Context, _a1 mnemosynerpc.AccessToken,
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, mnemosynerpc.AccessToken, string, string) error); ok {
-		r1 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, token, key, value)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+type randomBytesGenerator struct {
+	mock.Mock
+}
+
+// generateRandomBytes provides a mock function with given fields: _a0
+func (_m *randomBytesGenerator) generateRandomBytes(_a0 int) ([]byte, error) {
+	ret := _m.Called(_a0)
+
+	var r0 []byte
+	if rf, ok := ret.Get(0).(func(int) []byte); ok {
+		r0 = rf(_a0)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -175,13 +218,13 @@ func (_m *Storage) TearDown() error {
 	return r0
 }
 
-// Start provides a mock function with given fields: _a0, _a1
-func (_m *Storage) Start(_a0 string, _a1 map[string]string) (*mnemosynerpc.Session, error) {
-	ret := _m.Called(_a0, _a1)
+// Start provides a mock function with given fields: _a0, _a1, _a2
+func (_m *Storage) Start(_a0 string, _a1 string, _a2 map[string]string) (*mnemosynerpc.Session, error) {
+	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 *mnemosynerpc.Session
-	if rf, ok := ret.Get(0).(func(string, map[string]string) *mnemosynerpc.Session); ok {
-		r0 = rf(_a0, _a1)
+	if rf, ok := ret.Get(0).(func(string, string, map[string]string) *mnemosynerpc.Session); ok {
+		r0 = rf(_a0, _a1, _a2)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*mnemosynerpc.Session)
@@ -189,8 +232,8 @@ func (_m *Storage) Start(_a0 string, _a1 map[string]string) (*mnemosynerpc.Sessi
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, map[string]string) error); ok {
-		r1 = rf(_a0, _a1)
+	if rf, ok := ret.Get(1).(func(string, string, map[string]string) error); ok {
+		r1 = rf(_a0, _a1, _a2)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -713,33 +756,6 @@ func (_m *RPCServer) Delete(_a0 context.Context, _a1 *mnemosynerpc.DeleteRequest
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *mnemosynerpc.DeleteRequest) error); ok {
 		r1 = rf(_a0, _a1)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-type RandomBytesGenerator struct {
-	mock.Mock
-}
-
-// GenerateRandomBytes provides a mock function with given fields: _a0
-func (_m *RandomBytesGenerator) GenerateRandomBytes(_a0 int) ([]byte, error) {
-	ret := _m.Called(_a0)
-
-	var r0 []byte
-	if rf, ok := ret.Get(0).(func(int) []byte); ok {
-		r0 = rf(_a0)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]byte)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(int) error); ok {
-		r1 = rf(_a0)
 	} else {
 		r1 = ret.Error(1)
 	}

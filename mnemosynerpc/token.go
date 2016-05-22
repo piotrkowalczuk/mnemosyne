@@ -38,10 +38,10 @@ func (at AccessToken) Bytes() []byte {
 	return append(at.Key[:10], at.Hash...)
 }
 
-// DecodeAccessToken parse byteslice and allocates new token instance if ok.
+// DecodeAccessToken parse byte slice and allocates new token instance if ok.
 // Expected token has format <key(10)><hash(n)>.
 func DecodeAccessToken(s []byte) (at AccessToken) {
-	if len(s) < 10 {
+	if len(s) <= 10 {
 		return
 	}
 
@@ -49,6 +49,11 @@ func DecodeAccessToken(s []byte) (at AccessToken) {
 		Key:  bytes.TrimSpace(s[:10]),
 		Hash: bytes.TrimSpace(s[10:]),
 	}
+}
+
+// ParseAccessToken parse given string similar way how DecodeAccessToken does with byte slice.
+func ParseAccessToken(s string) AccessToken {
+	return DecodeAccessToken([]byte(s))
 }
 
 // DecodeAccessTokenString works like DecodeToken but accepts string.

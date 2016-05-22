@@ -95,7 +95,7 @@ func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 }
 
 // TestDaemon returns address of fully started in-memory daemon and closer to close it.
-func TestDaemon(t *testing.T, opts *TestDaemonOpts) (net.Addr, io.Closer) {
+func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 	l, err := net.Listen("tcp", "127.0.0.1:0") // any available address
 	if err != nil {
 		t.Fatalf("mnemosyne daemon tcp listener setup error: %s", err.Error())

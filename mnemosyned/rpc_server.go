@@ -227,25 +227,26 @@ func (rs *rpcServer) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest
 }
 
 func (rs *rpcServer) cleanup(done chan struct{}) {
+	logger := log.NewContext(rs.logger).WithPrefix("module", "cleanup")
 	sklog.Info(rs.logger, "cleanup routing started")
 InfLoop:
 	for {
 		select {
 		case <-time.After(rs.ttc):
 			t := time.Now()
-			sklog.Debug(rs.logger, "session cleanup start", "start_at", t.Format(time.RFC3339))
+			sklog.Debug(logger, "session cleanup start", "start_at", t.Format(time.RFC3339))
 			affected, err := rs.storage.Delete(nil, nil, &t)
 			if err != nil {
 				if rs.monitor.enabled {
 					rs.monitor.general.errors.Add(1)
 				}
-				sklog.Error(rs.logger, fmt.Errorf("session cleanup failure: %s", err.Error()), "expire_at_to", t)
+				sklog.Error(logger, fmt.Errorf("session cleanup failure: %s", err.Error()), "expire_at_to", t)
 				return
 			}
 
-			sklog.Debug(rs.logger, "session cleanup success", "count", affected, "elapsed", time.Now().Sub(t))
+			sklog.Debug(logger, "session cleanup success", "count", affected, "elapsed", time.Now().Sub(t))
 		case <-done:
-			sklog.Info(rs.logger, "cleanup routing terminated")
+			sklog.Info(logger, "cleanup routing terminated")
 			break InfLoop
 		}
 	}

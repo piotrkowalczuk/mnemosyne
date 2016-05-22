@@ -50,13 +50,14 @@ func TestDaemon_Run(t *testing.T) {
 	}
 	defer d.Close()
 
-	conn, err := grpc.Dial(d.Addr().String(), grpc.WithInsecure(), grpc.WithBlock())
+	m, err := mnemosyne.New(mnemosyne.MnemosyneOpts{
+		Addresses: []string{d.Addr().String()},
+	})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("unexpected mnemosyne instatiation error: %s", err.Error())
 	}
-	defer conn.Close()
+	defer m.Close()
 
-	m := mnemosyne.New(conn, mnemosyne.MnemosyneOpts{})
 	ats := make([]mnemosynerpc.AccessToken, 0, nb)
 	for i := 0; i < nb; i++ {
 
@@ -75,7 +76,7 @@ func TestDaemon_Run(t *testing.T) {
 
 	for i, at := range ats {
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-		_, err := m.Get(ctx, at)
+		_, err := m.Get(ctx, at.Encode())
 		if err == nil {
 			t.Error("%d: missing error", i)
 			return
@@ -90,10 +91,9 @@ func TestDaemon_Run(t *testing.T) {
 }
 
 func TestTestDaemon(t *testing.T) {
-	addr, closer := TestDaemon(t, &TestDaemonOpts{
+	addr, closer := TestDaemon(t, TestDaemonOpts{
 		StoragePostgresAddress: testPostgresAddress,
 	})
-
 	if addr.String() == "" {
 		t.Errorf("address should not be empty")
 	}

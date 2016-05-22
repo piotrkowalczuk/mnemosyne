@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynetest"
 	"github.com/piotrkowalczuk/sklog"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
@@ -19,7 +20,7 @@ type integrationSuite struct {
 	service       mnemosynerpc.RPCClient
 	serviceConn   *grpc.ClientConn
 	serviceServer mnemosynerpc.RPCServer
-	store         *storageMock
+	store         *mnemosynetest.Storage
 }
 
 func (is *integrationSuite) setup(t *testing.T) {
@@ -33,7 +34,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 	//logger := sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	monitor := initPrometheus("mnemosyne_test", "mnemosyne", stdprometheus.Labels{"server": "test"})
 
-	is.store = &storageMock{}
+	is.store = &mnemosynetest.Storage{}
 	is.listener = listenTCP(t)
 	is.server = grpc.NewServer()
 	is.serviceServer = newRPCServer(logger, is.store, monitor, DefaultTTC)

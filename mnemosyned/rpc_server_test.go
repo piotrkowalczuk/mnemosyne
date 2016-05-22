@@ -74,7 +74,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				session = &mnemosynerpc.Session{AccessToken: token, SubjectId: subjectID, Bag: bag, ExpireAt: expireAt}
 
 				Convey("Without storage error", func() {
-					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 						Once().
 						Return(session, expectedErr)
 
@@ -84,7 +84,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				})
 				Convey("With storage postgres error", func() {
 					expectedErr = pq.Error{Message: "fake postgres error"}
-					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 						Once().
 						Return(nil, expectedErr)
 
@@ -104,7 +104,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 
 				req = &mnemosynerpc.StartRequest{SubjectId: subjectID}
 				session = &mnemosynerpc.Session{AccessToken: token, SubjectId: subjectID, ExpireAt: expireAt}
-				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
 
@@ -115,7 +115,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 			Convey("Without subject and with bag", func() {
 				req = &mnemosynerpc.StartRequest{Bag: bag}
 				expectedErr = errors.New("session cannot be started, subject id is missing")
-				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
 

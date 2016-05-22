@@ -9,16 +9,16 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func testStorage_Start(t *testing.T, s Storage) {
 	subjectID := "subjectID"
+	subjectClient := "subjectClient"
 	bag := map[string]string{
 		"username": "test",
 	}
-	session, err := s.Start(subjectID, bag)
+	session, err := s.Start(subjectID, subjectClient, bag)
 
 	if assert.NoError(t, err) {
 		assert.Len(t, session.AccessToken.Hash, 128)
@@ -28,7 +28,7 @@ func testStorage_Start(t *testing.T, s Storage) {
 }
 
 func testStorage_Get(t *testing.T, s Storage) {
-	ses, err := s.Start("subjectID", map[string]string{
+	ses, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -51,9 +51,10 @@ func testStorage_List(t *testing.T, s Storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
+	sc := "subjectClient"
 
 	for i := 1; i <= nb; i++ {
-		_, err := s.Start(sid, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		_, err := s.Start(sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -80,13 +81,14 @@ func testStorage_List_between(t *testing.T, s Storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
+	sc := "subjectClient"
 	var (
 		err      error
 		from, to time.Time
 	)
 
 	for i := 1; i <= nb; i++ {
-		res, err := s.Start(sid, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		res, err := s.Start(sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -114,7 +116,7 @@ func testStorage_List_between(t *testing.T, s Storage) {
 }
 
 func testStorage_Exists(t *testing.T, s Storage) {
-	new, err := s.Start("subjectID", map[string]string{
+	new, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -132,7 +134,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 }
 
 func testStorage_Abandon(t *testing.T, s Storage) {
-	new, err := s.Start("subjectID", map[string]string{
+	new, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -154,7 +156,7 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 }
 
 func testStorage_SetValue(t *testing.T, s Storage) {
-	new, err := s.Start("subjectID", map[string]string{
+	new, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	if err != nil {
@@ -229,9 +231,10 @@ func testStorage_Delete(t *testing.T, s Storage) {
 	nb := int64(10)
 	key := "index"
 	sid := "subjectID"
+	sc := "subjectClient"
 
 	for i := int64(1); i <= nb; i++ {
-		_, err := s.Start(sid, map[string]string{key: strconv.FormatInt(i, 10)})
+		_, err := s.Start(sid, sc, map[string]string{key: strconv.FormatInt(i, 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -279,7 +282,7 @@ func testStorage_Delete(t *testing.T, s Storage) {
 
 DataLoop:
 	for _, args := range data {
-		new, err := s.Start("subjectID", nil)
+		new, err := s.Start("subjectID", "subjectID", nil)
 		require.NoError(t, err)
 
 		if !assert.NoError(t, err) {
@@ -325,79 +328,4 @@ DataLoop:
 			assert.Equal(t, int64(0), affected)
 		}
 	}
-}
-
-type storageMock struct {
-	mock.Mock
-}
-
-// Start implements Storage interface.
-func (sm *storageMock) Start(subjectID string, bag map[string]string) (*mnemosynerpc.Session, error) {
-	args := sm.Called(subjectID, bag)
-
-	ses, ok := args.Get(0).(*mnemosynerpc.Session)
-	if !ok {
-		return nil, args.Error(1)
-	}
-	return ses, args.Error(1)
-}
-
-// Ąbandon implements Storage interface.
-func (sm *storageMock) Abandon(token *mnemosynerpc.AccessToken) (bool, error) {
-	args := sm.Called(token)
-
-	return args.Bool(0), args.Error(1)
-}
-
-// Get implements Storage interface.
-func (sm *storageMock) Get(token *mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error) {
-	args := sm.Called(token)
-
-	ses, ok := args.Get(0).(*mnemosynerpc.Session)
-	if !ok {
-		return nil, args.Error(1)
-	}
-	return ses, args.Error(1)
-}
-
-// List implements Storage interface.
-func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
-	args := sm.Called(offset, limit, expireAtFrom, expireAtTo)
-
-	ses, ok := args.Get(0).([]*mnemosynerpc.Session)
-	if !ok {
-		return nil, args.Error(1)
-	}
-	return ses, args.Error(1)
-}
-
-// Exists implements Storage interface.
-func (sm *storageMock) Exists(token *mnemosynerpc.AccessToken) (bool, error) {
-	args := sm.Called(token)
-
-	return args.Bool(0), args.Error(1)
-}
-
-// Delete implements Storage interface.
-func (sm *storageMock) Delete(token *mnemosynerpc.AccessToken, expireAtFrom, expireAtTo *time.Time) (int64, error) {
-	args := sm.Called(token, expireAtFrom, expireAtTo)
-
-	return args.Get(0).(int64), args.Error(1)
-}
-
-// SetValue implements Storage interface.
-func (sm *storageMock) SetValue(token *mnemosynerpc.AccessToken, key, value string) (map[string]string, error) {
-	args := sm.Called(token, key, value)
-
-	return args.Get(0).(map[string]string), args.Error(1)
-}
-
-// Setup implements Storage
-func (sm *storageMock) Setup() error {
-	return sm.Called().Error(0)
-}
-
-// Teardown implements Storage
-func (sm *storageMock) TearDown() error {
-	return sm.Called().Error(0)
 }

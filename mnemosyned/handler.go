@@ -138,7 +138,7 @@ func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*m
 
 	h.logger = log.NewContext(h.logger).With("subject_id", req.SubjectId)
 
-	ses, err := h.storage.Start(req.SubjectId, req.Bag)
+	ses, err := h.storage.Start(req.SubjectId, req.SubjectClient, req.Bag)
 	if err != nil {
 		return nil, err
 	}

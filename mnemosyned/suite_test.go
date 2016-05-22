@@ -16,7 +16,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&testPostgresAddress, "s.p.address", "postgres://postgres:@localhost/test?sslmode=disable&timezone=utc", "")
+	flag.StringVar(&testPostgresAddress, "s.p.address", "postgres://postgres:@localhost/test?sslmode=disable", "")
 }
 
 type suite interface {

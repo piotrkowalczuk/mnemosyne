@@ -28,7 +28,7 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 	-s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS) \
 	-s.p.table=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE)
 
-CMD_TEST=go test -v -race -coverprofile=.tmp/profile.out -covermode=atomic
+CMD_TEST=go test -race -coverprofile=.tmp/profile.out -covermode=atomic
 
 .PHONY:	all proto build rebuild mocks run test test-short get install package
 
@@ -62,7 +62,7 @@ test-short:
 	@${CMD_TEST} -short ${PACKAGE_TEST}
 
 test:
-	@${CMD_TEST} ${PACKAGE}
+	@${CMD_TEST} ${PACKAGE} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
 	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
 	@${CMD_TEST} ${PACKAGE_DAEMON} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
 	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out

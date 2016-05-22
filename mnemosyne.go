@@ -1,38 +1,78 @@
 package mnemosyne
 
 import (
+	"crypto/x509"
+	"errors"
+	"time"
+
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // Mnemosyne ...
 type Mnemosyne interface {
-	FromContext(context.Context) (*mnemosynerpc.Session, error)
-	Get(context.Context, mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error)
-	Exists(context.Context, mnemosynerpc.AccessToken) (bool, error)
-	Start(context.Context, string, string, map[string]string) (*mnemosynerpc.Session, error)
-	Abandon(context.Context, mnemosynerpc.AccessToken) error
-	SetValue(context.Context, mnemosynerpc.AccessToken, string, string) (map[string]string, error)
+	Close() error
+	FromContext(ctx context.Context) (ses *mnemosynerpc.Session, err error)
+	Get(ctx context.Context, token string) (ses *mnemosynerpc.Session, err error)
+	Start(ctx context.Context, subjectID string, subjectClient string, bag map[string]string) (ses *mnemosynerpc.Session, err error)
+	Exists(ctx context.Context, token string) (bool, error)
+	Abandon(ctx context.Context, token string) error
+	SetValue(ctx context.Context, token, key, value string) (bag map[string]string, err error)
 }
 
 type mnemosyne struct {
 	metadata []string
+	conn     *grpc.ClientConn
 	client   mnemosynerpc.RPCClient
 }
 
 // MnemosyneOpts ...
 type MnemosyneOpts struct {
 	Metadata []string
+	// Only one supported now.
+	Addresses   []string
+	UserAgent   string
+	Certificate *x509.CertPool
+	Block       bool
+	Timeout     time.Duration
 }
 
 // New allocates new mnemosyne instance.
-func New(conn *grpc.ClientConn, options MnemosyneOpts) Mnemosyne {
-	return &mnemosyne{
-		client: mnemosynerpc.NewRPCClient(conn),
+func New(opts MnemosyneOpts) (Mnemosyne, error) {
+	if len(opts.Addresses) == 0 {
+		return nil, errors.New("mnemosyne: at least one address needs to be provided")
 	}
+	if len(opts.Addresses) > 1 {
+		return nil, errors.New("mnemosyne: client side load balancing is not implemented yet, only one address can be provided")
+	}
+	var dialOpts []grpc.DialOption
+	if opts.Certificate == nil {
+		dialOpts = append(dialOpts, grpc.WithInsecure())
+	} else {
+		dialOpts = append(dialOpts, grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(opts.Certificate, "")))
+	}
+	if opts.Block {
+		dialOpts = append(dialOpts, grpc.WithBlock())
+	}
+	if opts.Timeout.Nanoseconds() > 0 {
+		dialOpts = append(dialOpts, grpc.WithTimeout(opts.Timeout))
+	}
+	if opts.UserAgent != "" {
+		dialOpts = append(dialOpts, grpc.WithUserAgent(opts.UserAgent))
+	}
+	conn, err := grpc.Dial(opts.Addresses[0], dialOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return &mnemosyne{
+		metadata: opts.Metadata,
+		conn:     conn,
+		client:   mnemosynerpc.NewRPCClient(conn),
+	}, nil
 }
 
 // FromContext implements Mnemosyne interface.
@@ -45,8 +85,9 @@ func (m *mnemosyne) FromContext(ctx context.Context) (*mnemosynerpc.Session, err
 }
 
 // Get implements Mnemosyne interface.
-func (m *mnemosyne) Get(ctx context.Context, token mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error) {
-	res, err := m.client.Get(ctx, &mnemosynerpc.GetRequest{AccessToken: &token})
+func (m *mnemosyne) Get(ctx context.Context, token string) (*mnemosynerpc.Session, error) {
+	at := mnemosynerpc.ParseAccessToken(token)
+	res, err := m.client.Get(ctx, &mnemosynerpc.GetRequest{AccessToken: &at})
 	if err != nil {
 		return nil, err
 	}
@@ -55,8 +96,9 @@ func (m *mnemosyne) Get(ctx context.Context, token mnemosynerpc.AccessToken) (*m
 }
 
 // Exists implements Mnemosyne interface.
-func (m *mnemosyne) Exists(ctx context.Context, token mnemosynerpc.AccessToken) (bool, error) {
-	res, err := m.client.Exists(ctx, &mnemosynerpc.ExistsRequest{AccessToken: &token})
+func (m *mnemosyne) Exists(ctx context.Context, token string) (bool, error) {
+	at := mnemosynerpc.ParseAccessToken(token)
+	res, err := m.client.Exists(ctx, &mnemosynerpc.ExistsRequest{AccessToken: &at})
 
 	if err != nil {
 		return false, err
@@ -80,16 +122,18 @@ func (m *mnemosyne) Start(ctx context.Context, subjectID, subjectClient string, 
 }
 
 // Abandon implements Mnemosyne interface.
-func (m *mnemosyne) Abandon(ctx context.Context, token mnemosynerpc.AccessToken) error {
-	_, err := m.client.Abandon(ctx, &mnemosynerpc.AbandonRequest{AccessToken: &token})
+func (m *mnemosyne) Abandon(ctx context.Context, token string) error {
+	at := mnemosynerpc.ParseAccessToken(token)
+	_, err := m.client.Abandon(ctx, &mnemosynerpc.AbandonRequest{AccessToken: &at})
 
 	return err
 }
 
 // SetData implements Mnemosyne interface.
-func (m *mnemosyne) SetValue(ctx context.Context, token mnemosynerpc.AccessToken, key, value string) (map[string]string, error) {
+func (m *mnemosyne) SetValue(ctx context.Context, token, key, value string) (map[string]string, error) {
+	at := mnemosynerpc.ParseAccessToken(token)
 	res, err := m.client.SetValue(ctx, &mnemosynerpc.SetValueRequest{
-		AccessToken: &token,
+		AccessToken: &at,
 		Key:         key,
 		Value:       value,
 	})
@@ -99,6 +143,11 @@ func (m *mnemosyne) SetValue(ctx context.Context, token mnemosynerpc.AccessToken
 	}
 
 	return res.Bag, nil
+}
+
+// Close implements io Closer interface.
+func (m *mnemosyne) Close() error {
+	return m.conn.Close()
 }
 
 //// TokenContextMiddleware puts token taken from header into current context.

@@ -2,31 +2,6 @@
 // source: mnemosyne.proto
 // DO NOT EDIT!
 
-/*
-Package mnemosyne is a generated protocol buffer package.
-
-It is generated from these files:
-	mnemosyne.proto
-
-It has these top-level messages:
-	AccessToken
-	Session
-	GetRequest
-	GetResponse
-	ContextResponse
-	ListRequest
-	ListResponse
-	ExistsRequest
-	ExistsResponse
-	StartRequest
-	StartResponse
-	AbandonRequest
-	AbandonResponse
-	SetValueRequest
-	SetValueResponse
-	DeleteRequest
-	DeleteResponse
-*/
 package mnemosyne
 
 import proto "github.com/golang/protobuf/proto"

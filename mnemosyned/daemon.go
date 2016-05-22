@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"testing"
 
@@ -65,7 +66,7 @@ type Daemon struct {
 }
 
 // NewDaemon ...
-func NewDaemon(opts *DaemonOpts) *Daemon {
+func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 	d := &Daemon{
 		done:          make(chan struct{}, 0),
 		opts:          opts,
@@ -75,6 +76,9 @@ func NewDaemon(opts *DaemonOpts) *Daemon {
 		debugListener: opts.DebugListener,
 	}
 
+	if err := d.setPostgresConnectionParameters(); err != nil {
+		return nil, err
+	}
 	if d.opts.SessionTTL == 0 {
 		d.opts.SessionTTL = DefaultTTL
 	}
@@ -87,7 +91,8 @@ func NewDaemon(opts *DaemonOpts) *Daemon {
 	if d.opts.StoragePostgresTable == "" {
 		d.opts.StoragePostgresTable = "session"
 	}
-	return d
+
+	return d, nil
 }
 
 // TestDaemon returns address of fully started in-memory daemon and closer to close it.
@@ -100,13 +105,16 @@ func TestDaemon(t *testing.T, opts *TestDaemonOpts) (net.Addr, io.Closer) {
 	logger := sklog.NewTestLogger(t)
 	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
 
-	d := NewDaemon(&DaemonOpts{
+	d, err := NewDaemon(&DaemonOpts{
 		Namespace:              "mnemosyne_test",
 		MonitoringEngine:       MonitoringEnginePrometheus,
 		Logger:                 logger,
 		StoragePostgresAddress: opts.StoragePostgresAddress,
 		RPCListener:            l,
 	})
+	if err != nil {
+		t.Fatalf("mnemosyne daemon cannot be instantiated: %s", err.Error())
+	}
 	if err := d.Run(); err != nil {
 		t.Fatalf("mnemosyne daemon start error: %s", err.Error())
 	}
@@ -205,6 +213,18 @@ func (d *Daemon) initStorage() (err error) {
 	default:
 		return errors.New("unknown storage engine")
 	}
+}
+
+func (d *Daemon) setPostgresConnectionParameters() error {
+	u, err := url.Parse(d.opts.StoragePostgresAddress)
+	if err != nil {
+		return err
+	}
+	v := u.Query()
+	v.Set("timezone", "utc")
+	u.RawQuery = v.Encode()
+	d.opts.StoragePostgresAddress = u.String()
+	return nil
 }
 
 func (d *Daemon) initMonitoring() (err error) {

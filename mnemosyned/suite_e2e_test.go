@@ -22,11 +22,12 @@ func (es *e2eSuite) setup(t *testing.T) {
 	if testing.Short() {
 		t.Skip("e2e suite ignored in short mode")
 	}
-
+	var err error
+	//logger := sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	logger := sklog.NewTestLogger(t)
 
 	es.listener = listenTCP(t)
-	es.daemon = NewDaemon(&DaemonOpts{
+	es.daemon, err = NewDaemon(&DaemonOpts{
 		Namespace:              "mnemosyne_e2e",
 		Subsystem:              "mnemosyne",
 		RPCOptions:             []grpc.ServerOption{},
@@ -35,8 +36,9 @@ func (es *e2eSuite) setup(t *testing.T) {
 		Logger:                 logger,
 		StoragePostgresAddress: testPostgresAddress,
 	})
-
-	var err error
+	if err != nil {
+		t.Fatalf("unexpected deamon instantiation error: %s", err.Error())
+	}
 	if err = es.daemon.Run(); err != nil {
 		t.Fatalf("unexpected deamon run error: %s", err.Error())
 	} else {

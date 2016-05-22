@@ -149,15 +149,15 @@ type RPCClient struct {
 }
 
 // Context provides a mock function with given fields: ctx, in, opts
-func (_m *RPCClient) Context(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*mnemosyne.Session, error) {
+func (_m *RPCClient) Context(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*mnemosyne.ContextResponse, error) {
 	ret := _m.Called(ctx, in, opts)
 
-	var r0 *mnemosyne.Session
-	if rf, ok := ret.Get(0).(func(context.Context, *empty.Empty, ...grpc.CallOption) *mnemosyne.Session); ok {
+	var r0 *mnemosyne.ContextResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *empty.Empty, ...grpc.CallOption) *mnemosyne.ContextResponse); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*mnemosyne.Session)
+			r0 = ret.Get(0).(*mnemosyne.ContextResponse)
 		}
 	}
 
@@ -337,15 +337,15 @@ type RPCServer struct {
 }
 
 // Context provides a mock function with given fields: _a0, _a1
-func (_m *RPCServer) Context(_a0 context.Context, _a1 *empty.Empty) (*mnemosyne.Session, error) {
+func (_m *RPCServer) Context(_a0 context.Context, _a1 *empty.Empty) (*mnemosyne.ContextResponse, error) {
 	ret := _m.Called(_a0, _a1)
 
-	var r0 *mnemosyne.Session
-	if rf, ok := ret.Get(0).(func(context.Context, *empty.Empty) *mnemosyne.Session); ok {
+	var r0 *mnemosyne.ContextResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *empty.Empty) *mnemosyne.ContextResponse); ok {
 		r0 = rf(_a0, _a1)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*mnemosyne.Session)
+			r0 = ret.Get(0).(*mnemosyne.ContextResponse)
 		}
 	}
 

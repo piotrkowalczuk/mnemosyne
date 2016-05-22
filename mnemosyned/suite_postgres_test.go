@@ -2,7 +2,6 @@ package mnemosyned
 
 import (
 	"database/sql"
-	"os"
 	"testing"
 
 	"github.com/go-kit/kit/log"
@@ -22,8 +21,8 @@ func (ps *postgresSuite) setup(t *testing.T) {
 
 	var err error
 
-	//ps.logger = sklog.NewTestLogger(t)
-	ps.logger = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
+	ps.logger = sklog.NewTestLogger(t)
+	//ps.logger = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	ps.db, err = initPostgres(testPostgresAddress, ps.logger)
 	if err != nil {
 		t.Fatal(err)

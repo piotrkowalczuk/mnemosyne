@@ -60,19 +60,56 @@ func testStorage_List(t *testing.T, s Storage) {
 	}
 
 	sessions, err := s.List(2, int64(nb), nil, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
 	if len(sessions) != nb-2 {
-		t.Fatalf("wrong number of sessions returned: expected %d but got %d", nb, len(sessions))
+		t.Fatalf("wrong number of sessions returned: expected %d but got %d", nb-2, len(sessions))
 	}
 
-	if assert.NoError(t, err) {
-		assert.Len(t, sessions, nb-2)
-		for i, s := range sessions {
-			assert.NotEmpty(t, s.AccessToken)
-			assert.NotEmpty(t, s.ExpireAt)
-			assert.Equal(t, s.SubjectId, sid)
+	for i, s := range sessions {
+		assert.NotEmpty(t, s.AccessToken)
+		assert.NotEmpty(t, s.ExpireAt)
+		assert.Equal(t, s.SubjectId, sid)
 
-			assert.Equal(t, s.Bag[key], strconv.FormatInt(int64(i+3), 10))
+		assert.Equal(t, s.Bag[key], strconv.FormatInt(int64(i+3), 10))
+	}
+}
+
+func testStorage_List_between(t *testing.T, s Storage) {
+	nb := 10
+	key := "index"
+	sid := "subjectID"
+	var (
+		err      error
+		from, to time.Time
+	)
+
+	for i := 1; i <= nb; i++ {
+		res, err := s.Start(sid, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		if err != nil {
+			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
+		if i == 1 {
+			if from, err = ptypes.Timestamp(res.ExpireAt); err != nil {
+				t.Fatalf("timestamp conversion unexpected error: %s", err.Error())
+			}
+			from = from.Add(-1 * time.Second)
+		}
+		if i == nb {
+			if to, err = ptypes.Timestamp(res.ExpireAt); err != nil {
+				t.Fatalf("timestamp conversion unexpected error: %s", err.Error())
+			}
+			to = to.Add(1 * time.Second)
+		}
+	}
+
+	sessions, err := s.List(0, int64(nb), &from, &to)
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	if len(sessions) != nb {
+		t.Fatalf("wrong number of sessions returned: expected %d but got %d", nb, len(sessions))
 	}
 }
 

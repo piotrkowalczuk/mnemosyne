@@ -2,7 +2,6 @@ package mnemosyned
 
 import (
 	"net"
-	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -31,18 +30,21 @@ func TestDaemon_Run(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	d := NewDaemon(&DaemonOpts{
+	d, err := NewDaemon(&DaemonOpts{
 		Environment:   EnvironmentTest,
 		SessionTTL:    ttl,
 		SessionTTC:    ttc,
 		RPCListener:   rl,
 		DebugListener: dl,
 		// Use this logger to debug issues
-		Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
-		//Logger:                 sklog.NewTestLogger(t),
+		//Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
+		Logger:                 sklog.NewTestLogger(t),
 		StoragePostgresAddress: testPostgresAddress,
 	})
-	if err := d.Run(); err != nil {
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = d.Run(); err != nil {
 		t.Fatal(err)
 	}
 	defer d.Close()

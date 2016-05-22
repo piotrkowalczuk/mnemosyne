@@ -29,6 +29,15 @@ func TestPostgresStorage_List(t *testing.T) {
 	s.teardown(t)
 }
 
+func TestPostgresStorage_List_between(t *testing.T) {
+	s := &postgresSuite{}
+	s.setup(t)
+
+	testStorage_List_between(t, s.store)
+
+	s.teardown(t)
+}
+
 func TestPostgresStorage_Exists(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)

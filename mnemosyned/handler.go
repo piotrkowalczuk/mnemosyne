@@ -105,24 +105,30 @@ func (h *handler) get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyn
 
 func (h *handler) list(ctx context.Context, req *mnemosyne.ListRequest) ([]*mnemosyne.Session, error) {
 	var (
-		err                      error
-		expireAtFrom, expireAtTo time.Time
+		expireAtFrom, expireAtTo *time.Time
 	)
-	if expireAtFrom, err = ptypes.Timestamp(req.ExpireAtFrom); err != nil {
-		return nil, err
+	h.logger = log.NewContext(h.logger).With("offset", req.Offset, "limit", req.Limit)
+	if req.ExpireAtFrom != nil {
+		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
+		if err != nil {
+			return nil, err
+		}
+		expireAtFrom = &eaf
+		h.logger = log.NewContext(h.logger).With("expire_at_from", eaf)
 	}
-	if expireAtTo, err = ptypes.Timestamp(req.ExpireAtTo); err != nil {
-		return nil, err
+	if req.ExpireAtTo != nil {
+		eat, err := ptypes.Timestamp(req.ExpireAtTo)
+		if err != nil {
+			return nil, err
+		}
+		expireAtTo = &eat
+		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
+	}
+	if req.Limit == 0 {
+		req.Limit = 10
 	}
 
-	h.logger = log.NewContext(h.logger).With(
-		"offset", req.Offset,
-		"limit", req.Limit,
-		"expire_at_from", expireAtFrom.String(),
-		"expire_at_to", expireAtTo.String(),
-	)
-
-	return h.storage.List(req.Offset, req.Limit, &expireAtFrom, &expireAtTo)
+	return h.storage.List(req.Offset, req.Limit, expireAtFrom, expireAtTo)
 }
 
 func (h *handler) start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.Session, error) {
@@ -141,7 +147,7 @@ func (h *handler) start(ctx context.Context, req *mnemosyne.StartRequest) (*mnem
 	if err != nil {
 		return nil, err
 	}
-	h.logger = log.NewContext(h.logger).With("access_token", ses.AccessToken.Encode(), "expire_at", expireAt.Format(time.RFC3339))
+	h.logger = log.NewContext(h.logger).With("access_token", ses.AccessToken.Encode(), "expire_at", expireAt)
 
 	return ses, nil
 }

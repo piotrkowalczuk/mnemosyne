@@ -118,7 +118,9 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 
 	args := []interface{}{offset, limit}
 	query := "SELECT access_token, subject_id, bag, expire_at FROM mnemosyne." + ps.table + " "
-
+	if expiredAtFrom != nil || expiredAtTo != nil {
+		query += " WHERE "
+	}
 	switch {
 	case expiredAtFrom != nil && expiredAtTo == nil:
 		query += "expire_at > $3"
@@ -127,7 +129,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 		query += "expire_at < $3"
 		args = append(args, expiredAtTo)
 	case expiredAtFrom != nil && expiredAtTo != nil:
-		query += "expire_at > $4 AND expire_at < $5"
+		query += "expire_at > $3 AND expire_at < $4"
 		args = append(args, expiredAtFrom, expiredAtTo)
 	}
 

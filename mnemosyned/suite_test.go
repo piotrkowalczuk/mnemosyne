@@ -16,7 +16,7 @@ var (
 )
 
 func init() {
-	flag.StringVar(&testPostgresAddress, "s.p.address", "postgres://postgres:@localhost/test?sslmode=disable", "")
+	flag.StringVar(&testPostgresAddress, "s.p.address", "postgres://postgres:@localhost/test?sslmode=disable&timezone=utc", "")
 }
 
 type suite interface {
@@ -41,13 +41,7 @@ func ShouldBeValidStartResponse(actual interface{}, expected ...interface{}) (s 
 	if !ok {
 		return "The given value must be *StartResponse."
 	}
-	if s = convey.ShouldNotBeNil(sr.Session); s != "" {
-		return
-	}
-	if s = convey.ShouldEqual(sr.Session.SubjectId, expected[0]); s != "" {
-		return
-	}
-	if s = convey.ShouldHaveLength(sr.Session.AccessToken.Encode(), 138); s != "" {
+	if s = ShouldBeValidSession(sr.Session); s != "" {
 		return
 	}
 	return

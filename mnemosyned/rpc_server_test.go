@@ -2,6 +2,7 @@ package mnemosyned
 
 import (
 	"errors"
+	"strconv"
 	"testing"
 	"time"
 
@@ -461,6 +462,113 @@ func TestRPCServer_SetValue_postgresStore(t *testing.T) {
 
 				So(resp, ShouldBeNil)
 				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(ErrSessionNotFound))
+			})
+		})
+	}))
+}
+
+func TestRPCServer_List_postgresStore(t *testing.T) {
+	var (
+		sid string
+	)
+	nb := 20
+	Convey("List", t, WithE2ESuite(t, func(s *e2eSuite) {
+		Convey("Having multiple sessions active", func() {
+			for i := 0; i < nb; i++ {
+				resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
+					SubjectId: strconv.Itoa(i),
+				})
+				So(err, ShouldBeNil)
+				So(resp, ShouldBeValidStartResponse, sid)
+			}
+			Convey("With empty request", func() {
+				Convey("Should return last 10 sessions", func() {
+					resp, err := s.client.List(context.Background(), &mnemosyne.ListRequest{})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(len(resp.Sessions), ShouldEqual, 10)
+				})
+			})
+			Convey("With limit set", func() {
+				Convey("Should return specified numer of sessions", func() {
+					resp, err := s.client.List(context.Background(), &mnemosyne.ListRequest{
+						Limit: int64(nb),
+					})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(len(resp.Sessions), ShouldEqual, nb)
+				})
+			})
+			Convey("With offset higher than overall number of sessions", func() {
+				Convey("Should return empty collection", func() {
+					resp, err := s.client.List(context.Background(), &mnemosyne.ListRequest{
+						Offset: int64(nb),
+					})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(len(resp.Sessions), ShouldEqual, 0)
+				})
+			})
+			Convey("With expire at to set in the past", func() {
+				Convey("Should return empty collection", func() {
+					past, err := ptypes.TimestampProto(time.Now().Add(-5 * time.Hour).UTC())
+					So(err, ShouldBeNil)
+
+					resp, err := s.client.List(context.Background(), &mnemosyne.ListRequest{
+						ExpireAtTo: past,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(len(resp.Sessions), ShouldEqual, 0)
+				})
+			})
+			Convey("With expire at from set in the future", func() {
+				Convey("Should return empty collection", func() {
+					future, err := ptypes.TimestampProto(time.Now().Add(5 * time.Hour).UTC())
+					So(err, ShouldBeNil)
+
+					resp, err := s.client.List(context.Background(), &mnemosyne.ListRequest{
+						ExpireAtFrom: future,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(len(resp.Sessions), ShouldEqual, 0)
+				})
+			})
+			Convey("With time range set very wide and maximum offset", func() {
+				Convey("Should return all possible sessions", func() {
+					from, err := ptypes.TimestampProto(time.Now().Add(-5 * time.Hour).UTC())
+					So(err, ShouldBeNil)
+
+					to, err := ptypes.TimestampProto(time.Now().Add(5 * time.Hour).UTC())
+					So(err, ShouldBeNil)
+
+					resp, err := s.client.List(context.Background(), &mnemosyne.ListRequest{
+						Limit:        int64(nb),
+						ExpireAtFrom: from,
+						ExpireAtTo:   to,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldNotBeNil)
+					So(len(resp.Sessions), ShouldEqual, nb)
+				})
+			})
+		})
+		Convey("Without single session active", func() {
+			Convey("Should return empty collection", func() {
+				resp, err := s.client.List(context.Background(), &mnemosyne.ListRequest{
+					Limit: 100,
+				})
+
+				So(err, ShouldBeNil)
+				So(resp, ShouldNotBeNil)
+				So(len(resp.Sessions), ShouldEqual, 0)
 			})
 		})
 	}))

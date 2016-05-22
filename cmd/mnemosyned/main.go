@@ -24,7 +24,7 @@ func main() {
 	rpcListener := initListener(logger, config.host, config.port)
 	debugListener := initListener(logger, config.host, config.port+1)
 
-	daemon := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
+	daemon, err := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
 		Namespace:              config.namespace,
 		Subsystem:              config.subsystem,
 		SessionTTL:             config.session.ttl,
@@ -40,6 +40,9 @@ func main() {
 		RPCListener:            rpcListener,
 		DebugListener:          debugListener,
 	})
+	if err != nil {
+		sklog.Fatal(logger, err)
+	}
 
 	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
 	if err := daemon.Run(); err != nil {

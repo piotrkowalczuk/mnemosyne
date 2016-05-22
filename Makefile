@@ -73,7 +73,7 @@ test:
 get:
 	@go get github.com/Masterminds/glide
 	@go get github.com/smartystreets/goconvey/...
-	@glide install
+	@glide --no-color install
 
 install: build
 	#install binary

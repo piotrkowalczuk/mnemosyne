@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/pprof"
 	"net/url"
 	"os"
 	"testing"
@@ -159,7 +160,14 @@ func (d *Daemon) Run() (err error) {
 		go func() {
 			sklog.Info(d.logger, "debug server is running", "address", d.debugListener.Addr().String(), "subsystem", d.opts.Subsystem, "namespace", d.opts.Namespace)
 			// TODO: implement keep alive
-			sklog.Error(d.logger, http.Serve(d.debugListener, nil))
+
+			mux := http.NewServeMux()
+			mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+			mux.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+			mux.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+			mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+			mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+			sklog.Error(d.logger, http.Serve(d.debugListener, mux))
 		}()
 	}
 

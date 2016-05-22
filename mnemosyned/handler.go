@@ -74,7 +74,7 @@ func (h *handler) context(ctx context.Context) (*mnemosynerpc.Session, error) {
 
 	token := mnemosynerpc.DecodeAccessToken([]byte(md[mnemosynerpc.AccessTokenMetadataKey][0]))
 
-	h.logger = log.NewContext(h.logger).With("access_token", token.Encode())
+	h.logger = log.NewContext(h.logger).With("access_token", md[mnemosynerpc.AccessTokenMetadataKey][0])
 
 	ses, err := h.storage.Get(&token)
 	if err != nil {
@@ -157,7 +157,7 @@ func (h *handler) exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (
 		return false, ErrMissingAccessToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
 
 	exists, err := h.storage.Exists(req.AccessToken)
 	if err != nil {

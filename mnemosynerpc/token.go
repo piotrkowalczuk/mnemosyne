@@ -14,12 +14,12 @@ import (
 
 // NewAccessTokenContext returns a new Context that carries Token value.
 func NewAccessTokenContext(ctx context.Context, at AccessToken) context.Context {
-	return context.WithValue(ctx, AccessTokenContextKey, at)
+	return context.WithValue(ctx, accessTokenContextKey, at)
 }
 
 // AccessTokenFromContext returns the Token value stored in context, if any.
 func AccessTokenFromContext(ctx context.Context) (AccessToken, bool) {
-	at, ok := ctx.Value(AccessTokenContextKey).(AccessToken)
+	at, ok := ctx.Value(accessTokenContextKey).(AccessToken)
 
 	return at, ok
 }
@@ -38,7 +38,7 @@ func (at AccessToken) Bytes() []byte {
 	return append(at.Key[:10], at.Hash...)
 }
 
-// DecodeAccessToken parse string and allocates new token instance if ok.
+// DecodeAccessToken parse byteslice and allocates new token instance if ok.
 // Expected token has format <key(10)><hash(n)>.
 func DecodeAccessToken(s []byte) (at AccessToken) {
 	if len(s) < 10 {
@@ -56,7 +56,9 @@ func DecodeAccessTokenString(s string) AccessToken {
 	return DecodeAccessToken([]byte(s))
 }
 
-// NewAccessToken ...
+// NewAccessToken allocates new access token based on given key and hash.
+// Key should not be longer than 10 elements, otherwise will be truncated.
+// If key is shorten then 10 elements, it will be filled with zeros at the begining.
 func NewAccessToken(key, hash []byte) AccessToken {
 	if len(key) < 10 {
 		return AccessToken{
@@ -95,12 +97,12 @@ func (at *AccessToken) Scan(src interface{}) error {
 	return nil
 }
 
-// IsEmpty ...
+// IsEmpty returns true if hash is zero length.
 func (at AccessToken) IsEmpty() bool {
 	return len(at.Hash) == 0
 }
 
-// RandomAccessToken ...
+// RandomAccessToken generate Access Token with given key and generated hash of length 64.
 func RandomAccessToken(key []byte) (at AccessToken, err error) {
 	var buf []byte
 	buf, err = generateRandomBytes(128)

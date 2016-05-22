@@ -9,10 +9,7 @@ import (
 )
 
 const (
-	// TokenContextKey ...
-	TokenContextKey = "mnemosyne_token"
-	// AccessTokenContextKey is used by Mnemosyne internally to retrieve session token from context.Context.
-	AccessTokenContextKey = "mnemosyne_access_token"
+	accessTokenContextKey = "mnemosyne_access_token"
 	// AccessTokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
 	AccessTokenMetadataKey = "authorization"
 )

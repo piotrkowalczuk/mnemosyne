@@ -6,7 +6,7 @@ import "github.com/golang/protobuf/ptypes/timestamp/timestamp.proto";
 import "github.com/golang/protobuf/ptypes/empty/empty.proto";
 
 service RPC {
-    rpc Context(google.protobuf.Empty) returns (Session) {};
+    rpc Context(google.protobuf.Empty) returns (ContextResponse) {};
     rpc Get(GetRequest) returns (GetResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
     rpc Exists(ExistsRequest) returns (ExistsResponse) {};
@@ -34,6 +34,10 @@ message GetRequest {
 }
 message GetResponse {
     Session session = 1;
+}
+
+message ContextResponse {
+	Session session = 1;
 }
 
 message ListRequest {

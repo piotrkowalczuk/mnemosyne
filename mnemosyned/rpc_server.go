@@ -75,7 +75,7 @@ func newRPCServer(l log.Logger, s Storage, m *monitoring, ttc time.Duration) *rp
 }
 
 // Get implements RPCServer interface.
-func (rs *rpcServer) Context(ctx context.Context, req *empty.Empty) (*mnemosyne.Session, error) {
+func (rs *rpcServer) Context(ctx context.Context, req *empty.Empty) (*mnemosyne.ContextResponse, error) {
 	h := rs.alloc.context(rs.loggerBackground(ctx), rs.storage, rs.monitor.rpc)
 	if h.monitor.enabled {
 		h.monitor.requests.Add(1)
@@ -88,7 +88,9 @@ func (rs *rpcServer) Context(ctx context.Context, req *empty.Empty) (*mnemosyne.
 
 	sklog.Debug(h.logger, "session has been retrieved (by context)")
 
-	return ses, nil
+	return &mnemosyne.ContextResponse{
+		Session: ses,
+	}, nil
 }
 
 // Get implements RPCServer interface.

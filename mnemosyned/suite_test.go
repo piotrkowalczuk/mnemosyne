@@ -58,17 +58,43 @@ func ShouldBeValidGetResponse(actual interface{}, expected ...interface{}) (s st
 		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
 	}
 
-	sr, ok := actual.(*mnemosyne.GetResponse)
+	gr, ok := actual.(*mnemosyne.GetResponse)
 	if !ok {
 		return "The given value must be *GetResponse."
 	}
-	if s = convey.ShouldNotBeNil(sr.Session); s != "" {
+	if s = ShouldBeValidSession(gr.Session); s != "" {
 		return
 	}
-	if s = convey.ShouldEqual(sr.Session.SubjectId, expected[0]); s != "" {
+	return
+}
+
+func ShouldBeValidContextResponse(actual interface{}, expected ...interface{}) (s string) {
+	if len(expected) != 1 {
+		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
+	}
+
+	cr, ok := actual.(*mnemosyne.ContextResponse)
+	if !ok {
+		return "The given value must be *ContextResponse."
+	}
+	if s = ShouldBeValidSession(cr.Session); s != "" {
 		return
 	}
-	if s = convey.ShouldHaveLength(sr.Session.AccessToken.Encode(), 138); s != "" {
+	return
+}
+
+func ShouldBeValidSession(expected ...interface{}) (s string) {
+	if len(expected) != 1 {
+		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
+	}
+	sr, ok := expected[0].(*mnemosyne.Session)
+	if !ok {
+		return "The given value must be *GetResponse."
+	}
+	if s = convey.ShouldNotBeNil(sr); s != "" {
+		return
+	}
+	if s = convey.ShouldHaveLength(sr.AccessToken.Encode(), 138); s != "" {
 		return
 	}
 	return

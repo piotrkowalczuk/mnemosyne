@@ -65,11 +65,11 @@ func (h *handler) error(err error) error {
 func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
-		return nil, errors.New("missing metadata in context, session token cannot be retrieved")
+		return nil, grpc.Errorf(codes.InvalidArgument, "missing metadata in context, session token cannot be retrieved")
 	}
 
 	if len(md[mnemosyne.AccessTokenMetadataKey]) == 0 {
-		return nil, errors.New("missing sesion token in metadata")
+		return nil, grpc.Errorf(codes.InvalidArgument, "missing sesion token in metadata")
 	}
 
 	token := mnemosyne.DecodeAccessToken([]byte(md[mnemosyne.AccessTokenMetadataKey][0]))

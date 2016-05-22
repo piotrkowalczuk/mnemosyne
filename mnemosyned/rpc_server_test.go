@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne"
 	. "github.com/smartystreets/goconvey/convey"
@@ -13,6 +14,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 )
 
 func TestRPCServer_mockedStore(t *testing.T) {
@@ -199,6 +201,63 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 
 				So(resp, ShouldBeNil)
 				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session (get) does not exists")
+			})
+		})
+	}))
+}
+
+func TestRPCServer_Context_postgresStore(t *testing.T) {
+	var (
+		sid string
+		at  *mnemosyne.AccessToken
+	)
+	Convey("Context", t, WithE2ESuite(t, func(s *e2eSuite) {
+		Convey("With existing session", func() {
+			sid = "entity:1"
+			resp, err := s.client.Start(context.Background(), &mnemosyne.StartRequest{
+				SubjectId: sid,
+			})
+
+			So(err, ShouldBeNil)
+			So(resp, ShouldBeValidStartResponse, sid)
+
+			at = resp.Session.AccessToken
+			Convey("With proper access token", func() {
+				Convey("Should return corresponding session", func() {
+					meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, at.Encode())
+					ctx := metadata.NewContext(context.Background(), meta)
+					resp, err := s.client.Context(ctx, &empty.Empty{})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldBeValidContextResponse, sid)
+				})
+			})
+			Convey("Without metadata", func() {
+				Convey("Should return invalid argument gRPC error", func() {
+					resp, err := s.client.Context(context.Background(), &empty.Empty{})
+
+					So(resp, ShouldBeNil)
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: missing metadata in context, session token cannot be retrieved")
+				})
+			})
+			Convey("Without access token", func() {
+				Convey("Should return invalid argument gRPC error", func() {
+					ctx := metadata.NewContext(context.Background(), metadata.New(map[string]string{"some-key": "some-value"}))
+					resp, err := s.client.Context(ctx, &empty.Empty{})
+
+					So(resp, ShouldBeNil)
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: missing sesion token in metadata")
+				})
+			})
+		})
+		Convey("With unknown access token", func() {
+			Convey("Should return not found gRPC error", func() {
+				meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, "0000000000test")
+				ctx := metadata.NewContext(context.Background(), meta)
+				resp, err := s.client.Context(ctx, &empty.Empty{})
+
+				So(resp, ShouldBeNil)
+				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session (context) does not exists")
 			})
 		})
 	}))

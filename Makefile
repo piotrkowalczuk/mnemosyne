@@ -3,6 +3,7 @@ SERVICE=mnemosyne
 PACKAGE=github.com/piotrkowalczuk/mnemosyne
 PACKAGE_TEST=$(PACKAGE)/$(SERVICE)test
 PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
+PACKAGE_RPC=$(PACKAGE)/$(SERVICE)rpc
 PACKAGE_CMD_DAEMON=$(PACKAGE)/cmd/$(SERVICE)d
 BINARY_CMD_DAEMON=cmd/${SERVICE}d/${SERVICE}d
 
@@ -27,7 +28,7 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 	-s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS) \
 	-s.p.table=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE)
 
-CMD_TEST=go test -v -race -coverprofile=profile.out -covermode=atomic
+CMD_TEST=go test -v -race -coverprofile=.tmp/profile.out -covermode=.tmp/atomic
 
 .PHONY:	all proto build rebuild mocks run test test-short get install package
 
@@ -37,8 +38,8 @@ proto:
 	@${PROTOC} --proto_path=${GOPATH}/src \
 	    --proto_path=. \
 	    --go_out=plugins=grpc:. \
-	    ${SERVICE}.proto
-	@ls -al | grep "pb.go"
+	    ${SERVICE}rpc/${SERVICE}.proto
+	@ls -al ./${SERVICE}rpc | grep "pb.go"
 
 mocks:
 	@mockery -all -output=${SERVICE}test -output_file=mocks.go -output_pkg_name=mnemosynetest
@@ -53,15 +54,19 @@ run:
 
 test-short:
 	@${CMD_TEST} -short ${PACKAGE}
-	@cat profile.out >> coverage.txt && rm profile.out
+	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
 	@${CMD_TEST} -short ${PACKAGE_DAEMON}
-	@cat profile.out >> coverage.txt && rm profile.out
+	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
+	@${CMD_TEST} -short ${PACKAGE_RPC}
+	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
 	@${CMD_TEST} -short ${PACKAGE_TEST}
 
 test:
 	@${CMD_TEST} ${PACKAGE}
 	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} ${PACKAGE_DAEMON} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
+	@cat profile.out >> coverage.txt && rm profile.out
+	@${CMD_TEST} ${PACKAGE_RPC}
 	@cat profile.out >> coverage.txt && rm profile.out
 	@${CMD_TEST} ${PACKAGE_TEST}
 

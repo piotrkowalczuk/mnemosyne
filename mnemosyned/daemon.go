@@ -9,11 +9,10 @@ import (
 	"net/url"
 	"os"
 	"testing"
-
 	"time"
 
 	"github.com/go-kit/kit/log"
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
@@ -141,7 +140,7 @@ func (d *Daemon) Run() (err error) {
 	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
 	gRPCServer := grpc.NewServer(d.rpcOptions...)
 	mnemosyneServer := newRPCServer(d.logger, d.storage, d.monitor, d.opts.SessionTTC)
-	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
+	mnemosynerpc.RegisterRPCServer(gRPCServer, mnemosyneServer)
 
 	go func() {
 		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String(), "subsystem", d.opts.Subsystem, "namespace", d.opts.Namespace)

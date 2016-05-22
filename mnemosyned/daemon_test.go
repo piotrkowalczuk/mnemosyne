@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -56,7 +57,7 @@ func TestDaemon_Run(t *testing.T) {
 	defer conn.Close()
 
 	m := mnemosyne.New(conn, mnemosyne.MnemosyneOpts{})
-	ats := make([]mnemosyne.AccessToken, 0, nb)
+	ats := make([]mnemosynerpc.AccessToken, 0, nb)
 	for i := 0; i < nb; i++ {
 
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)

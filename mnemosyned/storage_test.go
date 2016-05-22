@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -41,7 +41,7 @@ func testStorage_Get(t *testing.T, s Storage) {
 	assert.Equal(t, ses.ExpireAt, got.ExpireAt)
 
 	// Check for non existing Token
-	got2, err2 := s.Get(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	got2, err2 := s.Get(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	assert.Error(t, err2)
 	assert.EqualError(t, err2, ErrSessionNotFound.Error())
 	assert.Nil(t, got2)
@@ -125,7 +125,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 	assert.True(t, exists)
 
 	// Check for non existing Token
-	exists2, err2 := s.Exists(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	exists2, err2 := s.Exists(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	if assert.NoError(t, err2) {
 		assert.False(t, exists2)
 	}
@@ -148,7 +148,7 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	assert.EqualError(t, err3, ErrSessionNotFound.Error())
 
 	// Check for session that never exists
-	ok4, err4 := s.Abandon(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	ok4, err4 := s.Abandon(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
 	assert.False(t, ok4)
 	assert.EqualError(t, err4, ErrSessionNotFound.Error())
 }
@@ -179,7 +179,7 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	assert.Equal(t, "test", bag2["username"])
 
 	// Check for non existing Token
-	bag3, err3 := s.SetValue(&mnemosyne.AccessToken{Key: []byte("key"), Hash: []byte("hash")}, "email", "fake@email.com")
+	bag3, err3 := s.SetValue(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")}, "email", "fake@email.com")
 	require.Error(t, err3, ErrSessionNotFound.Error())
 	assert.Nil(t, bag3)
 
@@ -287,7 +287,7 @@ DataLoop:
 		}
 
 		var (
-			id            *mnemosyne.AccessToken
+			id            *mnemosynerpc.AccessToken
 			expiredAtTo   *time.Time
 			expiredAtFrom *time.Time
 		)
@@ -332,10 +332,10 @@ type storageMock struct {
 }
 
 // Start implements Storage interface.
-func (sm *storageMock) Start(subjectID string, bag map[string]string) (*mnemosyne.Session, error) {
+func (sm *storageMock) Start(subjectID string, bag map[string]string) (*mnemosynerpc.Session, error) {
 	args := sm.Called(subjectID, bag)
 
-	ses, ok := args.Get(0).(*mnemosyne.Session)
+	ses, ok := args.Get(0).(*mnemosynerpc.Session)
 	if !ok {
 		return nil, args.Error(1)
 	}
@@ -343,17 +343,17 @@ func (sm *storageMock) Start(subjectID string, bag map[string]string) (*mnemosyn
 }
 
 // Ąbandon implements Storage interface.
-func (sm *storageMock) Abandon(token *mnemosyne.AccessToken) (bool, error) {
+func (sm *storageMock) Abandon(token *mnemosynerpc.AccessToken) (bool, error) {
 	args := sm.Called(token)
 
 	return args.Bool(0), args.Error(1)
 }
 
 // Get implements Storage interface.
-func (sm *storageMock) Get(token *mnemosyne.AccessToken) (*mnemosyne.Session, error) {
+func (sm *storageMock) Get(token *mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error) {
 	args := sm.Called(token)
 
-	ses, ok := args.Get(0).(*mnemosyne.Session)
+	ses, ok := args.Get(0).(*mnemosynerpc.Session)
 	if !ok {
 		return nil, args.Error(1)
 	}
@@ -361,10 +361,10 @@ func (sm *storageMock) Get(token *mnemosyne.AccessToken) (*mnemosyne.Session, er
 }
 
 // List implements Storage interface.
-func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.Time) ([]*mnemosyne.Session, error) {
+func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
 	args := sm.Called(offset, limit, expireAtFrom, expireAtTo)
 
-	ses, ok := args.Get(0).([]*mnemosyne.Session)
+	ses, ok := args.Get(0).([]*mnemosynerpc.Session)
 	if !ok {
 		return nil, args.Error(1)
 	}
@@ -372,21 +372,21 @@ func (sm *storageMock) List(offset, limit int64, expireAtFrom, expireAtTo *time.
 }
 
 // Exists implements Storage interface.
-func (sm *storageMock) Exists(token *mnemosyne.AccessToken) (bool, error) {
+func (sm *storageMock) Exists(token *mnemosynerpc.AccessToken) (bool, error) {
 	args := sm.Called(token)
 
 	return args.Bool(0), args.Error(1)
 }
 
 // Delete implements Storage interface.
-func (sm *storageMock) Delete(token *mnemosyne.AccessToken, expireAtFrom, expireAtTo *time.Time) (int64, error) {
+func (sm *storageMock) Delete(token *mnemosynerpc.AccessToken, expireAtFrom, expireAtTo *time.Time) (int64, error) {
 	args := sm.Called(token, expireAtFrom, expireAtTo)
 
 	return args.Get(0).(int64), args.Error(1)
 }
 
 // SetValue implements Storage interface.
-func (sm *storageMock) SetValue(token *mnemosyne.AccessToken, key, value string) (map[string]string, error) {
+func (sm *storageMock) SetValue(token *mnemosynerpc.AccessToken, key, value string) (map[string]string, error) {
 	args := sm.Called(token, key, value)
 
 	return args.Get(0).(map[string]string), args.Error(1)

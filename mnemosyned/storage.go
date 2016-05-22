@@ -3,7 +3,7 @@ package mnemosyned
 import (
 	"time"
 
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
 const (
@@ -17,14 +17,14 @@ type Storage interface {
 	Setup() error
 	TearDown() error
 
-	Start(string, map[string]string) (*mnemosyne.Session, error)
-	Abandon(*mnemosyne.AccessToken) (bool, error)
-	Get(*mnemosyne.AccessToken) (*mnemosyne.Session, error)
-	List(int64, int64, *time.Time, *time.Time) ([]*mnemosyne.Session, error)
-	Exists(*mnemosyne.AccessToken) (bool, error)
-	Delete(*mnemosyne.AccessToken, *time.Time, *time.Time) (int64, error)
+	Start(string, map[string]string) (*mnemosynerpc.Session, error)
+	Abandon(*mnemosynerpc.AccessToken) (bool, error)
+	Get(*mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error)
+	List(int64, int64, *time.Time, *time.Time) ([]*mnemosynerpc.Session, error)
+	Exists(*mnemosynerpc.AccessToken) (bool, error)
+	Delete(*mnemosynerpc.AccessToken, *time.Time, *time.Time) (int64, error)
 
-	SetValue(*mnemosyne.AccessToken, string, string) (map[string]string, error)
-	//	DeleteValue(*mnemosyne.AccessToken, string) (*mnemosyne.Session, error)
-	//	Clear(*mnemosyne.AccessToken) (*mnemosyne.Session, error)
+	SetValue(*mnemosynerpc.AccessToken, string, string) (map[string]string, error)
+	//	DeleteValue(*mnemosynerpc.AccessToken, string) (*mnemosynerpc.Session, error)
+	//	Clear(*mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error)
 }

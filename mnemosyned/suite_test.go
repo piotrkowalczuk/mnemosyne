@@ -6,7 +6,7 @@ import (
 	"net"
 	"testing"
 
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
 )
@@ -37,7 +37,7 @@ func ShouldBeValidStartResponse(actual interface{}, expected ...interface{}) (s 
 		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
 	}
 
-	sr, ok := actual.(*mnemosyne.StartResponse)
+	sr, ok := actual.(*mnemosynerpc.StartResponse)
 	if !ok {
 		return "The given value must be *StartResponse."
 	}
@@ -52,7 +52,7 @@ func ShouldBeValidGetResponse(actual interface{}, expected ...interface{}) (s st
 		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
 	}
 
-	gr, ok := actual.(*mnemosyne.GetResponse)
+	gr, ok := actual.(*mnemosynerpc.GetResponse)
 	if !ok {
 		return "The given value must be *GetResponse."
 	}
@@ -67,7 +67,7 @@ func ShouldBeValidContextResponse(actual interface{}, expected ...interface{}) (
 		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
 	}
 
-	cr, ok := actual.(*mnemosyne.ContextResponse)
+	cr, ok := actual.(*mnemosynerpc.ContextResponse)
 	if !ok {
 		return "The given value must be *ContextResponse."
 	}
@@ -81,7 +81,7 @@ func ShouldBeValidSession(expected ...interface{}) (s string) {
 	if len(expected) != 1 {
 		return fmt.Sprintf("This assertion requires exactly 1 comparison values (you provided %d).", len(expected))
 	}
-	sr, ok := expected[0].(*mnemosyne.Session)
+	sr, ok := expected[0].(*mnemosynerpc.Session)
 	if !ok {
 		return "The given value must be *GetResponse."
 	}
@@ -120,11 +120,11 @@ func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) 
 	if s = convey.ShouldNotBeNil(actual); s != "" {
 		return
 	}
-	if s = convey.ShouldHaveSameTypeAs(actual, &mnemosyne.AccessToken{}); s != "" {
+	if s = convey.ShouldHaveSameTypeAs(actual, &mnemosynerpc.AccessToken{}); s != "" {
 		return
 	}
 
-	t := actual.(*mnemosyne.AccessToken)
+	t := actual.(*mnemosynerpc.AccessToken)
 	if s = convey.ShouldNotBeEmpty(t.Key); s != "" {
 		return
 	}

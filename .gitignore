@@ -1,13 +1,10 @@
 # Project
 .idea
-glide.yml
 vendor
 .tmp
 *.iml
 run.sh
 test.sh
-profile.out
-coverage.txt
 *.sublime-project
 *.sublime-workspace
 .vscode

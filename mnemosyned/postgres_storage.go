@@ -9,7 +9,7 @@ import (
 
 	"github.com/go-kit/kit/metrics"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
 var (
@@ -20,18 +20,16 @@ type postgresStorage struct {
 	db                                             *sql.DB
 	table                                          string
 	ttl                                            time.Duration
-	generator                                      mnemosyne.RandomBytesGenerator
 	monitor                                        *monitoring
 	querySave, queryGet, queryExists, queryAbandon string
 }
 
 func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration) Storage {
 	return &postgresStorage{
-		db:        db,
-		table:     tb,
-		ttl:       ttl,
-		generator: &mnemosyne.SystemRandomBytesGenerator{},
-		monitor:   m,
+		db:      db,
+		table:   tb,
+		ttl:     ttl,
+		monitor: m,
 		querySave: `INSERT INTO mnemosyne.` + tb + ` (access_token, subject_id, bag)
 		VALUES ($1, $2, $3)
 		RETURNING expire_at`,
@@ -45,8 +43,8 @@ func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration)
 }
 
 // Create implements Storage interface.
-func (ps *postgresStorage) Start(subjectID string, bag map[string]string) (*mnemosyne.Session, error) {
-	accessToken, err := mnemosyne.RandomAccessToken(ps.generator, tmpKey)
+func (ps *postgresStorage) Start(subjectID string, bag map[string]string) (*mnemosynerpc.Session, error) {
+	accessToken, err := mnemosynerpc.RandomAccessToken(tmpKey)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +79,7 @@ func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
 }
 
 // Get implements Storage interface.
-func (ps *postgresStorage) Get(accessToken *mnemosyne.AccessToken) (*mnemosyne.Session, error) {
+func (ps *postgresStorage) Get(accessToken *mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error) {
 	var entity sessionEntity
 	field := metrics.Field{Key: "query", Value: "get"}
 
@@ -102,7 +100,7 @@ func (ps *postgresStorage) Get(accessToken *mnemosyne.AccessToken) (*mnemosyne.S
 	if err != nil {
 		return nil, err
 	}
-	return &mnemosyne.Session{
+	return &mnemosynerpc.Session{
 		AccessToken: accessToken,
 		SubjectId:   entity.SubjectID,
 		Bag:         entity.Bag,
@@ -111,7 +109,7 @@ func (ps *postgresStorage) Get(accessToken *mnemosyne.AccessToken) (*mnemosyne.S
 }
 
 // List implements Storage interface.
-func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosyne.Session, error) {
+func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
 	if limit == 0 {
 		return nil, errors.New("cannot retrieve list of sessions, limit needs to be higher than 0")
 	}
@@ -146,7 +144,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 
 	ps.incQueries(field)
 
-	sessions := make([]*mnemosyne.Session, 0, limit)
+	sessions := make([]*mnemosynerpc.Session, 0, limit)
 	for rows.Next() {
 		var entity sessionEntity
 
@@ -165,7 +163,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 		if err != nil {
 			return nil, err
 		}
-		sessions = append(sessions, &mnemosyne.Session{
+		sessions = append(sessions, &mnemosynerpc.Session{
 			AccessToken: &entity.AccessToken,
 			SubjectId:   entity.SubjectID,
 			Bag:         entity.Bag,
@@ -181,7 +179,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 }
 
 // Exists implements Storage interface.
-func (ps *postgresStorage) Exists(accessToken *mnemosyne.AccessToken) (exists bool, err error) {
+func (ps *postgresStorage) Exists(accessToken *mnemosynerpc.AccessToken) (exists bool, err error) {
 	field := metrics.Field{Key: "query", Value: "exists"}
 
 	err = ps.db.QueryRow(ps.queryExists, *accessToken).Scan(
@@ -196,7 +194,7 @@ func (ps *postgresStorage) Exists(accessToken *mnemosyne.AccessToken) (exists bo
 }
 
 // Abandon ...
-func (ps *postgresStorage) Abandon(accessToken *mnemosyne.AccessToken) (bool, error) {
+func (ps *postgresStorage) Abandon(accessToken *mnemosynerpc.AccessToken) (bool, error) {
 	field := metrics.Field{Key: "query", Value: "abandon"}
 
 	result, err := ps.db.Exec(ps.queryAbandon, *accessToken)
@@ -220,7 +218,7 @@ func (ps *postgresStorage) Abandon(accessToken *mnemosyne.AccessToken) (bool, er
 }
 
 // SetData implements Storage interface.
-func (ps *postgresStorage) SetValue(accessToken *mnemosyne.AccessToken, key, value string) (map[string]string, error) {
+func (ps *postgresStorage) SetValue(accessToken *mnemosynerpc.AccessToken, key, value string) (map[string]string, error) {
 	var err error
 	if accessToken == nil {
 		return nil, ErrMissingAccessToken
@@ -279,7 +277,7 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosyne.AccessToken, key, val
 }
 
 // Delete implements Storage interface.
-func (ps *postgresStorage) Delete(accessToken *mnemosyne.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+func (ps *postgresStorage) Delete(accessToken *mnemosynerpc.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	if accessToken == nil && expiredAtFrom == nil && expiredAtTo == nil {
 		return 0, errors.New("session cannot be deleted, no where parameter provided")
 	}
@@ -336,7 +334,7 @@ func (ps *postgresStorage) incError(field metrics.Field) {
 	}
 }
 
-func (ps *postgresStorage) where(accessToken *mnemosyne.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
+func (ps *postgresStorage) where(accessToken *mnemosynerpc.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
 	switch {
 	case accessToken != nil && expiredAtFrom == nil && expiredAtTo == nil:
 		return " access_token = $1", []interface{}{accessToken}
@@ -358,18 +356,18 @@ func (ps *postgresStorage) where(accessToken *mnemosyne.AccessToken, expiredAtFr
 }
 
 type sessionEntity struct {
-	AccessToken mnemosyne.AccessToken `json:"accessToken"`
-	SubjectID   string                `json:"subjectId"`
-	Bag         bagpack               `json:"bag"`
-	ExpireAt    time.Time             `json:"expireAt"`
+	AccessToken mnemosynerpc.AccessToken `json:"accessToken"`
+	SubjectID   string                   `json:"subjectId"`
+	Bag         bagpack                  `json:"bag"`
+	ExpireAt    time.Time                `json:"expireAt"`
 }
 
-func (se *sessionEntity) session() (*mnemosyne.Session, error) {
+func (se *sessionEntity) session() (*mnemosynerpc.Session, error) {
 	expireAt, err := ptypes.TimestampProto(se.ExpireAt)
 	if err != nil {
 		return nil, err
 	}
-	return &mnemosyne.Session{
+	return &mnemosynerpc.Session{
 		AccessToken: &se.AccessToken,
 		SubjectId:   se.SubjectID,
 		Bag:         se.Bag,

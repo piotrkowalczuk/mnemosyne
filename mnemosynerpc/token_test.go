@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosynerpc
 
 import (
 	"testing"
@@ -67,7 +67,7 @@ func TestDecodeTokenString(t *testing.T) {
 }
 
 func TestRandomToken(t *testing.T) {
-	token, err := RandomAccessToken(&SystemRandomBytesGenerator{}, []byte("abc"))
+	token, err := RandomAccessToken([]byte("abc"))
 
 	if assert.NoError(t, err) {
 		assert.Len(t, token.Hash, 128)

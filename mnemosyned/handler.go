@@ -7,7 +7,7 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/metrics"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -62,17 +62,17 @@ func (h *handler) error(err error) error {
 	}
 }
 
-func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
+func (h *handler) context(ctx context.Context) (*mnemosynerpc.Session, error) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
 		return nil, grpc.Errorf(codes.InvalidArgument, "missing metadata in context, session token cannot be retrieved")
 	}
 
-	if len(md[mnemosyne.AccessTokenMetadataKey]) == 0 {
+	if len(md[mnemosynerpc.AccessTokenMetadataKey]) == 0 {
 		return nil, grpc.Errorf(codes.InvalidArgument, "missing sesion token in metadata")
 	}
 
-	token := mnemosyne.DecodeAccessToken([]byte(md[mnemosyne.AccessTokenMetadataKey][0]))
+	token := mnemosynerpc.DecodeAccessToken([]byte(md[mnemosynerpc.AccessTokenMetadataKey][0]))
 
 	h.logger = log.NewContext(h.logger).With("access_token", token.Encode())
 
@@ -86,7 +86,7 @@ func (h *handler) context(ctx context.Context) (*mnemosyne.Session, error) {
 	return ses, nil
 }
 
-func (h *handler) get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyne.Session, error) {
+func (h *handler) get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemosynerpc.Session, error) {
 	if req.AccessToken == nil {
 		return nil, ErrMissingAccessToken
 	}
@@ -103,7 +103,7 @@ func (h *handler) get(ctx context.Context, req *mnemosyne.GetRequest) (*mnemosyn
 	return ses, nil
 }
 
-func (h *handler) list(ctx context.Context, req *mnemosyne.ListRequest) ([]*mnemosyne.Session, error) {
+func (h *handler) list(ctx context.Context, req *mnemosynerpc.ListRequest) ([]*mnemosynerpc.Session, error) {
 	var (
 		expireAtFrom, expireAtTo *time.Time
 	)
@@ -131,7 +131,7 @@ func (h *handler) list(ctx context.Context, req *mnemosyne.ListRequest) ([]*mnem
 	return h.storage.List(req.Offset, req.Limit, expireAtFrom, expireAtTo)
 }
 
-func (h *handler) start(ctx context.Context, req *mnemosyne.StartRequest) (*mnemosyne.Session, error) {
+func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*mnemosynerpc.Session, error) {
 	if req.SubjectId == "" {
 		return nil, ErrMissingSubjectID
 	}
@@ -152,7 +152,7 @@ func (h *handler) start(ctx context.Context, req *mnemosyne.StartRequest) (*mnem
 	return ses, nil
 }
 
-func (h *handler) exists(ctx context.Context, req *mnemosyne.ExistsRequest) (bool, error) {
+func (h *handler) exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (bool, error) {
 	if req.AccessToken == nil {
 		return false, ErrMissingAccessToken
 	}
@@ -169,7 +169,7 @@ func (h *handler) exists(ctx context.Context, req *mnemosyne.ExistsRequest) (boo
 	return exists, nil
 }
 
-func (h *handler) abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (bool, error) {
+func (h *handler) abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest) (bool, error) {
 	if req.AccessToken == nil {
 		return false, ErrMissingAccessToken
 	}
@@ -184,7 +184,7 @@ func (h *handler) abandon(ctx context.Context, req *mnemosyne.AbandonRequest) (b
 	return abandoned, nil
 }
 
-func (h *handler) setValue(ctx context.Context, req *mnemosyne.SetValueRequest) (map[string]string, error) {
+func (h *handler) setValue(ctx context.Context, req *mnemosynerpc.SetValueRequest) (map[string]string, error) {
 	switch {
 	case req.AccessToken == nil:
 		return nil, ErrMissingAccessToken
@@ -202,7 +202,7 @@ func (h *handler) setValue(ctx context.Context, req *mnemosyne.SetValueRequest) 
 	return bag, nil
 }
 
-func (h *handler) delete(ctx context.Context, req *mnemosyne.DeleteRequest) (int64, error) {
+func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (int64, error) {
 	var (
 		expireAtFrom, expireAtTo *time.Time
 	)

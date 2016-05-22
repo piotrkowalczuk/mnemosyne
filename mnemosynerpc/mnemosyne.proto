@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package mnemosyne;
+package mnemosynerpc;
 
 import "github.com/golang/protobuf/ptypes/timestamp/timestamp.proto";
 import "github.com/golang/protobuf/ptypes/empty/empty.proto";

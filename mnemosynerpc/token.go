@@ -1,10 +1,12 @@
-package mnemosyne
+package mnemosynerpc
 
 import (
 	"bytes"
+	"crypto/rand"
 	"database/sql/driver"
 	"encoding/hex"
 	"errors"
+	"io"
 
 	"golang.org/x/crypto/sha3"
 	"golang.org/x/net/context"
@@ -23,12 +25,12 @@ func AccessTokenFromContext(ctx context.Context) (AccessToken, bool) {
 }
 
 // Encode ...
-func (at *AccessToken) Encode() string {
+func (at AccessToken) Encode() string {
 	return string(at.Bytes())
 }
 
 // Bytes ...
-func (at *AccessToken) Bytes() []byte {
+func (at AccessToken) Bytes() []byte {
 	if len(at.Key) < 10 {
 		return at.Hash
 	}
@@ -68,23 +70,6 @@ func NewAccessToken(key, hash []byte) AccessToken {
 	}
 }
 
-// RandomAccessToken ...
-func RandomAccessToken(generator RandomBytesGenerator, key []byte) (at AccessToken, err error) {
-	var buf []byte
-	buf, err = generator.GenerateRandomBytes(128)
-	if err != nil {
-		return
-	}
-
-	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
-	hash := make([]byte, 64)
-	// Compute a 64-byte hash of buf and put it in h.
-	sha3.ShakeSum256(hash, buf)
-	hash2 := make([]byte, hex.EncodedLen(len(hash)))
-	hex.Encode(hash2, hash)
-	return NewAccessToken(key, hash2), nil
-}
-
 // Value implements driver.Valuer interface.
 func (at AccessToken) Value() (driver.Value, error) {
 	return string(at.Bytes()), nil
@@ -111,9 +96,31 @@ func (at *AccessToken) Scan(src interface{}) error {
 }
 
 // IsEmpty ...
-func (at *AccessToken) IsEmpty() bool {
-	if at == nil {
-		return true
-	}
+func (at AccessToken) IsEmpty() bool {
 	return len(at.Hash) == 0
+}
+
+// RandomAccessToken ...
+func RandomAccessToken(key []byte) (at AccessToken, err error) {
+	var buf []byte
+	buf, err = generateRandomBytes(128)
+	if err != nil {
+		return
+	}
+
+	// A hash needs to be 64 bytes long to have 256-bit collision resistance.
+	hash := make([]byte, 64)
+	// Compute a 64-byte hash of buf and put it in h.
+	sha3.ShakeSum256(hash, buf)
+	hash2 := make([]byte, hex.EncodedLen(len(hash)))
+	hex.Encode(hash2, hash)
+	return NewAccessToken(key, hash2), nil
+}
+
+func generateRandomBytes(length int) ([]byte, error) {
+	k := make([]byte, length)
+	if _, err := io.ReadFull(rand.Reader, k); err != nil {
+		return nil, err
+	}
+	return k, nil
 }

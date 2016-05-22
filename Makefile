@@ -63,11 +63,11 @@ test-short:
 
 test:
 	@${CMD_TEST} ${PACKAGE}
-	@cat profile.out >> coverage.txt && rm profile.out
+	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
 	@${CMD_TEST} ${PACKAGE_DAEMON} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
-	@cat profile.out >> coverage.txt && rm profile.out
+	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
 	@${CMD_TEST} ${PACKAGE_RPC}
-	@cat profile.out >> coverage.txt && rm profile.out
+	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
 	@${CMD_TEST} ${PACKAGE_TEST}
 
 get:

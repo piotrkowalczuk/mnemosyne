@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"code.google.com/p/go.net/context"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
+	"golang.org/x/net/context"
 )
 
 func TestMnemosyne_Start(t *testing.T) {

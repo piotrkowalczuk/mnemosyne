@@ -27,7 +27,7 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 	-s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS) \
 	-s.p.table=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE)
 
-CMD_TEST=go test -v -coverprofile=profile.out -covermode=atomic
+CMD_TEST=go test -v -race -coverprofile=profile.out -covermode=atomic
 
 .PHONY:	all proto build rebuild mocks run test test-short get install package
 

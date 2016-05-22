@@ -135,7 +135,6 @@ func (d *Daemon) Run() (err error) {
 	mnemosyneServer := newRPCServer(d.logger, d.storage, d.monitor, d.opts.SessionTTC)
 	mnemosyne.RegisterRPCServer(gRPCServer, mnemosyneServer)
 
-	go mnemosyneServer.cleanup(d.done)
 	go func() {
 		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String(), "subsystem", d.opts.Subsystem, "namespace", d.opts.Namespace)
 
@@ -156,6 +155,8 @@ func (d *Daemon) Run() (err error) {
 			sklog.Error(d.logger, http.Serve(d.debugListener, nil))
 		}()
 	}
+
+	go mnemosyneServer.cleanup(d.done)
 
 	return
 }

@@ -23,15 +23,20 @@ func TestDaemon_Run(t *testing.T) {
 	ttc := 1 * time.Second
 	nb := 10
 
-	l, err := net.Listen("tcp", "127.0.0.1:0")
+	rl, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dl, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
 	d := NewDaemon(&DaemonOpts{
-		Environment: EnvironmentTest,
-		SessionTTL:  ttl,
-		SessionTTC:  ttc,
-		RPCListener: l,
+		Environment:   EnvironmentTest,
+		SessionTTL:    ttl,
+		SessionTTC:    ttc,
+		RPCListener:   rl,
+		DebugListener: dl,
 		// Use this logger to debug issues
 		Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
 		//Logger:                 sklog.NewTestLogger(t),

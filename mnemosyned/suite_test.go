@@ -6,6 +6,7 @@ import (
 	"net"
 	"testing"
 
+	_ "github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"

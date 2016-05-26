@@ -2,7 +2,6 @@ package main
 
 import (
 	"net"
-	_ "net/http/pprof"
 	"strconv"
 
 	"github.com/go-kit/kit/log"

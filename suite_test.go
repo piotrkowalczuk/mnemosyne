@@ -1,6 +1,10 @@
 package mnemosyne
 
-import "flag"
+import (
+	"flag"
+
+	_ "github.com/lib/pq"
+)
 
 var (
 	testPostgresAddress string

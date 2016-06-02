@@ -2,15 +2,13 @@ package mnemosynetest
 
 import (
 	"testing"
-
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/net/context"
 )
-
-import "github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 
 import "google.golang.org/grpc"
 

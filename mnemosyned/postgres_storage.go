@@ -33,10 +33,10 @@ func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration)
 		querySave: `INSERT INTO mnemosyne.` + tb + ` (access_token, subject_id, subject_client, bag)
 			VALUES ($1, $2, $3, $4)
 			RETURNING expire_at`,
-		queryGet: `SELECT subject_id, subject_client, bag, expire_at
-			FROM mnemosyne.` + tb + `
+		queryGet: fmt.Sprintf(`UPDATE mnemosyne.`+tb+`
+			SET expire_at = (NOW() + '%d seconds')
 			WHERE access_token = $1
-			LIMIT 1`,
+			RETURNING subject_id, subject_client, bag, expire_at`, int64(ttl.Seconds())),
 		queryExists:  `SELECT EXISTS(SELECT 1 FROM mnemosyne.` + tb + ` WHERE access_token = $1)`,
 		queryAbandon: `DELETE FROM mnemosyne.` + tb + ` WHERE access_token = $1`,
 	}

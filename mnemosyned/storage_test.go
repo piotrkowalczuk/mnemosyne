@@ -38,7 +38,9 @@ func testStorage_Get(t *testing.T, s Storage) {
 	require.NoError(t, err)
 	assert.Equal(t, ses.AccessToken, got.AccessToken)
 	assert.Equal(t, ses.Bag, got.Bag)
-	assert.Equal(t, ses.ExpireAt, got.ExpireAt)
+	if ses.ExpireAt.Seconds > got.ExpireAt.Seconds || (ses.ExpireAt.Seconds == got.ExpireAt.Seconds && ses.ExpireAt.Nanos > got.ExpireAt.Nanos) {
+		t.Fatalf("after get expire at should be increased, got %s but expected %s", got.ExpireAt, ses.ExpireAt)
+	}
 
 	// Check for non existing Token
 	got2, err2 := s.Get(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")})

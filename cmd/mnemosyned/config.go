@@ -10,7 +10,7 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 )
 
-const VERSION = "0.2.1"
+const version = "0.1.0"
 
 type configuration struct {
 	host      string
@@ -71,7 +71,7 @@ func (c *configuration) parse() {
 		ver := flag.Bool("version", false, "print version and exit")
 		flag.Parse()
 		if *ver {
-			fmt.Printf("%s", VERSION)
+			fmt.Printf("%s", version)
 			os.Exit(0)
 		}
 	}

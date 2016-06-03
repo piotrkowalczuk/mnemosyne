@@ -7,9 +7,12 @@ import (
 )
 
 const (
+	// StorageEngineInMemory is not implemented yet.
 	StorageEngineInMemory = "in_memory"
+	// StorageEnginePostgres keeps session within postgres database.
 	StorageEnginePostgres = "postgres"
-	StorageEngineRedis    = "redis"
+	// StorageEngineRedis is not implemented yet.
+	StorageEngineRedis = "redis"
 )
 
 // Storage combines API that needs to be implemented by any storage to be replaceable.

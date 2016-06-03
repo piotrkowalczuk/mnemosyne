@@ -54,7 +54,7 @@ func TestDaemon_Run(t *testing.T) {
 		Addresses: []string{d.Addr().String()},
 	})
 	if err != nil {
-		t.Fatal("unexpected mnemosyne instatiation error: %s", err.Error())
+		t.Fatalf("unexpected mnemosyne instatiation error: %s", err.Error())
 	}
 	defer m.Close()
 
@@ -64,7 +64,7 @@ func TestDaemon_Run(t *testing.T) {
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 		ses, err := m.Start(ctx, strconv.Itoa(i), "daemon test client", nil)
 		if err != nil {
-			t.Errorf("session could not be started:", err)
+			t.Errorf("session could not be started: %s", err.Error())
 			return
 		}
 		t.Logf("session created, it expires at: %s", time.Unix(ses.ExpireAt.Seconds, int64(ses.ExpireAt.Nanos)).Format(time.RFC3339))
@@ -78,11 +78,11 @@ func TestDaemon_Run(t *testing.T) {
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
 		_, err := m.Get(ctx, at.Encode())
 		if err == nil {
-			t.Error("%d: missing error", i)
+			t.Errorf("%d: missing error", i)
 			return
 		}
 		if grpc.Code(err) != codes.NotFound {
-			t.Errorf("%d: wrong error code, expected %s", i, codes.NotFound, grpc.Code(err))
+			t.Errorf("%d: wrong error code, expected %d but got %d", i, codes.NotFound, grpc.Code(err))
 			return
 		}
 

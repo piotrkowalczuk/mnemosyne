@@ -16,14 +16,16 @@ import (
 )
 
 const (
+	// DefaultTTL is session time to live default value.
 	DefaultTTL = 24 * time.Minute
+	// DefaultTTC is time to clear default value.
 	DefaultTTC = 1 * time.Minute
 )
 
 var (
 	// ErrSessionNotFound can be returned by any endpoint if session does not exists.
 	ErrSessionNotFound = grpc.Errorf(codes.NotFound, "mnemosyned: session not found")
-	// mnemosynerpc.ErrMissingAccessToken can be returned by any endpoint that expects access token in request.
+	// ErrMissingAccessToken can be returned by any endpoint that expects access token in request.
 	ErrMissingAccessToken = grpc.Errorf(codes.InvalidArgument, "mnemosyned: missing access token")
 	// ErrMissingSubjectID can be returned by start endpoint if subject was not provided.
 	ErrMissingSubjectID = grpc.Errorf(codes.InvalidArgument, "mnemosyned: missing subject id")

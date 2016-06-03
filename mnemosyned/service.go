@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	// MonitoringEnginePrometheus is currently only supported monitoring system.
 	MonitoringEnginePrometheus = "prometheus"
 )
 

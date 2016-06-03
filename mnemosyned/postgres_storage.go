@@ -43,7 +43,7 @@ func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration)
 }
 
 // Create implements Storage interface.
-func (ps *postgresStorage) Start(subjectID, subjectClient string, bag map[string]string) (*mnemosynerpc.Session, error) {
+func (ps *postgresStorage) Start(sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
 	accessToken, err := mnemosynerpc.RandomAccessToken(tmpKey)
 	if err != nil {
 		return nil, err
@@ -51,9 +51,9 @@ func (ps *postgresStorage) Start(subjectID, subjectClient string, bag map[string
 
 	ent := &sessionEntity{
 		AccessToken:   accessToken,
-		SubjectID:     subjectID,
-		SubjectClient: subjectClient,
-		Bag:           bagpack(bag),
+		SubjectID:     sid,
+		SubjectClient: sc,
+		Bag:           bag(b),
 	}
 
 	if err := ps.save(ent); err != nil {
@@ -265,7 +265,7 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosynerpc.AccessToken, key, 
 	}
 	ps.incQueries(metrics.Field{Key: "query", Value: "set_value_select"})
 
-	entity.Bag.Set(key, value)
+	entity.Bag.set(key, value)
 
 	_, err = tx.Exec(updateQuery, *accessToken, entity.Bag)
 	if err != nil {
@@ -363,7 +363,7 @@ type sessionEntity struct {
 	AccessToken   mnemosynerpc.AccessToken `json:"accessToken"`
 	SubjectID     string                   `json:"subjectId"`
 	SubjectClient string                   `json:"subjectClient"`
-	Bag           bagpack                  `json:"bag"`
+	Bag           bag                      `json:"bag"`
 	ExpireAt      time.Time                `json:"expireAt"`
 }
 

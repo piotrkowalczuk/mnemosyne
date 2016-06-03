@@ -28,7 +28,8 @@ const (
 	EnvironmentTest = "test"
 )
 
-// DaemonOpts ...
+// DaemonOpts it is constructor argument that can be passed to
+// the NewDaemon constructor function.
 type DaemonOpts struct {
 	Environment            string
 	Namespace              string
@@ -48,12 +49,12 @@ type DaemonOpts struct {
 	DebugListener          net.Listener
 }
 
-// TestDaemonOpts ...
+// TestDaemonOpts set of options that are used with TestDaemon instance.
 type TestDaemonOpts struct {
 	StoragePostgresAddress string
 }
 
-// Daemon ...
+// Daemon represents single daemon instance that can be run.
 type Daemon struct {
 	done          chan struct{}
 	opts          *DaemonOpts
@@ -65,7 +66,7 @@ type Daemon struct {
 	debugListener net.Listener
 }
 
-// NewDaemon ...
+// NewDaemon allocates new daemon instance using given options.
 func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 	d := &Daemon{
 		done:          make(chan struct{}, 0),
@@ -122,6 +123,7 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 	return d.Addr(), d
 }
 
+// Run starts daemon and all services within.
 func (d *Daemon) Run() (err error) {
 	if err = d.initMonitoring(); err != nil {
 		return

@@ -2,16 +2,16 @@ package mnemosyned
 
 import "testing"
 
-func TestBagpack(t *testing.T) {
-	b := bagpack{}
+func TestBackpack(t *testing.T) {
+	b := bag{}
 
-	b.Set("key", "value")
+	b.set("key", "value")
 
-	if !b.Has("key") {
+	if !b.has("key") {
 		t.Errorf("bagpack should have specified key")
 	}
 
-	if b.Get("key") != "value" {
+	if b.get("key") != "value" {
 		t.Errorf("bagpack should have specified key")
 	}
 }

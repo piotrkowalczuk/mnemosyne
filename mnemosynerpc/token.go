@@ -63,7 +63,7 @@ func DecodeAccessTokenString(s string) AccessToken {
 
 // NewAccessToken allocates new access token based on given key and hash.
 // Key should not be longer than 10 elements, otherwise will be truncated.
-// If key is shorten then 10 elements, it will be filled with zeros at the begining.
+// If key is shorten then 10 elements, it will be filled with zeros at the beginning.
 func NewAccessToken(key, hash []byte) AccessToken {
 	if len(key) < 10 {
 		return AccessToken{

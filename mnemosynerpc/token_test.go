@@ -8,11 +8,11 @@ import (
 
 var (
 	successTokens = map[string]AccessToken{
-		"0000000key_hash": AccessToken{
+		"0000000key_hash": {
 			Key:  []byte("0000000key"),
 			Hash: []byte("_hash"),
 		},
-		"0000000001be29318725cdbd51aa0078dee7ff5b4eda7f18d2d91c87b1117f2f2d35db044eceaf19dfbd9c56ec14fd5d7aa8e795e3c25e288eee0bef7b7828fbe5710f2362": AccessToken{
+		"0000000001be29318725cdbd51aa0078dee7ff5b4eda7f18d2d91c87b1117f2f2d35db044eceaf19dfbd9c56ec14fd5d7aa8e795e3c25e288eee0bef7b7828fbe5710f2362": {
 			Key:  []byte("0000000001"),
 			Hash: []byte("be29318725cdbd51aa0078dee7ff5b4eda7f18d2d91c87b1117f2f2d35db044eceaf19dfbd9c56ec14fd5d7aa8e795e3c25e288eee0bef7b7828fbe5710f2362"),
 		},
@@ -48,16 +48,16 @@ func TestAccessToken_Bytes(t *testing.T) {
 
 func TestDecodeTokenString(t *testing.T) {
 	success := map[string]AccessToken{
-		"01234567895234532534523": AccessToken{Key: []byte("0123456789"), Hash: []byte("5234532534523")},
-		"01234567891":             AccessToken{Key: []byte("0123456789"), Hash: []byte("1")},
-		"0123456789a":             AccessToken{Key: []byte("0123456789"), Hash: []byte("a")},
-		"1":                       AccessToken{Key: nil, Hash: nil},
-		":1":                      AccessToken{Key: nil, Hash: nil},
-		"1:":                      AccessToken{Key: nil, Hash: nil},
-		":":                       AccessToken{Key: nil, Hash: nil},
-		"":                        AccessToken{Key: nil, Hash: nil},
-		":   ":                    AccessToken{Key: nil, Hash: nil},
-		"   :":                    AccessToken{Key: nil, Hash: nil},
+		"01234567895234532534523": {Key: []byte("0123456789"), Hash: []byte("5234532534523")},
+		"01234567891":             {Key: []byte("0123456789"), Hash: []byte("1")},
+		"0123456789a":             {Key: []byte("0123456789"), Hash: []byte("a")},
+		"1":                       {Key: nil, Hash: nil},
+		":1":                      {Key: nil, Hash: nil},
+		"1:":                      {Key: nil, Hash: nil},
+		":":                       {Key: nil, Hash: nil},
+		"":                        {Key: nil, Hash: nil},
+		":   ":                    {Key: nil, Hash: nil},
+		"   :":                    {Key: nil, Hash: nil},
 	}
 
 	for given, expected := range success {

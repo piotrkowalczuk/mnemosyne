@@ -32,7 +32,7 @@ CMD_TEST=go test -race -coverprofile=.tmp/profile.out -covermode=atomic
 
 .PHONY:	all proto build rebuild mocks run test test-short get install package
 
-all: proto build test run
+all: get install
 
 proto:
 	@${PROTOC} --proto_path=${GOPATH}/src \
@@ -75,13 +75,8 @@ get:
 	@go get github.com/smartystreets/goconvey/...
 	@glide --no-color install
 
-install: build
-	#install binary
-	install -Dm 755 ${BINARY} ${DIST_BINDIR}/${SERVICE}
-	#install config file
-	install -Dm 644 scripts/${SERVICE}.env ${DESTDIR}/etc/${SERVICE}.env
-	#install init script
-	install -Dm 755 scripts/${SERVICE}.service ${DESTDIR}/etc/systemd/system/${SERVICE}.service
+install:
+	@go install ${PACKAGE_CMD_DAEMON}
 
 package:
 	# export DIST_PACKAGE_TYPE to vary package type (e.g. deb, tar, rpm)

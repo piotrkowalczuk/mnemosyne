@@ -9,7 +9,6 @@ It is generated from these files:
 	mnemosyne.proto
 
 It has these top-level messages:
-	AccessToken
 	Session
 	GetRequest
 	GetResponse
@@ -51,19 +50,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-// AccessToken represents identifier of single session. It consist of partition key and a hash.
-type AccessToken struct {
-	Key  []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Hash []byte `protobuf:"bytes,2,opt,name=hash,proto3" json:"hash,omitempty"`
-}
-
-func (m *AccessToken) Reset()                    { *m = AccessToken{} }
-func (m *AccessToken) String() string            { return proto.CompactTextString(m) }
-func (*AccessToken) ProtoMessage()               {}
-func (*AccessToken) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
-
 type Session struct {
-	AccessToken   *AccessToken               `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	AccessToken   string                     `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
 	SubjectId     string                     `protobuf:"bytes,2,opt,name=subject_id,json=subjectId" json:"subject_id,omitempty"`
 	SubjectClient string                     `protobuf:"bytes,3,opt,name=subject_client,json=subjectClient" json:"subject_client,omitempty"`
 	Bag           map[string]string          `protobuf:"bytes,4,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -73,14 +61,7 @@ type Session struct {
 func (m *Session) Reset()                    { *m = Session{} }
 func (m *Session) String() string            { return proto.CompactTextString(m) }
 func (*Session) ProtoMessage()               {}
-func (*Session) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *Session) GetAccessToken() *AccessToken {
-	if m != nil {
-		return m.AccessToken
-	}
-	return nil
-}
+func (*Session) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
 func (m *Session) GetBag() map[string]string {
 	if m != nil {
@@ -97,20 +78,13 @@ func (m *Session) GetExpireAt() *google_protobuf.Timestamp {
 }
 
 type GetRequest struct {
-	AccessToken *AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
 }
 
 func (m *GetRequest) Reset()                    { *m = GetRequest{} }
 func (m *GetRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetRequest) ProtoMessage()               {}
-func (*GetRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
-
-func (m *GetRequest) GetAccessToken() *AccessToken {
-	if m != nil {
-		return m.AccessToken
-	}
-	return nil
-}
+func (*GetRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 type GetResponse struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
@@ -119,7 +93,7 @@ type GetResponse struct {
 func (m *GetResponse) Reset()                    { *m = GetResponse{} }
 func (m *GetResponse) String() string            { return proto.CompactTextString(m) }
 func (*GetResponse) ProtoMessage()               {}
-func (*GetResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*GetResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *GetResponse) GetSession() *Session {
 	if m != nil {
@@ -135,7 +109,7 @@ type ContextResponse struct {
 func (m *ContextResponse) Reset()                    { *m = ContextResponse{} }
 func (m *ContextResponse) String() string            { return proto.CompactTextString(m) }
 func (*ContextResponse) ProtoMessage()               {}
-func (*ContextResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*ContextResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
 func (m *ContextResponse) GetSession() *Session {
 	if m != nil {
@@ -154,7 +128,7 @@ type ListRequest struct {
 func (m *ListRequest) Reset()                    { *m = ListRequest{} }
 func (m *ListRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListRequest) ProtoMessage()               {}
-func (*ListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*ListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 func (m *ListRequest) GetExpireAtFrom() *google_protobuf.Timestamp {
 	if m != nil {
@@ -177,7 +151,7 @@ type ListResponse struct {
 func (m *ListResponse) Reset()                    { *m = ListResponse{} }
 func (m *ListResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListResponse) ProtoMessage()               {}
-func (*ListResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*ListResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
 func (m *ListResponse) GetSessions() []*Session {
 	if m != nil {
@@ -187,20 +161,13 @@ func (m *ListResponse) GetSessions() []*Session {
 }
 
 type ExistsRequest struct {
-	AccessToken *AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
 }
 
 func (m *ExistsRequest) Reset()                    { *m = ExistsRequest{} }
 func (m *ExistsRequest) String() string            { return proto.CompactTextString(m) }
 func (*ExistsRequest) ProtoMessage()               {}
-func (*ExistsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
-
-func (m *ExistsRequest) GetAccessToken() *AccessToken {
-	if m != nil {
-		return m.AccessToken
-	}
-	return nil
-}
+func (*ExistsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
 type ExistsResponse struct {
 	Exists bool `protobuf:"varint,1,opt,name=exists" json:"exists,omitempty"`
@@ -209,7 +176,7 @@ type ExistsResponse struct {
 func (m *ExistsResponse) Reset()                    { *m = ExistsResponse{} }
 func (m *ExistsResponse) String() string            { return proto.CompactTextString(m) }
 func (*ExistsResponse) ProtoMessage()               {}
-func (*ExistsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*ExistsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
 type StartRequest struct {
 	SubjectId     string            `protobuf:"bytes,1,opt,name=subject_id,json=subjectId" json:"subject_id,omitempty"`
@@ -220,7 +187,7 @@ type StartRequest struct {
 func (m *StartRequest) Reset()                    { *m = StartRequest{} }
 func (m *StartRequest) String() string            { return proto.CompactTextString(m) }
 func (*StartRequest) ProtoMessage()               {}
-func (*StartRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*StartRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
 func (m *StartRequest) GetBag() map[string]string {
 	if m != nil {
@@ -236,7 +203,7 @@ type StartResponse struct {
 func (m *StartResponse) Reset()                    { *m = StartResponse{} }
 func (m *StartResponse) String() string            { return proto.CompactTextString(m) }
 func (*StartResponse) ProtoMessage()               {}
-func (*StartResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (*StartResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
 func (m *StartResponse) GetSession() *Session {
 	if m != nil {
@@ -246,20 +213,13 @@ func (m *StartResponse) GetSession() *Session {
 }
 
 type AbandonRequest struct {
-	AccessToken *AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
 }
 
 func (m *AbandonRequest) Reset()                    { *m = AbandonRequest{} }
 func (m *AbandonRequest) String() string            { return proto.CompactTextString(m) }
 func (*AbandonRequest) ProtoMessage()               {}
-func (*AbandonRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
-
-func (m *AbandonRequest) GetAccessToken() *AccessToken {
-	if m != nil {
-		return m.AccessToken
-	}
-	return nil
-}
+func (*AbandonRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
 
 type AbandonResponse struct {
 	Abandoned bool `protobuf:"varint,1,opt,name=abandoned" json:"abandoned,omitempty"`
@@ -268,25 +228,18 @@ type AbandonResponse struct {
 func (m *AbandonResponse) Reset()                    { *m = AbandonResponse{} }
 func (m *AbandonResponse) String() string            { return proto.CompactTextString(m) }
 func (*AbandonResponse) ProtoMessage()               {}
-func (*AbandonResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (*AbandonResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
 
 type SetValueRequest struct {
-	AccessToken *AccessToken `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
-	Key         string       `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
-	Value       string       `protobuf:"bytes,3,opt,name=value" json:"value,omitempty"`
+	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	Key         string `protobuf:"bytes,2,opt,name=key" json:"key,omitempty"`
+	Value       string `protobuf:"bytes,3,opt,name=value" json:"value,omitempty"`
 }
 
 func (m *SetValueRequest) Reset()                    { *m = SetValueRequest{} }
 func (m *SetValueRequest) String() string            { return proto.CompactTextString(m) }
 func (*SetValueRequest) ProtoMessage()               {}
-func (*SetValueRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
-
-func (m *SetValueRequest) GetAccessToken() *AccessToken {
-	if m != nil {
-		return m.AccessToken
-	}
-	return nil
-}
+func (*SetValueRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
 
 type SetValueResponse struct {
 	Bag map[string]string `protobuf:"bytes,1,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -295,7 +248,7 @@ type SetValueResponse struct {
 func (m *SetValueResponse) Reset()                    { *m = SetValueResponse{} }
 func (m *SetValueResponse) String() string            { return proto.CompactTextString(m) }
 func (*SetValueResponse) ProtoMessage()               {}
-func (*SetValueResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*SetValueResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
 
 func (m *SetValueResponse) GetBag() map[string]string {
 	if m != nil {
@@ -305,7 +258,7 @@ func (m *SetValueResponse) GetBag() map[string]string {
 }
 
 type DeleteRequest struct {
-	AccessToken  *AccessToken               `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
+	AccessToken  string                     `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
 	ExpireAtFrom *google_protobuf.Timestamp `protobuf:"bytes,2,opt,name=expire_at_from,json=expireAtFrom" json:"expire_at_from,omitempty"`
 	ExpireAtTo   *google_protobuf.Timestamp `protobuf:"bytes,3,opt,name=expire_at_to,json=expireAtTo" json:"expire_at_to,omitempty"`
 }
@@ -313,14 +266,7 @@ type DeleteRequest struct {
 func (m *DeleteRequest) Reset()                    { *m = DeleteRequest{} }
 func (m *DeleteRequest) String() string            { return proto.CompactTextString(m) }
 func (*DeleteRequest) ProtoMessage()               {}
-func (*DeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
-
-func (m *DeleteRequest) GetAccessToken() *AccessToken {
-	if m != nil {
-		return m.AccessToken
-	}
-	return nil
-}
+func (*DeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
 func (m *DeleteRequest) GetExpireAtFrom() *google_protobuf.Timestamp {
 	if m != nil {
@@ -343,10 +289,9 @@ type DeleteResponse struct {
 func (m *DeleteResponse) Reset()                    { *m = DeleteResponse{} }
 func (m *DeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*DeleteResponse) ProtoMessage()               {}
-func (*DeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+func (*DeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
 
 func init() {
-	proto.RegisterType((*AccessToken)(nil), "mnemosynerpc.AccessToken")
 	proto.RegisterType((*Session)(nil), "mnemosynerpc.Session")
 	proto.RegisterType((*GetRequest)(nil), "mnemosynerpc.GetRequest")
 	proto.RegisterType((*GetResponse)(nil), "mnemosynerpc.GetResponse")
@@ -373,9 +318,9 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion3
 
-// Client API for RPC service
+// Client API for SessionManager service
 
-type RPCClient interface {
+type SessionManagerClient interface {
 	Context(ctx context.Context, in *google_protobuf1.Empty, opts ...grpc.CallOption) (*ContextResponse, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
@@ -386,89 +331,89 @@ type RPCClient interface {
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 }
 
-type rPCClient struct {
+type sessionManagerClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewRPCClient(cc *grpc.ClientConn) RPCClient {
-	return &rPCClient{cc}
+func NewSessionManagerClient(cc *grpc.ClientConn) SessionManagerClient {
+	return &sessionManagerClient{cc}
 }
 
-func (c *rPCClient) Context(ctx context.Context, in *google_protobuf1.Empty, opts ...grpc.CallOption) (*ContextResponse, error) {
+func (c *sessionManagerClient) Context(ctx context.Context, in *google_protobuf1.Empty, opts ...grpc.CallOption) (*ContextResponse, error) {
 	out := new(ContextResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/Context", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/Context", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *rPCClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
+func (c *sessionManagerClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/Get", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/Get", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *rPCClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+func (c *sessionManagerClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
 	out := new(ListResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/List", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/List", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *rPCClient) Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error) {
+func (c *sessionManagerClient) Exists(ctx context.Context, in *ExistsRequest, opts ...grpc.CallOption) (*ExistsResponse, error) {
 	out := new(ExistsResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/Exists", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/Exists", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *rPCClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error) {
+func (c *sessionManagerClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartResponse, error) {
 	out := new(StartResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/Start", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/Start", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *rPCClient) Abandon(ctx context.Context, in *AbandonRequest, opts ...grpc.CallOption) (*AbandonResponse, error) {
+func (c *sessionManagerClient) Abandon(ctx context.Context, in *AbandonRequest, opts ...grpc.CallOption) (*AbandonResponse, error) {
 	out := new(AbandonResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/Abandon", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/Abandon", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *rPCClient) SetValue(ctx context.Context, in *SetValueRequest, opts ...grpc.CallOption) (*SetValueResponse, error) {
+func (c *sessionManagerClient) SetValue(ctx context.Context, in *SetValueRequest, opts ...grpc.CallOption) (*SetValueResponse, error) {
 	out := new(SetValueResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/SetValue", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/SetValue", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *rPCClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+func (c *sessionManagerClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
 	out := new(DeleteResponse)
-	err := grpc.Invoke(ctx, "/mnemosynerpc.RPC/Delete", in, out, c.cc, opts...)
+	err := grpc.Invoke(ctx, "/mnemosynerpc.SessionManager/Delete", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// Server API for RPC service
+// Server API for SessionManager service
 
-type RPCServer interface {
+type SessionManagerServer interface {
 	Context(context.Context, *google_protobuf1.Empty) (*ContextResponse, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	List(context.Context, *ListRequest) (*ListResponse, error)
@@ -479,189 +424,189 @@ type RPCServer interface {
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
 }
 
-func RegisterRPCServer(s *grpc.Server, srv RPCServer) {
-	s.RegisterService(&_RPC_serviceDesc, srv)
+func RegisterSessionManagerServer(s *grpc.Server, srv SessionManagerServer) {
+	s.RegisterService(&_SessionManager_serviceDesc, srv)
 }
 
-func _RPC_Context_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_Context_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(google_protobuf1.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).Context(ctx, in)
+		return srv.(SessionManagerServer).Context(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/Context",
+		FullMethod: "/mnemosynerpc.SessionManager/Context",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).Context(ctx, req.(*google_protobuf1.Empty))
+		return srv.(SessionManagerServer).Context(ctx, req.(*google_protobuf1.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RPC_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).Get(ctx, in)
+		return srv.(SessionManagerServer).Get(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/Get",
+		FullMethod: "/mnemosynerpc.SessionManager/Get",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).Get(ctx, req.(*GetRequest))
+		return srv.(SessionManagerServer).Get(ctx, req.(*GetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RPC_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).List(ctx, in)
+		return srv.(SessionManagerServer).List(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/List",
+		FullMethod: "/mnemosynerpc.SessionManager/List",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).List(ctx, req.(*ListRequest))
+		return srv.(SessionManagerServer).List(ctx, req.(*ListRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RPC_Exists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_Exists_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ExistsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).Exists(ctx, in)
+		return srv.(SessionManagerServer).Exists(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/Exists",
+		FullMethod: "/mnemosynerpc.SessionManager/Exists",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).Exists(ctx, req.(*ExistsRequest))
+		return srv.(SessionManagerServer).Exists(ctx, req.(*ExistsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RPC_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StartRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).Start(ctx, in)
+		return srv.(SessionManagerServer).Start(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/Start",
+		FullMethod: "/mnemosynerpc.SessionManager/Start",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).Start(ctx, req.(*StartRequest))
+		return srv.(SessionManagerServer).Start(ctx, req.(*StartRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RPC_Abandon_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_Abandon_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AbandonRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).Abandon(ctx, in)
+		return srv.(SessionManagerServer).Abandon(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/Abandon",
+		FullMethod: "/mnemosynerpc.SessionManager/Abandon",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).Abandon(ctx, req.(*AbandonRequest))
+		return srv.(SessionManagerServer).Abandon(ctx, req.(*AbandonRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RPC_SetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_SetValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(SetValueRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).SetValue(ctx, in)
+		return srv.(SessionManagerServer).SetValue(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/SetValue",
+		FullMethod: "/mnemosynerpc.SessionManager/SetValue",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).SetValue(ctx, req.(*SetValueRequest))
+		return srv.(SessionManagerServer).SetValue(ctx, req.(*SetValueRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _RPC_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SessionManager_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DeleteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(RPCServer).Delete(ctx, in)
+		return srv.(SessionManagerServer).Delete(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/mnemosynerpc.RPC/Delete",
+		FullMethod: "/mnemosynerpc.SessionManager/Delete",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RPCServer).Delete(ctx, req.(*DeleteRequest))
+		return srv.(SessionManagerServer).Delete(ctx, req.(*DeleteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _RPC_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "mnemosynerpc.RPC",
-	HandlerType: (*RPCServer)(nil),
+var _SessionManager_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "mnemosynerpc.SessionManager",
+	HandlerType: (*SessionManagerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Context",
-			Handler:    _RPC_Context_Handler,
+			Handler:    _SessionManager_Context_Handler,
 		},
 		{
 			MethodName: "Get",
-			Handler:    _RPC_Get_Handler,
+			Handler:    _SessionManager_Get_Handler,
 		},
 		{
 			MethodName: "List",
-			Handler:    _RPC_List_Handler,
+			Handler:    _SessionManager_List_Handler,
 		},
 		{
 			MethodName: "Exists",
-			Handler:    _RPC_Exists_Handler,
+			Handler:    _SessionManager_Exists_Handler,
 		},
 		{
 			MethodName: "Start",
-			Handler:    _RPC_Start_Handler,
+			Handler:    _SessionManager_Start_Handler,
 		},
 		{
 			MethodName: "Abandon",
-			Handler:    _RPC_Abandon_Handler,
+			Handler:    _SessionManager_Abandon_Handler,
 		},
 		{
 			MethodName: "SetValue",
-			Handler:    _RPC_SetValue_Handler,
+			Handler:    _SessionManager_SetValue_Handler,
 		},
 		{
 			MethodName: "Delete",
-			Handler:    _RPC_Delete_Handler,
+			Handler:    _SessionManager_Delete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -671,55 +616,53 @@ var _RPC_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("mnemosyne.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 786 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xac, 0x55, 0x4b, 0x4f, 0xdb, 0x4a,
-	0x14, 0xc6, 0x71, 0x9e, 0x27, 0x2f, 0x34, 0xe2, 0x22, 0x63, 0x1e, 0x42, 0xbe, 0xba, 0xf7, 0xb2,
-	0x4a, 0x6e, 0x41, 0x7d, 0xa3, 0x96, 0x84, 0xa6, 0xf4, 0xad, 0xca, 0xa0, 0x6e, 0x23, 0x27, 0x99,
-	0x04, 0x97, 0xd8, 0xe3, 0x66, 0x26, 0x2d, 0xf9, 0x01, 0xfd, 0x3f, 0xed, 0xba, 0xcb, 0xae, 0xfb,
-	0x9f, 0x2a, 0xcf, 0x8c, 0x1d, 0xdb, 0x18, 0x50, 0x21, 0x9b, 0xc8, 0x73, 0xe6, 0xcc, 0x77, 0xce,
-	0xf7, 0x9d, 0x47, 0xa0, 0xee, 0xb8, 0xd8, 0x21, 0x74, 0xe6, 0xe2, 0x86, 0x37, 0x21, 0x8c, 0xa0,
-	0x4a, 0x68, 0x98, 0x78, 0x7d, 0xfd, 0xf1, 0xc8, 0x66, 0xa7, 0xd3, 0x5e, 0xa3, 0x4f, 0x9c, 0xe6,
-	0x88, 0x8c, 0x2d, 0x77, 0xd4, 0xe4, 0x6e, 0xbd, 0xe9, 0xb0, 0xe9, 0xb1, 0x99, 0x87, 0x69, 0x93,
-	0xd9, 0x0e, 0xa6, 0xcc, 0x72, 0xbc, 0xf9, 0x97, 0x80, 0xd2, 0xf7, 0xae, 0x7f, 0x8c, 0x1d, 0x8f,
-	0xcd, 0xc4, 0xaf, 0x78, 0x64, 0xec, 0x41, 0xb9, 0xd5, 0xef, 0x63, 0x4a, 0x4f, 0xc8, 0x19, 0x76,
-	0xd1, 0x32, 0xa8, 0x67, 0x78, 0xa6, 0x29, 0xdb, 0xca, 0x4e, 0xc5, 0xf4, 0x3f, 0x11, 0x82, 0xec,
-	0xa9, 0x45, 0x4f, 0xb5, 0x0c, 0x37, 0xf1, 0x6f, 0xe3, 0x5b, 0x06, 0x0a, 0xc7, 0x98, 0x52, 0x9b,
-	0xb8, 0x68, 0x1f, 0x2a, 0x16, 0x07, 0xe8, 0x32, 0x1f, 0x81, 0x3f, 0x2d, 0xef, 0xae, 0x35, 0xa2,
-	0xbc, 0x1a, 0x91, 0x10, 0x66, 0xd9, 0x8a, 0xc4, 0xdb, 0x04, 0xa0, 0xd3, 0xde, 0x47, 0xdc, 0x67,
-	0x5d, 0x7b, 0xc0, 0x63, 0x94, 0xcc, 0x92, 0xb4, 0xbc, 0x1c, 0xa0, 0x7f, 0xa0, 0x16, 0x5c, 0xf7,
-	0xc7, 0x36, 0x76, 0x99, 0xa6, 0x72, 0x97, 0xaa, 0xb4, 0x1e, 0x72, 0x23, 0xfa, 0x1f, 0xd4, 0x9e,
-	0x35, 0xd2, 0xb2, 0xdb, 0xea, 0x4e, 0x79, 0x77, 0x2b, 0x1e, 0x5a, 0xe6, 0xd9, 0x68, 0x5b, 0xa3,
-	0x8e, 0xcb, 0x26, 0x33, 0xd3, 0x77, 0x45, 0xf7, 0xa1, 0x84, 0xcf, 0x3d, 0x7b, 0x82, 0xbb, 0x16,
-	0xd3, 0x72, 0x3c, 0x65, 0xbd, 0x31, 0x22, 0x64, 0x34, 0x96, 0x85, 0xe9, 0x4d, 0x87, 0x8d, 0x93,
-	0x40, 0x60, 0xb3, 0x28, 0x9c, 0x5b, 0x4c, 0xbf, 0x07, 0xc5, 0x00, 0x29, 0x2a, 0x56, 0x49, 0x88,
-	0xb5, 0x02, 0xb9, 0xcf, 0xd6, 0x78, 0x8a, 0x25, 0x13, 0x71, 0x78, 0x94, 0x79, 0xa0, 0x18, 0xaf,
-	0x00, 0x8e, 0x30, 0x33, 0xf1, 0xa7, 0x29, 0xa6, 0xec, 0x76, 0xa2, 0x19, 0x4f, 0xa0, 0xcc, 0xb1,
-	0xa8, 0x47, 0x5c, 0x8a, 0x51, 0x13, 0x0a, 0x54, 0x90, 0x94, 0x38, 0x7f, 0xa5, 0x2a, 0x60, 0x06,
-	0x5e, 0x46, 0x1b, 0xea, 0x87, 0xc4, 0x65, 0xf8, 0xfc, 0x16, 0x18, 0x3f, 0x14, 0x28, 0xbf, 0xb1,
-	0x69, 0xc8, 0x68, 0x15, 0xf2, 0x64, 0x38, 0xa4, 0x98, 0xf1, 0xf7, 0xaa, 0x29, 0x4f, 0xbe, 0x22,
-	0x63, 0xdb, 0xb1, 0x19, 0x57, 0x44, 0x35, 0xc5, 0x01, 0x1d, 0x40, 0x2d, 0x94, 0xbf, 0x3b, 0x9c,
-	0x10, 0x87, 0xd7, 0xf5, 0xea, 0x1a, 0x54, 0x82, 0x1a, 0x3c, 0x9f, 0x10, 0xc7, 0x57, 0x70, 0x8e,
-	0xc0, 0x88, 0x96, 0xbd, 0xf6, 0x3d, 0x04, 0xef, 0x4f, 0x88, 0xd1, 0x82, 0x8a, 0x48, 0x5e, 0xd2,
-	0xbf, 0x03, 0x45, 0x49, 0x8c, 0x6a, 0x0a, 0xef, 0xa2, 0x4b, 0xf8, 0x87, 0x6e, 0xc6, 0x5b, 0xa8,
-	0x76, 0xce, 0x6d, 0xca, 0xe8, 0x62, 0x6a, 0xba, 0x03, 0xb5, 0x00, 0x4e, 0xe6, 0xb4, 0x0a, 0x79,
-	0xcc, 0x2d, 0x1c, 0xa9, 0x68, 0xca, 0x93, 0xf1, 0x53, 0x81, 0xca, 0x31, 0xb3, 0x26, 0xa1, 0xf4,
-	0xf1, 0x19, 0x52, 0xae, 0x9f, 0xa1, 0x4c, 0xda, 0x0c, 0xdd, 0x15, 0x33, 0xa4, 0x72, 0xf6, 0x7f,
-	0x27, 0xd8, 0x47, 0xc2, 0xc5, 0x07, 0xe9, 0xc6, 0xf3, 0x70, 0x00, 0x55, 0x89, 0x7a, 0xd3, 0x0e,
-	0x7c, 0x07, 0xb5, 0x56, 0xcf, 0x72, 0x07, 0xc4, 0x5d, 0x4c, 0x05, 0x9a, 0x50, 0x0f, 0xf1, 0x64,
-	0x4e, 0x1b, 0x50, 0xb2, 0x84, 0x09, 0x0f, 0x64, 0x15, 0xe6, 0x06, 0xe3, 0x0b, 0xd4, 0x8f, 0x31,
-	0xfb, 0xe0, 0x53, 0x5a, 0x48, 0x06, 0x81, 0x7e, 0x99, 0x14, 0xfd, 0xd4, 0x88, 0x7e, 0xc6, 0x57,
-	0x05, 0x96, 0xe7, 0x91, 0x65, 0xae, 0x0f, 0x45, 0xfd, 0x44, 0xf7, 0xfe, 0x97, 0xd4, 0x2e, 0xee,
-	0xbc, 0xa0, 0x1a, 0xfe, 0x52, 0xa0, 0xfa, 0x0c, 0x8f, 0x31, 0x5b, 0x10, 0xff, 0x8b, 0x5b, 0x21,
-	0x73, 0xcb, 0xad, 0xa0, 0xfe, 0xd1, 0x56, 0xf8, 0x17, 0x6a, 0x01, 0x1d, 0x29, 0xea, 0x0a, 0xe4,
-	0xfa, 0x64, 0xea, 0x06, 0x4b, 0x4d, 0x1c, 0x76, 0xbf, 0x67, 0x41, 0x35, 0xdf, 0x1f, 0xa2, 0x36,
-	0x14, 0xe4, 0x1e, 0x45, 0xab, 0x17, 0x42, 0x74, 0xfc, 0x3f, 0x59, 0x7d, 0x33, 0x4e, 0x3d, 0xb1,
-	0x76, 0x8d, 0x25, 0xb4, 0x0f, 0xea, 0x11, 0x66, 0x48, 0x8b, 0xfb, 0xcd, 0xff, 0x2a, 0xf4, 0xb5,
-	0x94, 0x9b, 0xf0, 0xf5, 0x53, 0xc8, 0xfa, 0x7b, 0x0c, 0x25, 0x9c, 0x22, 0x8b, 0x59, 0xd7, 0xd3,
-	0xae, 0x42, 0x80, 0x0e, 0xe4, 0xc5, 0xda, 0x41, 0xeb, 0x71, 0xbf, 0xd8, 0x6e, 0xd3, 0x37, 0xd2,
-	0x2f, 0x43, 0x98, 0x36, 0xe4, 0xf8, 0x34, 0x23, 0xfd, 0xf2, 0xc5, 0xa1, 0xaf, 0xa7, 0xde, 0x85,
-	0x18, 0x2f, 0xa0, 0x20, 0xe7, 0x0f, 0x25, 0xc2, 0xc5, 0xc7, 0x3c, 0xa9, 0x69, 0x62, 0x68, 0x8d,
-	0x25, 0xf4, 0x1a, 0x8a, 0x41, 0xc7, 0xa3, 0xcd, 0xcb, 0x26, 0x41, 0x60, 0x6d, 0x5d, 0x3d, 0x28,
-	0x42, 0x21, 0xd1, 0x14, 0x49, 0x85, 0x62, 0x9d, 0x9f, 0x54, 0x28, 0xde, 0x47, 0xc6, 0x52, 0x2f,
-	0xcf, 0x1b, 0x63, 0xef, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff, 0x08, 0xe2, 0xbb, 0x40, 0x01, 0x0a,
-	0x00, 0x00,
+	// 765 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xac, 0x55, 0xdb, 0x6e, 0xd3, 0x4a,
+	0x14, 0xad, 0xe3, 0x5c, 0x77, 0x6e, 0xd5, 0xa8, 0xa7, 0xf2, 0x71, 0x2f, 0xea, 0xf1, 0xd1, 0x39,
+	0xe4, 0x29, 0x81, 0x54, 0xdc, 0x2b, 0x68, 0x53, 0x42, 0x41, 0xc0, 0x8b, 0x5b, 0xf1, 0x84, 0x14,
+	0x39, 0xc9, 0xc4, 0x98, 0xc6, 0x1e, 0xe3, 0x99, 0xa0, 0xe6, 0x03, 0xf8, 0x04, 0x7e, 0x84, 0x57,
+	0x78, 0xe3, 0xc7, 0x50, 0x66, 0xc6, 0x4e, 0xec, 0xba, 0x97, 0xb4, 0xbc, 0x44, 0x9e, 0x3d, 0x6b,
+	0xef, 0x99, 0xb5, 0x66, 0xaf, 0x1d, 0xa8, 0xbb, 0x1e, 0x76, 0x09, 0x9d, 0x7a, 0xb8, 0xe9, 0x07,
+	0x84, 0x11, 0x54, 0x89, 0x02, 0x81, 0x3f, 0xd0, 0x9f, 0xda, 0x0e, 0xfb, 0x38, 0xe9, 0x37, 0x07,
+	0xc4, 0x6d, 0xd9, 0x64, 0x6c, 0x79, 0x76, 0x8b, 0xc3, 0xfa, 0x93, 0x51, 0xcb, 0x67, 0x53, 0x1f,
+	0xd3, 0x16, 0x73, 0x5c, 0x4c, 0x99, 0xe5, 0xfa, 0xf3, 0x2f, 0x51, 0x4a, 0xdf, 0xbd, 0x3a, 0x19,
+	0xbb, 0x3e, 0x9b, 0x8a, 0x5f, 0x91, 0x64, 0x7c, 0xcb, 0x40, 0xe1, 0x18, 0x53, 0xea, 0x10, 0x0f,
+	0xfd, 0x03, 0x15, 0x6b, 0x30, 0xc0, 0x94, 0xf6, 0x18, 0x39, 0xc5, 0x9e, 0xa6, 0xec, 0x28, 0x8d,
+	0x92, 0x59, 0x16, 0xb1, 0x93, 0x59, 0x08, 0x6d, 0x01, 0xd0, 0x49, 0xff, 0x13, 0x1e, 0xb0, 0x9e,
+	0x33, 0xd4, 0x32, 0x1c, 0x50, 0x92, 0x91, 0xd7, 0x43, 0xf4, 0x1f, 0xd4, 0xc2, 0xed, 0xc1, 0xd8,
+	0xc1, 0x1e, 0xd3, 0x54, 0x0e, 0xa9, 0xca, 0xe8, 0x21, 0x0f, 0xa2, 0xbb, 0xa0, 0xf6, 0x2d, 0x5b,
+	0xcb, 0xee, 0xa8, 0x8d, 0x72, 0x7b, 0xbb, 0xb9, 0x28, 0x41, 0x53, 0x5e, 0xa6, 0xd9, 0xb1, 0xec,
+	0xae, 0xc7, 0x82, 0xa9, 0x39, 0x83, 0xa2, 0x87, 0x50, 0xc2, 0x67, 0xbe, 0x13, 0xe0, 0x9e, 0xc5,
+	0xb4, 0xdc, 0x8e, 0xd2, 0x28, 0xb7, 0xf5, 0xa6, 0x4d, 0x88, 0x3d, 0x96, 0x42, 0xf6, 0x27, 0xa3,
+	0xe6, 0x49, 0x28, 0x88, 0x59, 0x14, 0xe0, 0x03, 0xa6, 0x3f, 0x80, 0x62, 0x58, 0x09, 0xad, 0x82,
+	0x7a, 0x8a, 0xa7, 0x92, 0xd6, 0xec, 0x13, 0xad, 0x41, 0xee, 0x8b, 0x35, 0x9e, 0x60, 0xc9, 0x44,
+	0x2c, 0x9e, 0x64, 0x1e, 0x29, 0x46, 0x0b, 0xe0, 0x08, 0x33, 0x13, 0x7f, 0x9e, 0x60, 0xca, 0xae,
+	0xa1, 0x8c, 0xf1, 0x0c, 0xca, 0x3c, 0x81, 0xfa, 0xc4, 0xa3, 0x18, 0xb5, 0xa0, 0x40, 0x05, 0x13,
+	0x0e, 0x2e, 0xb7, 0xff, 0x4a, 0xa5, 0x69, 0x86, 0x28, 0xa3, 0x03, 0xf5, 0x43, 0xe2, 0x31, 0x7c,
+	0x76, 0x8b, 0x1a, 0x3f, 0x14, 0x28, 0xbf, 0x75, 0x68, 0x74, 0xed, 0x75, 0xc8, 0x93, 0xd1, 0x88,
+	0x62, 0xc6, 0xf3, 0x55, 0x53, 0xae, 0x66, 0xb4, 0xc7, 0x8e, 0xeb, 0x30, 0x4e, 0x5b, 0x35, 0xc5,
+	0x02, 0xed, 0x43, 0x2d, 0xd2, 0xb8, 0x37, 0x0a, 0x88, 0xcb, 0x1f, 0xef, 0x72, 0xa1, 0x2b, 0xa1,
+	0xd0, 0x2f, 0x03, 0xe2, 0xa2, 0x3d, 0xa8, 0xcc, 0x2b, 0x30, 0xa2, 0x65, 0xaf, 0xcc, 0x87, 0x30,
+	0xff, 0x84, 0x18, 0x07, 0x50, 0x11, 0x97, 0x97, 0xf4, 0xef, 0x41, 0x51, 0x12, 0xa3, 0x9a, 0xc2,
+	0x5b, 0xe5, 0x02, 0xfe, 0x11, 0xcc, 0x68, 0x43, 0xb5, 0x7b, 0xe6, 0x50, 0x46, 0x97, 0x78, 0xb8,
+	0x06, 0xd4, 0xc2, 0x1c, 0x79, 0xf0, 0x3a, 0xe4, 0x31, 0x8f, 0x70, 0x78, 0xd1, 0x94, 0x2b, 0xe3,
+	0x97, 0x02, 0x95, 0x63, 0x66, 0x05, 0x91, 0xbe, 0x71, 0x37, 0x28, 0x57, 0xbb, 0x21, 0x93, 0xe6,
+	0x86, 0xfb, 0xc2, 0x0d, 0x2a, 0xa7, 0xf8, 0x6f, 0x82, 0xe2, 0xc2, 0x71, 0x71, 0x4b, 0xdc, 0xb8,
+	0xb3, 0xf7, 0xa1, 0x2a, 0xab, 0xde, 0xb4, 0xcd, 0x76, 0xa1, 0x76, 0xd0, 0xb7, 0xbc, 0x21, 0xf1,
+	0x96, 0x90, 0xb9, 0x05, 0xf5, 0x28, 0x49, 0x1e, 0xbc, 0x09, 0x25, 0x4b, 0x84, 0xf0, 0x50, 0x4a,
+	0x3d, 0x0f, 0x18, 0x1f, 0xa0, 0x7e, 0x8c, 0xd9, 0xfb, 0xd9, 0xbd, 0xaf, 0x7f, 0x4c, 0xa8, 0x44,
+	0x26, 0x45, 0x09, 0x75, 0x41, 0x09, 0xe3, 0xab, 0x02, 0xab, 0xf3, 0xf2, 0xf2, 0x42, 0x8f, 0xc5,
+	0x4b, 0x88, 0x66, 0xbb, 0x93, 0x54, 0x21, 0x0e, 0xfe, 0x43, 0xaf, 0xf1, 0x5d, 0x81, 0xea, 0x0b,
+	0x3c, 0xc6, 0x6c, 0x19, 0x92, 0xe7, 0x9d, 0x9a, 0xb9, 0xa5, 0x53, 0xd5, 0xa5, 0x9c, 0xfa, 0x3f,
+	0xd4, 0xc2, 0x3b, 0x4b, 0xe5, 0xd6, 0x20, 0x37, 0x20, 0x13, 0x2f, 0x1c, 0x34, 0x62, 0xd1, 0xfe,
+	0x99, 0x85, 0x9a, 0xec, 0x9e, 0x77, 0x96, 0x67, 0xd9, 0x38, 0x40, 0x1d, 0x28, 0xc8, 0x31, 0x87,
+	0xd6, 0xcf, 0x9d, 0xd6, 0x9d, 0xfd, 0x31, 0xe9, 0x5b, 0x71, 0xe1, 0x13, 0x53, 0xd1, 0x58, 0x41,
+	0x7b, 0xa0, 0x1e, 0x61, 0x86, 0xb4, 0x38, 0x6e, 0x3e, 0xae, 0xf5, 0xbf, 0x53, 0x76, 0xa2, 0xec,
+	0xe7, 0x90, 0x9d, 0x8d, 0x19, 0x94, 0x00, 0x2d, 0xcc, 0x4d, 0x5d, 0x4f, 0xdb, 0x8a, 0x0a, 0x74,
+	0x21, 0x2f, 0x06, 0x06, 0xda, 0x88, 0xe3, 0x62, 0xa3, 0x47, 0xdf, 0x4c, 0xdf, 0x8c, 0xca, 0x74,
+	0x20, 0xc7, 0x7d, 0x88, 0xf4, 0x8b, 0x2d, 0xaf, 0x6f, 0xa4, 0xee, 0x45, 0x35, 0x5e, 0x41, 0x41,
+	0x9a, 0x0a, 0x25, 0x8e, 0x8b, 0x1b, 0x34, 0xa9, 0x69, 0xc2, 0x89, 0xc6, 0x0a, 0x7a, 0x03, 0xc5,
+	0xb0, 0xc3, 0xd1, 0xd6, 0x45, 0x9d, 0x2f, 0x6a, 0x6d, 0x5f, 0x6e, 0x0c, 0xa1, 0x90, 0xe8, 0x8f,
+	0xa4, 0x42, 0xb1, 0x4e, 0x4f, 0x2a, 0x14, 0x6f, 0x29, 0x63, 0xa5, 0x9f, 0xe7, 0x8d, 0xb1, 0xfb,
+	0x3b, 0x00, 0x00, 0xff, 0xff, 0x26, 0xd4, 0x84, 0x03, 0x35, 0x09, 0x00, 0x00,
 }

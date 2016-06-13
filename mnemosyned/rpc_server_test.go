@@ -26,7 +26,6 @@ func TestRPCServer_mockedStore(t *testing.T) {
 		subjectID   string
 		bag         map[string]string
 		session     *mnemosynerpc.Session
-		token       *mnemosynerpc.AccessToken
 	)
 
 	suite = &integrationSuite{}
@@ -42,8 +41,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 			expectedErr = nil
 			subjectID = "subject_id"
 			bag = map[string]string{"key": "value"}
-			tk := mnemosynerpc.NewAccessToken([]byte("key"), []byte("hash"))
-			token = &tk
+			token := mnemosynerpc.NewAccessToken("key", "hash")
 
 			itSuccess := func() {
 				Convey("Not return any error", func() {
@@ -80,6 +78,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 
 					res, err = suite.service.Start(context.Background(), req)
 
+					So(err, ShouldBeNil)
 					Convey("Should", itSuccess)
 				})
 				Convey("With storage postgres error", func() {
@@ -110,6 +109,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 
 				res, err = suite.service.Start(context.Background(), req)
 
+				So(err, ShouldBeNil)
 				Convey("Should", itSuccess)
 			})
 			Convey("Without subject and with bag", func() {
@@ -161,7 +161,7 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 func TestRPCServer_Get_postgresStore(t *testing.T) {
 	var (
 		sid string
-		at  *mnemosynerpc.AccessToken
+		at  string
 	)
 	Convey("Get", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
@@ -195,9 +195,8 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return not found gRPC error", func() {
-				access := mnemosynerpc.DecodeAccessTokenString("0000000000test")
 				resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{
-					AccessToken: &access,
+					AccessToken: "0000000000test",
 				})
 
 				So(resp, ShouldBeNil)
@@ -210,7 +209,7 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 func TestRPCServer_Context_postgresStore(t *testing.T) {
 	var (
 		sid string
-		at  *mnemosynerpc.AccessToken
+		at  string
 	)
 	Convey("Context", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
@@ -225,7 +224,7 @@ func TestRPCServer_Context_postgresStore(t *testing.T) {
 			at = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return corresponding session", func() {
-					meta := metadata.Pairs(mnemosynerpc.AccessTokenMetadataKey, at.Encode())
+					meta := metadata.Pairs(mnemosynerpc.AccessTokenMetadataKey, string(at))
 					ctx := metadata.NewContext(context.Background(), meta)
 					resp, err := s.client.Context(ctx, &empty.Empty{})
 
@@ -267,7 +266,7 @@ func TestRPCServer_Context_postgresStore(t *testing.T) {
 func TestRPCServer_Exists_postgresStore(t *testing.T) {
 	var (
 		sid string
-		at  *mnemosynerpc.AccessToken
+		at  string
 	)
 	Convey("Exists", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
@@ -301,9 +300,8 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return false", func() {
-				access := mnemosynerpc.DecodeAccessTokenString("0000000000test")
 				resp, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{
-					AccessToken: &access,
+					AccessToken: "0000000000test",
 				})
 
 				So(err, ShouldBeNil)
@@ -316,7 +314,7 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 func TestRPCServer_Abandon_postgresStore(t *testing.T) {
 	var (
 		sid string
-		at  *mnemosynerpc.AccessToken
+		at  string
 	)
 	Convey("Abandon", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
@@ -350,9 +348,8 @@ func TestRPCServer_Abandon_postgresStore(t *testing.T) {
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return not found gRPC error", func() {
-				access := mnemosynerpc.DecodeAccessTokenString("0000000000test")
 				resp, err := s.client.Abandon(context.Background(), &mnemosynerpc.AbandonRequest{
-					AccessToken: &access,
+					AccessToken: "0000000000test",
 				})
 
 				So(resp, ShouldBeNil)
@@ -365,7 +362,7 @@ func TestRPCServer_Abandon_postgresStore(t *testing.T) {
 func TestRPCServer_Delete_postgresStore(t *testing.T) {
 	var (
 		sid string
-		at  *mnemosynerpc.AccessToken
+		at  string
 	)
 	Convey("Delete", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
@@ -399,9 +396,8 @@ func TestRPCServer_Delete_postgresStore(t *testing.T) {
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return that even single record was affected", func() {
-				access := mnemosynerpc.DecodeAccessTokenString("0000000000test")
 				resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
-					AccessToken: &access,
+					AccessToken: "0000000000test",
 				})
 
 				So(err, ShouldBeNil)
@@ -414,7 +410,7 @@ func TestRPCServer_Delete_postgresStore(t *testing.T) {
 func TestRPCServer_SetValue_postgresStore(t *testing.T) {
 	var (
 		sid string
-		at  *mnemosynerpc.AccessToken
+		at  string
 	)
 	Convey("SetValue", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
@@ -453,9 +449,8 @@ func TestRPCServer_SetValue_postgresStore(t *testing.T) {
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return not found gRPC error", func() {
-				access := mnemosynerpc.DecodeAccessTokenString("0000000000test")
 				resp, err := s.client.SetValue(context.Background(), &mnemosynerpc.SetValueRequest{
-					AccessToken: &access,
+					AccessToken: "0000000000test",
 					Key:         "key",
 					Value:       "value",
 				})

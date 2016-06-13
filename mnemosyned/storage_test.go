@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +20,7 @@ func testStorage_Start(t *testing.T, s Storage) {
 	session, err := s.Start(subjectID, subjectClient, bag)
 
 	if assert.NoError(t, err) {
-		assert.Len(t, session.AccessToken.Hash, 128)
+		assert.Len(t, session.AccessToken[10:], 128)
 		assert.Equal(t, subjectID, session.SubjectId)
 		assert.Equal(t, bag, session.Bag)
 	}
@@ -43,7 +42,7 @@ func testStorage_Get(t *testing.T, s Storage) {
 	}
 
 	// Check for non existing Token
-	got2, err2 := s.Get(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	got2, err2 := s.Get("keyhash")
 	assert.Error(t, err2)
 	assert.EqualError(t, err2, ErrSessionNotFound.Error())
 	assert.Nil(t, got2)
@@ -129,7 +128,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 	assert.True(t, exists)
 
 	// Check for non existing Token
-	exists2, err2 := s.Exists(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	exists2, err2 := s.Exists("keyhash")
 	if assert.NoError(t, err2) {
 		assert.False(t, exists2)
 	}
@@ -152,7 +151,7 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	assert.EqualError(t, err3, ErrSessionNotFound.Error())
 
 	// Check for session that never exists
-	ok4, err4 := s.Abandon(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")})
+	ok4, err4 := s.Abandon("keyhash")
 	assert.False(t, ok4)
 	assert.EqualError(t, err4, ErrSessionNotFound.Error())
 }
@@ -183,7 +182,7 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	assert.Equal(t, "test", bag2["username"])
 
 	// Check for non existing Token
-	bag3, err3 := s.SetValue(&mnemosynerpc.AccessToken{Key: []byte("key"), Hash: []byte("hash")}, "email", "fake@email.com")
+	bag3, err3 := s.SetValue("keyhash", "email", "fake@email.com")
 	require.Error(t, err3, ErrSessionNotFound.Error())
 	assert.Nil(t, bag3)
 
@@ -244,7 +243,7 @@ func testStorage_Delete(t *testing.T, s Storage) {
 
 	expiredAtTo := time.Now().Add(35 * time.Minute)
 
-	affected, err := s.Delete(nil, nil, &expiredAtTo)
+	affected, err := s.Delete("", nil, &expiredAtTo)
 	if assert.NoError(t, err) {
 		assert.Equal(t, nb, affected)
 	}
@@ -292,7 +291,7 @@ DataLoop:
 		}
 
 		var (
-			id            *mnemosynerpc.AccessToken
+			id            string
 			expiredAtTo   *time.Time
 			expiredAtFrom *time.Time
 		)

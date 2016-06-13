@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/piotrkowalczuk/mnemosyne"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -58,7 +57,7 @@ func TestDaemon_Run(t *testing.T) {
 	}
 	defer m.Close()
 
-	ats := make([]mnemosynerpc.AccessToken, 0, nb)
+	ats := make([]string, 0, nb)
 	for i := 0; i < nb; i++ {
 
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
@@ -68,7 +67,7 @@ func TestDaemon_Run(t *testing.T) {
 			return
 		}
 		t.Logf("session created, it expires at: %s", time.Unix(ses.ExpireAt.Seconds, int64(ses.ExpireAt.Nanos)).Format(time.RFC3339))
-		ats = append(ats, *ses.AccessToken)
+		ats = append(ats, ses.AccessToken)
 	}
 
 	// BUG: this assertion can fail on travis because of cpu lag.
@@ -76,7 +75,7 @@ func TestDaemon_Run(t *testing.T) {
 
 	for i, at := range ats {
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-		_, err := m.Get(ctx, at.Encode())
+		_, err := m.Get(ctx, string(at))
 		if err == nil {
 			t.Errorf("%d: missing error", i)
 			return

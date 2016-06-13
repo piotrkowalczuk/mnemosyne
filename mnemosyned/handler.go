@@ -72,11 +72,11 @@ func (h *handler) context(ctx context.Context) (*mnemosynerpc.Session, error) {
 		return nil, grpc.Errorf(codes.InvalidArgument, "missing sesion token in metadata")
 	}
 
-	token := mnemosynerpc.DecodeAccessToken([]byte(md[mnemosynerpc.AccessTokenMetadataKey][0]))
+	token := md[mnemosynerpc.AccessTokenMetadataKey][0]
 
-	h.logger = log.NewContext(h.logger).With("access_token", md[mnemosynerpc.AccessTokenMetadataKey][0])
+	h.logger = log.NewContext(h.logger).With("access_token", token)
 
-	ses, err := h.storage.Get(&token)
+	ses, err := h.storage.Get(token)
 	if err != nil {
 		if err == ErrSessionNotFound {
 			return nil, grpc.Errorf(codes.NotFound, "session (context) does not exists")
@@ -87,11 +87,11 @@ func (h *handler) context(ctx context.Context) (*mnemosynerpc.Session, error) {
 }
 
 func (h *handler) get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemosynerpc.Session, error) {
-	if req.AccessToken == nil {
+	if req.AccessToken == "" {
 		return nil, ErrMissingAccessToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 
 	ses, err := h.storage.Get(req.AccessToken)
 	if err != nil {
@@ -147,17 +147,17 @@ func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*m
 	if err != nil {
 		return nil, err
 	}
-	h.logger = log.NewContext(h.logger).With("access_token", ses.AccessToken.Encode(), "expire_at", expireAt)
+	h.logger = log.NewContext(h.logger).With("access_token", ses.AccessToken, "expire_at", expireAt)
 
 	return ses, nil
 }
 
 func (h *handler) exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (bool, error) {
-	if req.AccessToken == nil {
+	if req.AccessToken == "" {
 		return false, ErrMissingAccessToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 
 	exists, err := h.storage.Exists(req.AccessToken)
 	if err != nil {
@@ -170,11 +170,11 @@ func (h *handler) exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (
 }
 
 func (h *handler) abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest) (bool, error) {
-	if req.AccessToken == nil {
+	if req.AccessToken == "" {
 		return false, ErrMissingAccessToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 
 	abandoned, err := h.storage.Abandon(req.AccessToken)
 	if err != nil {
@@ -186,13 +186,13 @@ func (h *handler) abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest)
 
 func (h *handler) setValue(ctx context.Context, req *mnemosynerpc.SetValueRequest) (map[string]string, error) {
 	switch {
-	case req.AccessToken == nil:
+	case req.AccessToken == "":
 		return nil, ErrMissingAccessToken
 	case req.Key == "":
 		return nil, grpc.Errorf(codes.InvalidArgument, "missing bag key")
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode(), "key", req.Key, "value", req.Value)
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken, "key", req.Key, "value", req.Value)
 
 	bag, err := h.storage.SetValue(req.AccessToken, req.Key, req.Value)
 	if err != nil {
@@ -206,11 +206,11 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 	var (
 		expireAtFrom, expireAtTo *time.Time
 	)
-	if req.AccessToken == nil && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
+	if req.AccessToken == "" && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
 		return 0, grpc.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}
-	if req.AccessToken != nil {
-		h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken.Encode())
+	if req.AccessToken != "" {
+		h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 	}
 	if req.ExpireAtFrom != nil {
 		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)

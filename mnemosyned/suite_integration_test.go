@@ -17,9 +17,9 @@ type integrationSuite struct {
 	logger        log.Logger
 	listener      net.Listener
 	server        *grpc.Server
-	service       mnemosynerpc.RPCClient
+	service       mnemosynerpc.SessionManagerClient
 	serviceConn   *grpc.ClientConn
-	serviceServer mnemosynerpc.RPCServer
+	serviceServer mnemosynerpc.SessionManagerServer
 	store         *mnemosynetest.Storage
 }
 
@@ -39,7 +39,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 	is.server = grpc.NewServer()
 	is.serviceServer = newRPCServer(logger, is.store, monitor, DefaultTTC)
 
-	mnemosynerpc.RegisterRPCServer(is.server, is.serviceServer)
+	mnemosynerpc.RegisterSessionManagerServer(is.server, is.serviceServer)
 
 	go is.server.Serve(is.listener)
 	is.serviceConn, err = grpc.Dial(
@@ -51,7 +51,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	is.service = mnemosynerpc.NewRPCClient(is.serviceConn)
+	is.service = mnemosynerpc.NewSessionManagerClient(is.serviceConn)
 }
 
 func (is *integrationSuite) teardown(t *testing.T) {

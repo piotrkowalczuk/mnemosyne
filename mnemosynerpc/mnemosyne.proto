@@ -5,7 +5,7 @@ package mnemosynerpc;
 import "github.com/golang/protobuf/ptypes/timestamp/timestamp.proto";
 import "github.com/golang/protobuf/ptypes/empty/empty.proto";
 
-service RPC {
+service SessionManager {
     rpc Context(google.protobuf.Empty) returns (ContextResponse) {};
     rpc Get(GetRequest) returns (GetResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
@@ -15,14 +15,9 @@ service RPC {
     rpc SetValue(SetValueRequest) returns (SetValueResponse) {};
     rpc Delete(DeleteRequest) returns (DeleteResponse) {};
 }
-// AccessToken represents identifier of single session. It consist of partition key and a hash.
-message AccessToken {
-    bytes key = 1;
-    bytes hash = 2;
-}
 
 message Session {
-    AccessToken access_token = 1;
+    string access_token = 1;
     string subject_id = 2;
     string subject_client = 3;
     map<string, string> bag = 4;
@@ -30,7 +25,7 @@ message Session {
 }
 
 message GetRequest {
-    AccessToken access_token = 1;
+    string access_token = 1;
 }
 message GetResponse {
     Session session = 1;
@@ -51,7 +46,7 @@ message ListResponse {
 }
 
 message ExistsRequest {
-    AccessToken access_token = 1;
+    string access_token = 1;
 }
 message ExistsResponse {
     bool exists = 1;
@@ -67,14 +62,14 @@ message StartResponse {
 }
 
 message AbandonRequest {
-    AccessToken access_token = 1;
+    string access_token = 1;
 }
 message AbandonResponse {
     bool abandoned = 1;
 }
 
 message SetValueRequest {
-    AccessToken access_token = 1;
+    string access_token = 1;
     string key = 2;
     string value = 3;
 }
@@ -83,7 +78,7 @@ message SetValueResponse {
 }
 
 message DeleteRequest {
-    AccessToken access_token = 1;
+    string access_token = 1;
     google.protobuf.Timestamp expire_at_from = 2;
     google.protobuf.Timestamp expire_at_to = 3;
 }

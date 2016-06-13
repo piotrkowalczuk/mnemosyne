@@ -14,7 +14,7 @@ import (
 type e2eSuite struct {
 	listener   net.Listener
 	daemon     *Daemon
-	client     mnemosynerpc.RPCClient
+	client     mnemosynerpc.SessionManagerClient
 	clientConn *grpc.ClientConn
 }
 
@@ -55,7 +55,7 @@ func (es *e2eSuite) setup(t *testing.T) {
 		t.Fatalf("unexpected client conn error: %s", err.Error())
 	}
 
-	es.client = mnemosynerpc.NewRPCClient(es.clientConn)
+	es.client = mnemosynerpc.NewSessionManagerClient(es.clientConn)
 }
 
 func (es *e2eSuite) teardown(t *testing.T) {

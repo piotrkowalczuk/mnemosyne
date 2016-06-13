@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	tmpKey = []byte(hex.EncodeToString([]byte("1")))
+	// TODO: change at some point to dynamic value that represents single instance
+	tmpKey = hex.EncodeToString([]byte("1"))
 )
 
 type postgresStorage struct {
@@ -44,13 +45,13 @@ func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration)
 
 // Create implements Storage interface.
 func (ps *postgresStorage) Start(sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
-	accessToken, err := mnemosynerpc.RandomAccessToken(tmpKey)
+	at, err := mnemosynerpc.RandomAccessToken(tmpKey)
 	if err != nil {
 		return nil, err
 	}
 
 	ent := &sessionEntity{
-		AccessToken:   accessToken,
+		AccessToken:   at,
 		SubjectID:     sid,
 		SubjectClient: sc,
 		Bag:           bag(b),
@@ -81,7 +82,7 @@ func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
 }
 
 // Get implements Storage interface.
-func (ps *postgresStorage) Get(accessToken *mnemosynerpc.AccessToken) (*mnemosynerpc.Session, error) {
+func (ps *postgresStorage) Get(accessToken string) (*mnemosynerpc.Session, error) {
 	var entity sessionEntity
 	field := metrics.Field{Key: "query", Value: "get"}
 
@@ -104,7 +105,7 @@ func (ps *postgresStorage) Get(accessToken *mnemosynerpc.AccessToken) (*mnemosyn
 		return nil, err
 	}
 	return &mnemosynerpc.Session{
-		AccessToken:   accessToken,
+		AccessToken:   string(accessToken),
 		SubjectId:     entity.SubjectID,
 		SubjectClient: entity.SubjectClient,
 		Bag:           entity.Bag,
@@ -169,7 +170,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 			return nil, err
 		}
 		sessions = append(sessions, &mnemosynerpc.Session{
-			AccessToken:   &entity.AccessToken,
+			AccessToken:   entity.AccessToken,
 			SubjectId:     entity.SubjectID,
 			SubjectClient: entity.SubjectClient,
 			Bag:           entity.Bag,
@@ -185,10 +186,10 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 }
 
 // Exists implements Storage interface.
-func (ps *postgresStorage) Exists(accessToken *mnemosynerpc.AccessToken) (exists bool, err error) {
+func (ps *postgresStorage) Exists(accessToken string) (exists bool, err error) {
 	field := metrics.Field{Key: "query", Value: "exists"}
 
-	err = ps.db.QueryRow(ps.queryExists, *accessToken).Scan(
+	err = ps.db.QueryRow(ps.queryExists, accessToken).Scan(
 		&exists,
 	)
 	if err != nil {
@@ -200,10 +201,10 @@ func (ps *postgresStorage) Exists(accessToken *mnemosynerpc.AccessToken) (exists
 }
 
 // Abandon ...
-func (ps *postgresStorage) Abandon(accessToken *mnemosynerpc.AccessToken) (bool, error) {
+func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
 	field := metrics.Field{Key: "query", Value: "abandon"}
 
-	result, err := ps.db.Exec(ps.queryAbandon, *accessToken)
+	result, err := ps.db.Exec(ps.queryAbandon, accessToken)
 	if err != nil {
 		ps.monitor.postgres.errors.With(field).Add(1)
 		return false, err
@@ -224,14 +225,14 @@ func (ps *postgresStorage) Abandon(accessToken *mnemosynerpc.AccessToken) (bool,
 }
 
 // SetData implements Storage interface.
-func (ps *postgresStorage) SetValue(accessToken *mnemosynerpc.AccessToken, key, value string) (map[string]string, error) {
+func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[string]string, error) {
 	var err error
-	if accessToken == nil {
+	if accessToken == "" {
 		return nil, ErrMissingAccessToken
 	}
 
 	entity := &sessionEntity{
-		AccessToken: *accessToken,
+		AccessToken: accessToken,
 	}
 	selectQuery := `
 		SELECT bag
@@ -252,7 +253,7 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosynerpc.AccessToken, key, 
 		return nil, err
 	}
 
-	err = tx.QueryRow(selectQuery, *accessToken).Scan(
+	err = tx.QueryRow(selectQuery, accessToken).Scan(
 		&entity.Bag,
 	)
 	if err != nil {
@@ -267,7 +268,7 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosynerpc.AccessToken, key, 
 
 	entity.Bag.set(key, value)
 
-	_, err = tx.Exec(updateQuery, *accessToken, entity.Bag)
+	_, err = tx.Exec(updateQuery, accessToken, entity.Bag)
 	if err != nil {
 		ps.incError(metrics.Field{Key: "query", Value: "set_value_update"})
 		tx.Rollback()
@@ -281,8 +282,8 @@ func (ps *postgresStorage) SetValue(accessToken *mnemosynerpc.AccessToken, key, 
 }
 
 // Delete implements Storage interface.
-func (ps *postgresStorage) Delete(accessToken *mnemosynerpc.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
-	if accessToken == nil && expiredAtFrom == nil && expiredAtTo == nil {
+func (ps *postgresStorage) Delete(accessToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+	if accessToken == "" && expiredAtFrom == nil && expiredAtTo == nil {
 		return 0, errors.New("session cannot be deleted, no where parameter provided")
 	}
 
@@ -338,21 +339,21 @@ func (ps *postgresStorage) incError(field metrics.Field) {
 	}
 }
 
-func (ps *postgresStorage) where(accessToken *mnemosynerpc.AccessToken, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
+func (ps *postgresStorage) where(accessToken string, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
 	switch {
-	case accessToken != nil && expiredAtFrom == nil && expiredAtTo == nil:
+	case accessToken != "" && expiredAtFrom == nil && expiredAtTo == nil:
 		return " access_token = $1", []interface{}{accessToken}
-	case accessToken == nil && expiredAtFrom != nil && expiredAtTo == nil:
+	case accessToken == "" && expiredAtFrom != nil && expiredAtTo == nil:
 		return " expire_at > $1", []interface{}{expiredAtFrom}
-	case accessToken == nil && expiredAtFrom == nil && expiredAtTo != nil:
+	case accessToken == "" && expiredAtFrom == nil && expiredAtTo != nil:
 		return " expire_at < $1", []interface{}{expiredAtTo}
-	case accessToken != nil && expiredAtFrom != nil && expiredAtTo == nil:
+	case accessToken != "" && expiredAtFrom != nil && expiredAtTo == nil:
 		return " access_token = $1 AND expire_at > $2", []interface{}{accessToken, expiredAtFrom}
-	case accessToken != nil && expiredAtFrom == nil && expiredAtTo != nil:
+	case accessToken != "" && expiredAtFrom == nil && expiredAtTo != nil:
 		return " access_token = $1 AND expire_at < $2", []interface{}{accessToken, expiredAtTo}
-	case accessToken == nil && expiredAtFrom != nil && expiredAtTo != nil:
+	case accessToken == "" && expiredAtFrom != nil && expiredAtTo != nil:
 		return " expire_at > $1 AND expire_at < $2", []interface{}{expiredAtFrom, expiredAtTo}
-	case accessToken != nil && expiredAtFrom != nil && expiredAtTo != nil:
+	case accessToken != "" && expiredAtFrom != nil && expiredAtTo != nil:
 		return " access_token = $1 AND expire_at > $2 AND expire_at < $3", []interface{}{accessToken, expiredAtFrom, expiredAtTo}
 	default:
 		return " ", nil
@@ -360,11 +361,11 @@ func (ps *postgresStorage) where(accessToken *mnemosynerpc.AccessToken, expiredA
 }
 
 type sessionEntity struct {
-	AccessToken   mnemosynerpc.AccessToken `json:"accessToken"`
-	SubjectID     string                   `json:"subjectId"`
-	SubjectClient string                   `json:"subjectClient"`
-	Bag           bag                      `json:"bag"`
-	ExpireAt      time.Time                `json:"expireAt"`
+	AccessToken   string    `json:"accessToken"`
+	SubjectID     string    `json:"subjectId"`
+	SubjectClient string    `json:"subjectClient"`
+	Bag           bag       `json:"bag"`
+	ExpireAt      time.Time `json:"expireAt"`
 }
 
 func (se *sessionEntity) session() (*mnemosynerpc.Session, error) {
@@ -373,7 +374,7 @@ func (se *sessionEntity) session() (*mnemosynerpc.Session, error) {
 		return nil, err
 	}
 	return &mnemosynerpc.Session{
-		AccessToken:   &se.AccessToken,
+		AccessToken:   se.AccessToken,
 		SubjectId:     se.SubjectID,
 		SubjectClient: se.SubjectClient,
 		Bag:           se.Bag,

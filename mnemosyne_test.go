@@ -32,10 +32,10 @@ func TestMnemosyne_Start(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 
-	if res.AccessToken == nil {
+	if res.AccessToken == "" {
 		t.Errorf("access token cannot be nil")
 	}
-	if res.AccessToken.IsEmpty() {
+	if len(res.AccessToken) == 0 {
 		t.Errorf("access token should not be empty")
 	}
 	if res.ExpireAt.Seconds == 0 || res.ExpireAt.Nanos == 0 {

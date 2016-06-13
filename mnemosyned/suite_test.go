@@ -89,7 +89,7 @@ func ShouldBeValidSession(expected ...interface{}) (s string) {
 	if s = convey.ShouldNotBeNil(sr); s != "" {
 		return
 	}
-	if s = convey.ShouldHaveLength(sr.AccessToken.Encode(), 138); s != "" {
+	if s = convey.ShouldHaveLength(string(sr.AccessToken), 138); s != "" {
 		return
 	}
 	return
@@ -121,15 +121,15 @@ func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) 
 	if s = convey.ShouldNotBeNil(actual); s != "" {
 		return
 	}
-	if s = convey.ShouldHaveSameTypeAs(actual, &mnemosynerpc.AccessToken{}); s != "" {
+	if s = convey.ShouldHaveSameTypeAs(actual, ""); s != "" {
 		return
 	}
 
-	t := actual.(*mnemosynerpc.AccessToken)
-	if s = convey.ShouldNotBeEmpty(t.Key); s != "" {
+	t, ok := actual.(string)
+	if s = convey.ShouldBeTrue(ok); s != "" {
 		return
 	}
-	if s = convey.ShouldNotBeEmpty(t.Hash); s != "" {
+	if s = convey.ShouldNotBeEmpty(t); s != "" {
 		return
 	}
 	return

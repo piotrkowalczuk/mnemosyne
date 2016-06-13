@@ -16,7 +16,7 @@ func TestSession_Token(t *testing.T) {
 	}{
 		{
 			given: &Session{
-				AccessToken: &AccessToken{Key: []byte("0000000001"), Hash: []byte("abc")},
+				AccessToken: "0000000001abc",
 				ExpireAt:    testTimestampProtoDate(2007, time.January, 1, 0, 0, 0, 0, time.UTC),
 			},
 			expected: oauth2.Token{
@@ -26,7 +26,7 @@ func TestSession_Token(t *testing.T) {
 		},
 		{
 			given: &Session{
-				AccessToken: &AccessToken{Key: []byte("0000000001"), Hash: []byte("999999999999")},
+				AccessToken: ("0000000001999999999999"),
 				Bag: map[string]string{
 					"firstName": "John",
 					"lastName":  "Snow",

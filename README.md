@@ -4,7 +4,6 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/piotrkowalczuk/mnemosyne.svg?maxAge=604800)](https://hub.docker.com/r/piotrkowalczuk/mnemosyne/)
 [![codecov.io](https://codecov.io/github/piotrkowalczuk/mnemosyne/coverage.svg?branch=develop)](https://codecov.io/github/piotrkowalczuk/mnemosyne?branch=develop)
 [![Code Climate](https://codeclimate.com/github/piotrkowalczuk/mnemosyne/badges/gpa.svg)](https://codeclimate.com/github/piotrkowalczuk/mnemosyne)
-[![Go Report Card](https://goreportcard.com/badge/github.com/piotrkowalczuk/mnemosyne)](https://goreportcard.com/report/github.com/piotrkowalczuk/mnemosyne)
 [![Gitter](https://badges.gitter.im/piotrkowalczuk/mnemosyne.svg)](https://gitter.im/piotrkowalczuk/mnemosyne?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 ## Introduction
@@ -14,8 +13,8 @@ It's written in Go, making it easy to build and deploy as a static binary.
 
 It provides two ways for communication:
 
-* [Mnemosyne](https://godoc.org/github.com/piotrkowalczuk/mnemosyne#Mnemosyne) - Simplified way that hides complexity of [gRPC](http://www.grpc.io) library.
-* [RPCClient](https://godoc.org/github.com/piotrkowalczuk/mnemosyne/mnemosynerpc#RPCClient) - Full feature client.
+* [mnemosyne.Mnemosyne](https://godoc.org/github.com/piotrkowalczuk/mnemosyne#Mnemosyne) - Simplified way that hides complexity of [gRPC](http://www.grpc.io) library.
+* [mnemosynerpc.SessionManager](https://godoc.org/github.com/piotrkowalczuk/mnemosyne/mnemosynerpc#SessionManager) - Full feature client.
 
 ### Quick Start
 
@@ -60,7 +59,7 @@ func main() {
 		// ...
 	}
 
-	fmt.Println(ses.AccessToken.Encode())
+	fmt.Println(ses.AccessToken)
 }
 ```
 ### Storage Engine
@@ -79,7 +78,8 @@ For communication, Mnemosyne is exposing RPC API that uses [protocol buffers](ht
 
 ## Installation
 
-Mnemosyne can be installed in two ways, from source and using `deb` package that can be found in dist directory.
+Mnemosyne can be installed in one way, from source.
+Or can be used as a container using docker [image](https://hub.docker.com/r/piotrkowalczuk/mnemosyne/).
 
 ### From source
 
@@ -108,7 +108,7 @@ $ go install ./cmd/mnemosyned
 | monitoring engine | `-m.engine` | prometheus | enum(prometheus) |
 | storage engine | `-s.engine` | postgres | enum(postgres) |
 | storage postgres address | `-s.p.address` | postgres://localhost:5432?sslmode=disable | string |
-| storage postgres table name |`-s.p.table` | mnemosyne_session|string|
+| storage postgres table name |`-s.p.table` | session |string|
 | tls | `-tls` | false | boolean |
 | tls certificate file | `-tls.certfile` | | string |
 | tls key file |`-tls.keyfile` | | string |
@@ -143,10 +143,3 @@ Mnemosyne will automatically create all required tables/indexes for specified da
 		- [x] TearDown
 	- [ ] RAM
 	- [ ] Redis
-
-### Building
-
-Increment version in `mnemosynd/config.go`. Execute `make package`.
-
-Changes to flags or flag value defaults should be into 
-`scripts/mnemosyne.service` and `mnemosyne.env`.

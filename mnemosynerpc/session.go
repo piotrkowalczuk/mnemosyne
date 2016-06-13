@@ -27,7 +27,7 @@ func (s *Session) Token() (*oauth2.Token, error) {
 		}
 	}
 	token := &oauth2.Token{
-		AccessToken: s.AccessToken.Encode(),
+		AccessToken: string(s.AccessToken),
 		Expiry:      expireAt,
 	}
 	if s.Bag != nil && len(s.Bag) > 0 {

@@ -30,21 +30,20 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 
 CMD_TEST=go test -race -coverprofile=.tmp/profile.out -covermode=atomic
 
-.PHONY:	all proto build rebuild mocks run test test-short get install package
+.PHONY:	all gen build rebuild run test test-short get install
 
 all: get install
 
 gen:
+	@go generate .
+	@go generate ./${SERVICE}d
 	@go generate ./${SERVICE}rpc
 	@ls -al ./${SERVICE}rpc | grep "pb.go"
-
-mocks:
-	@mockery -all -output=${SERVICE}test -output_file=mocks.go -output_pkg_name=mnemosynetest
 
 build:
 	@go build -o .tmp/${SERVICE}d ${PACKAGE_CMD_DAEMON}
 
-rebuild: proto mocks build
+rebuild: gen build
 
 run:
 	@.tmp/${SERVICE}d ${FLAGS}
@@ -74,27 +73,3 @@ get:
 
 install:
 	@go install ${PACKAGE_CMD_DAEMON}
-
-package:
-	# export DIST_PACKAGE_TYPE to vary package type (e.g. deb, tar, rpm)
-	@if [ -z "$(shell which fpm 2>/dev/null)" ]; then \
-		echo "error:\nPackagings requires effing package manager (fpm) to run.\nsee https://github.com/jordansissel/fpm\n"; \
-		exit 1; \
-	fi
-
-	#run make install against the packaging dir
-	mkdir -p ${DIST_PACKAGE_BUILD_DIR} && $(MAKE) install DESTDIR=${DIST_PACKAGE_BUILD_DIR}
-
-	#clean
-	mkdir -p ${DIST_PACKAGE_DIR} && rm -f ${DIST_PACKAGE_DIR}/*.${DIST_PACKAGE_TYPE}
-
-	#build package
-	fpm --rpm-os linux \
-		-s dir \
-		-p dist \
-		-t ${DIST_PACKAGE_TYPE} \
-		-n ${SERVICE} \
-		-v `${DIST_PACKAGE_BUILD_DIR}${DIST_PREFIX}/bin/${SERVICE} -version` \
-		--config-files /etc/${SERVICE}.env \
-		--config-files /etc/systemd/system/${SERVICE}.service \
-		-C ${DIST_PACKAGE_BUILD_DIR} .

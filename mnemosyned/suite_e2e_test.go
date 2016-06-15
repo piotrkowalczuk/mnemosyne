@@ -77,11 +77,6 @@ func WithE2ESuite(t *testing.T, f func(*e2eSuite)) func() {
 		s := &e2eSuite{}
 		s.setup(t)
 
-		state, err := s.clientConn.State()
-
-		So(err, ShouldBeNil)
-		So(state, ShouldNotEqual, grpc.Shutdown)
-		So(state, ShouldNotEqual, grpc.TransientFailure)
 		Reset(func() {
 			s.teardown(t)
 		})

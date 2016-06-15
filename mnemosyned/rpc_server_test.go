@@ -238,7 +238,7 @@ func TestRPCServer_Context_postgresStore(t *testing.T) {
 					resp, err := s.client.Context(context.Background(), &empty.Empty{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: missing metadata in context, session token cannot be retrieved")
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: missing sesion token in metadata")
 				})
 			})
 			Convey("Without access token", func() {

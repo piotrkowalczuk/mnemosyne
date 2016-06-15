@@ -34,11 +34,8 @@ CMD_TEST=go test -race -coverprofile=.tmp/profile.out -covermode=atomic
 
 all: get install
 
-proto:
-	@${PROTOC} --proto_path=${GOPATH}/src \
-	    --proto_path=. \
-	    --go_out=plugins=grpc:. \
-	    ${SERVICE}rpc/${SERVICE}.proto
+gen:
+	@go generate ./${SERVICE}rpc
 	@ls -al ./${SERVICE}rpc | grep "pb.go"
 
 mocks:

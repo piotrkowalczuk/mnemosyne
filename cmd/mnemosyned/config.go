@@ -27,7 +27,7 @@ type configuration struct {
 		ttc time.Duration
 	}
 	monitoring struct {
-		engine string
+		enabled bool
 	}
 	storage struct {
 		engine   string
@@ -54,13 +54,13 @@ func (c *configuration) init() {
 	flag.StringVar(&c.subsystem, "subsystem", "mnemosyne", "subsystem")
 	flag.DurationVar(&c.session.ttl, "ttl", mnemosyned.DefaultTTL, "session time to live, after which session is deleted")
 	flag.DurationVar(&c.session.ttc, "ttc", mnemosyned.DefaultTTC, "session time to cleanup, how offten cleanup will be performed")
-	flag.StringVar(&c.logger.adapter, "l.adapter", loggerAdapterStdOut, "logger adapter")
-	flag.StringVar(&c.logger.format, "l.format", loggerFormatJSON, "logger format")
-	flag.IntVar(&c.logger.level, "l.level", 6, "logger level")
-	flag.StringVar(&c.monitoring.engine, "m.engine", mnemosyned.MonitoringEnginePrometheus, "monitoring engine")
-	flag.StringVar(&c.storage.engine, "s.engine", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
-	flag.StringVar(&c.storage.postgres.address, "s.p.address", "postgres://localhost:5432?sslmode=disable", "storage postgres connection string")
-	flag.StringVar(&c.storage.postgres.table, "s.p.table", "session", "storage postgres table name")
+	flag.StringVar(&c.logger.adapter, "log.adapter", loggerAdapterStdOut, "logger adapter")
+	flag.StringVar(&c.logger.format, "log.format", loggerFormatJSON, "logger format")
+	flag.IntVar(&c.logger.level, "log.level", 6, "logger level")
+	flag.BoolVar(&c.monitoring.enabled, "monitoring", false, "toggle application monitoring")
+	flag.StringVar(&c.storage.engine, "storage.engine", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
+	flag.StringVar(&c.storage.postgres.address, "storage.postgres.address", "postgres://postgres:postgres@postgres/postgres?sslmode=disable", "storage postgres connection string")
+	flag.StringVar(&c.storage.postgres.table, "storage.postgres.table", "session", "storage postgres table name")
 	flag.BoolVar(&c.tls.enabled, "tls", false, "tls enable flag")
 	flag.StringVar(&c.tls.certFile, "tls.certfile", "", "path to tls cert file")
 	flag.StringVar(&c.tls.keyFile, "tls.keyfile", "", "path to tls key file")

@@ -11,5 +11,5 @@ var (
 )
 
 func init() {
-	flag.StringVar(&testPostgresAddress, "s.p.address", "postgres://postgres:@localhost/test?sslmode=disable", "")
+	flag.StringVar(&testPostgresAddress, "storage.postgres.address", "postgres://postgres:@localhost/test?sslmode=disable", "")
 }

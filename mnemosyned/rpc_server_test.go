@@ -90,7 +90,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 					res, err = suite.service.Start(context.Background(), req)
 
 					Convey("Should return grpc error with code 13", func() {
-						So(err, ShouldBeGRPCError, codes.Internal, "mnemosyned: "+expectedErr.Error())
+						So(err, ShouldBeGRPCError, codes.Unknown, expectedErr.Error())
 					})
 					Convey("Should return an nil response", func() {
 						So(res, ShouldBeNil)
@@ -152,7 +152,7 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingSubjectID))
+				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingSubjectID))
 			})
 		})
 	}))
@@ -189,7 +189,7 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 					resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
@@ -294,7 +294,7 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 					resp, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
@@ -342,7 +342,7 @@ func TestRPCServer_Abandon_postgresStore(t *testing.T) {
 					resp, err := s.client.Abandon(context.Background(), &mnemosynerpc.AbandonRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
@@ -353,7 +353,7 @@ func TestRPCServer_Abandon_postgresStore(t *testing.T) {
 				})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(ErrSessionNotFound))
+				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
 			})
 		})
 	}))
@@ -443,7 +443,7 @@ func TestRPCServer_SetValue_postgresStore(t *testing.T) {
 					})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(ErrMissingAccessToken))
+					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
@@ -456,7 +456,7 @@ func TestRPCServer_SetValue_postgresStore(t *testing.T) {
 				})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(ErrSessionNotFound))
+				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
 			})
 		})
 	}))

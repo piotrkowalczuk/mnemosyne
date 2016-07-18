@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testStorage_Start(t *testing.T, s Storage) {
+func testStorage_Start(t *testing.T, s storage) {
 	subjectID := "subjectID"
 	subjectClient := "subjectClient"
 	bag := map[string]string{
@@ -26,7 +26,7 @@ func testStorage_Start(t *testing.T, s Storage) {
 	}
 }
 
-func testStorage_Get(t *testing.T, s Storage) {
+func testStorage_Get(t *testing.T, s storage) {
 	ses, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -44,11 +44,11 @@ func testStorage_Get(t *testing.T, s Storage) {
 	// Check for non existing Token
 	got2, err2 := s.Get("keyhash")
 	assert.Error(t, err2)
-	assert.EqualError(t, err2, ErrSessionNotFound.Error())
+	assert.EqualError(t, err2, errSessionNotFound.Error())
 	assert.Nil(t, got2)
 }
 
-func testStorage_List(t *testing.T, s Storage) {
+func testStorage_List(t *testing.T, s storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
@@ -78,7 +78,7 @@ func testStorage_List(t *testing.T, s Storage) {
 	}
 }
 
-func testStorage_List_between(t *testing.T, s Storage) {
+func testStorage_List_between(t *testing.T, s storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
@@ -116,7 +116,7 @@ func testStorage_List_between(t *testing.T, s Storage) {
 	}
 }
 
-func testStorage_Exists(t *testing.T, s Storage) {
+func testStorage_Exists(t *testing.T, s storage) {
 	new, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -134,7 +134,7 @@ func testStorage_Exists(t *testing.T, s Storage) {
 	}
 }
 
-func testStorage_Abandon(t *testing.T, s Storage) {
+func testStorage_Abandon(t *testing.T, s storage) {
 	new, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -148,15 +148,15 @@ func testStorage_Abandon(t *testing.T, s Storage) {
 	// Check for already abandoned session
 	ok3, err3 := s.Abandon(new.AccessToken)
 	assert.False(t, ok3)
-	assert.EqualError(t, err3, ErrSessionNotFound.Error())
+	assert.EqualError(t, err3, errSessionNotFound.Error())
 
 	// Check for session that never exists
 	ok4, err4 := s.Abandon("keyhash")
 	assert.False(t, ok4)
-	assert.EqualError(t, err4, ErrSessionNotFound.Error())
+	assert.EqualError(t, err4, errSessionNotFound.Error())
 }
 
-func testStorage_SetValue(t *testing.T, s Storage) {
+func testStorage_SetValue(t *testing.T, s storage) {
 	new, err := s.Start("subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -183,7 +183,7 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 
 	// Check for non existing Token
 	bag3, err3 := s.SetValue("keyhash", "email", "fake@email.com")
-	require.Error(t, err3, ErrSessionNotFound.Error())
+	require.Error(t, err3, errSessionNotFound.Error())
 	assert.Nil(t, bag3)
 
 	wg := sync.WaitGroup{}
@@ -228,7 +228,7 @@ func testStorage_SetValue(t *testing.T, s Storage) {
 	}
 }
 
-func testStorage_Delete(t *testing.T, s Storage) {
+func testStorage_Delete(t *testing.T, s storage) {
 	nb := int64(10)
 	key := "index"
 	sid := "subjectID"

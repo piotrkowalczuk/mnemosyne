@@ -11,7 +11,7 @@ import (
 type postgresSuite struct {
 	db     *sql.DB
 	logger log.Logger
-	store  Storage
+	store  storage
 }
 
 func (ps *postgresSuite) setup(t *testing.T) {

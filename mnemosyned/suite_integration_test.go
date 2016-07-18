@@ -32,12 +32,12 @@ func (is *integrationSuite) setup(t *testing.T) {
 
 	logger := sklog.NewTestLogger(t)
 	//logger := sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
-	monitor := initPrometheus("mnemosyne_test", "mnemosyne", stdprometheus.Labels{"server": "test"})
+	monitor := initPrometheus("mnemosyne_test", false, stdprometheus.Labels{"server": "test"})
 
 	is.store = &mnemosynetest.Storage{}
 	is.listener = listenTCP(t)
 	is.server = grpc.NewServer()
-	is.serviceServer = newRPCServer(logger, is.store, monitor, DefaultTTC)
+	is.serviceServer = newSessionManager(logger, is.store, monitor, DefaultTTC)
 
 	mnemosynerpc.RegisterSessionManagerServer(is.server, is.serviceServer)
 

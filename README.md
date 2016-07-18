@@ -25,7 +25,7 @@ $ go get -d github.com/piotrkowalczuk/mnemosyne/...
 $ cd $GOPATH/src/github.com/piotrkowalczuk/mnemosyne
 $ glide install
 $ go install ./cmd/mnemosyned
-$ mnemosyned -l.format=humane -s.p.address='postgres://localhost/example?sslmode=disable'
+$ mnemosyned -log.format=humane -storage.postgres.address='postgres://localhost/example?sslmode=disable'
 ```
 
 Simpliest implementation could looks like that:
@@ -101,14 +101,14 @@ $ go install ./cmd/mnemosyned
 | port | `-port` | 8080 | int |
 | time to live | `-ttl` | 24m | duration |
 | time to clear | `-ttc` | 1m | duration |
-| logger format | `-l.format` | json | enum(json, humane, logfmt) |
-| logger adapter | `-l.adapter` | stdout | enum(stdout) |
-| namespace | `-namespace` | string | |
+| logger format | `-log.format` | json | enum(json, humane, logfmt) |
+| logger adapter | `-log.adapter` | stdout | enum(stdout) |
+| namespace | `-namespace` |  | string |
 | subsystem | `-subsystem` | mnemosyne|string |
-| monitoring engine | `-m.engine` | prometheus | enum(prometheus) |
-| storage engine | `-s.engine` | postgres | enum(postgres) |
-| storage postgres address | `-s.p.address` | postgres://localhost:5432?sslmode=disable | string |
-| storage postgres table name |`-s.p.table` | session |string|
+| monitoring | `-monitoring ` | false | boolean |
+| storage engine | `-storage.engine` | postgres | enum(postgres) |
+| storage postgres address | `-storage.postgres.address` | postgres://postgres:postgres@postgres/postgres?sslmode=disable | string |
+| storage postgres table name |`-storage.postgres.table` | session |string|
 | tls | `-tls` | false | boolean |
 | tls certificate file | `-tls.certfile` | | string |
 | tls key file |`-tls.keyfile` | | string |
@@ -118,7 +118,7 @@ $ go install ./cmd/mnemosyned
 As we know, mnemosyne can be configured in many ways. For the beginning we can start simple:
 
 ```bash
-$ mnemosyned -namespace=acme -s.p.address="postgres://localhost/test?sslmode=disable"
+$ mnemosyned -namespace=acme -storage.postgres.address="postgres://localhost/test?sslmode=disable"
 ```
 
 Mnemosyne will automatically create all required tables/indexes for specified database.

@@ -15,8 +15,8 @@ const (
 	StorageEngineRedis = "redis"
 )
 
-// Storage combines API that needs to be implemented by any storage to be replaceable.
-type Storage interface {
+// storage combines API that needs to be implemented by any storage to be replaceable.
+type storage interface {
 	Setup() error
 	TearDown() error
 	Start(string, string, map[string]string) (*mnemosynerpc.Session, error)

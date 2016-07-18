@@ -36,7 +36,7 @@ type DaemonOpts struct {
 	Subsystem              string
 	SessionTTL             time.Duration
 	SessionTTC             time.Duration
-	MonitoringEngine       string
+	Monitoring             bool
 	TLS                    bool
 	TLSCertFile            string
 	TLSKeyFile             string
@@ -60,7 +60,7 @@ type Daemon struct {
 	opts          *DaemonOpts
 	monitor       *monitoring
 	rpcOptions    []grpc.ServerOption
-	storage       Storage
+	storage       storage
 	logger        log.Logger
 	rpcListener   net.Listener
 	debugListener net.Listener
@@ -108,7 +108,7 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 
 	d, err := NewDaemon(&DaemonOpts{
 		Namespace:              "mnemosyne_test",
-		MonitoringEngine:       MonitoringEnginePrometheus,
+		Monitoring:             false,
 		Logger:                 logger,
 		StoragePostgresAddress: opts.StoragePostgresAddress,
 		RPCListener:            l,
@@ -141,8 +141,8 @@ func (d *Daemon) Run() (err error) {
 	}
 
 	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
-	gRPCServer := grpc.NewServer(d.rpcOptions...)
-	mnemosyneServer := newRPCServer(d.logger, d.storage, d.monitor, d.opts.SessionTTC)
+	gRPCServer := grpc.NewServer(append(d.rpcOptions, grpc.UnaryInterceptor(initUnaryServerInterceptor(d.monitor.rpc)))...)
+	mnemosyneServer := newSessionManager(d.logger, d.storage, d.monitor, d.opts.SessionTTC)
 	mnemosynerpc.RegisterSessionManagerServer(gRPCServer, mnemosyneServer)
 
 	go func() {
@@ -169,6 +169,7 @@ func (d *Daemon) Run() (err error) {
 			mux.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
 			mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 			mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+			mux.Handle("/metrics", prometheus.Handler())
 			sklog.Error(d.logger, http.Serve(d.debugListener, mux))
 		}()
 	}
@@ -242,14 +243,6 @@ func (d *Daemon) initMonitoring() (err error) {
 		return errors.New("getting hostname failed")
 	}
 
-	switch d.opts.MonitoringEngine {
-	case "":
-		d.monitor = &monitoring{}
-		return
-	case MonitoringEnginePrometheus:
-		d.monitor = initPrometheus(d.opts.Namespace, d.opts.Subsystem, prometheus.Labels{"server": hostname})
-		return
-	default:
-		return errors.New("unknown monitoring engine")
-	}
+	d.monitor = initPrometheus(d.opts.Namespace, d.opts.Monitoring, prometheus.Labels{"server": hostname})
+	return
 }

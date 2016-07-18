@@ -1,5 +1,5 @@
-hash: 87c2a95b9b6d4051535186453663edf2e11f0bd2e48fee6e7ccdb3036d5dbd0a
-updated: 2016-06-15T23:25:19.50208109+02:00
+hash: 882d3cb1f5aef1219d20fa1dda6bdba5394036b07ac6719f1eb255866239501e
+updated: 2016-07-18T19:07:03.784918648+02:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -33,7 +33,7 @@ imports:
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/lib/pq
-  version: ee1442bda7bd1b6a84e913bdb421cb1874ec629d
+  version: 4dd446efc17690bc53e154025146f73203b18309
   subpackages:
   - oid
 - name: github.com/matttproud/golang_protobuf_extensions
@@ -65,12 +65,13 @@ imports:
   subpackages:
   - mock
   - assert
+  - require
 - name: golang.org/x/crypto
-  version: f3241ce8505855877cc8a9717bd61a0f7c4ea83c
+  version: f28b56427a527c2e35c0bcac123f0a6a8a943cd3
   subpackages:
   - sha3
 - name: golang.org/x/net
-  version: 3f122ce3dbbe488b7e6a8bdb26f41edec852a40b
+  version: 3797cd8864994d713d909eda5e61ede8683fdc12
   subpackages:
   - context
   - http2
@@ -79,20 +80,21 @@ imports:
   - lex/httplex
   - internal/timeseries
 - name: golang.org/x/oauth2
-  version: 65a8d08c6292395d47053be10b3c5e91960def76
+  version: a8702432015187171c5120cbf5020bfca7be35b6
   subpackages:
   - internal
 - name: google.golang.org/appengine
-  version: 7f59a8c76b8594d06044bfe0bcbe475cb2020482
+  version: 267c27e7492265b84fc6719503b14a1e17975d79
   subpackages:
   - urlfetch
   - internal
   - internal/urlfetch
   - internal/base
   - internal/datastore
+  - internal/log
   - internal/remote_api
 - name: google.golang.org/grpc
-  version: e78224b060cf3215247b7be455f80ea22e469b66
+  version: 13edeeffdea7a41d5aad96c28deb4c7bd01a9397
   subpackages:
   - codes
   - credentials
@@ -102,4 +104,21 @@ imports:
   - internal
   - naming
   - transport
-devImports: []
+testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 72e303cb5f235b23471872477b57e573dc1c71d0
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: 8ddce2a84170772b95dd5d576c48d517b22cac63
+- name: github.com/smartystreets/assertions
+  version: 2063fd1cc7c975db70502811a34b06ad034ccdf2
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
+- name: github.com/smartystreets/goconvey
+  version: 4622128e06c77c0174e17a7f0ed2db19a989b473
+  subpackages:
+  - convey
+  - convey/reporting
+  - convey/gotest

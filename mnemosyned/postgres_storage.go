@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-kit/kit/metrics"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -25,7 +25,7 @@ type postgresStorage struct {
 	querySave, queryGet, queryExists, queryAbandon string
 }
 
-func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration) Storage {
+func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration) storage {
 	return &postgresStorage{
 		db:      db,
 		table:   tb,
@@ -65,8 +65,7 @@ func (ps *postgresStorage) Start(sid, sc string, b map[string]string) (*mnemosyn
 }
 
 func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
-	field := metrics.Field{Key: "query", Value: "save"}
-
+	labels := prometheus.Labels{"query": "save"}
 	err = ps.db.QueryRow(
 		ps.querySave,
 		entity.AccessToken,
@@ -76,15 +75,17 @@ func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
 	).Scan(
 		&entity.ExpireAt,
 	)
-	ps.incQueries(field)
-
+	ps.incQueries(labels)
+	if err != nil {
+		ps.incError(labels)
+	}
 	return
 }
 
 // Get implements Storage interface.
 func (ps *postgresStorage) Get(accessToken string) (*mnemosynerpc.Session, error) {
 	var entity sessionEntity
-	field := metrics.Field{Key: "query", Value: "get"}
+	labels := prometheus.Labels{"query": "get"}
 
 	err := ps.db.QueryRow(ps.queryGet, accessToken).Scan(
 		&entity.SubjectID,
@@ -92,10 +93,11 @@ func (ps *postgresStorage) Get(accessToken string) (*mnemosynerpc.Session, error
 		&entity.Bag,
 		&entity.ExpireAt,
 	)
+	ps.incQueries(labels)
 	if err != nil {
-		ps.incError(field)
+		ps.incError(labels)
 		if err == sql.ErrNoRows {
-			return nil, ErrSessionNotFound
+			return nil, errSessionNotFound
 		}
 		return nil, err
 	}
@@ -137,17 +139,15 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 	}
 
 	query += " OFFSET $1 LIMIT $2"
-
-	field := metrics.Field{Key: "query", Value: "list"}
+	labels := prometheus.Labels{"query": "list"}
 
 	rows, err := ps.db.Query(query, args...)
+	ps.incQueries(labels)
 	if err != nil {
-		ps.incError(field)
+		ps.incError(labels)
 		return nil, err
 	}
 	defer rows.Close()
-
-	ps.incQueries(field)
 
 	sessions := make([]*mnemosynerpc.Session, 0, limit)
 	for rows.Next() {
@@ -161,7 +161,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 			&entity.ExpireAt,
 		)
 		if err != nil {
-			ps.incError(field)
+			ps.incError(labels)
 			return nil, err
 		}
 
@@ -178,7 +178,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 		})
 	}
 	if rows.Err() != nil {
-		ps.incError(field)
+		ps.incError(labels)
 		return nil, rows.Err()
 	}
 
@@ -187,30 +187,29 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 
 // Exists implements Storage interface.
 func (ps *postgresStorage) Exists(accessToken string) (exists bool, err error) {
-	field := metrics.Field{Key: "query", Value: "exists"}
+	labels := prometheus.Labels{"query": "exists"}
 
 	err = ps.db.QueryRow(ps.queryExists, accessToken).Scan(
 		&exists,
 	)
 	if err != nil {
-		ps.incError(field)
+		ps.incError(labels)
 	}
-	ps.incQueries(field)
+	ps.incQueries(labels)
 
 	return
 }
 
 // Abandon ...
 func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
-	field := metrics.Field{Key: "query", Value: "abandon"}
+	labels := prometheus.Labels{"query": "abandon"}
 
 	result, err := ps.db.Exec(ps.queryAbandon, accessToken)
+	ps.incQueries(labels)
 	if err != nil {
-		ps.monitor.postgres.errors.With(field).Add(1)
+		ps.incError(labels)
 		return false, err
 	}
-
-	ps.incQueries(field)
 
 	affected, err := result.RowsAffected()
 	if err != nil {
@@ -218,7 +217,7 @@ func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
 	}
 
 	if affected == 0 {
-		return false, ErrSessionNotFound
+		return false, errSessionNotFound
 	}
 
 	return true, nil
@@ -228,7 +227,7 @@ func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
 func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[string]string, error) {
 	var err error
 	if accessToken == "" {
-		return nil, ErrMissingAccessToken
+		return nil, errMissingAccessToken
 	}
 
 	entity := &sessionEntity{
@@ -256,25 +255,25 @@ func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[
 	err = tx.QueryRow(selectQuery, accessToken).Scan(
 		&entity.Bag,
 	)
+	ps.incQueries(prometheus.Labels{"query": "set_value_select"})
 	if err != nil {
-		ps.incError(metrics.Field{Key: "query", Value: "set_value_select"})
+		ps.incError(prometheus.Labels{"query": "set_value_select"})
 		tx.Rollback()
 		if err == sql.ErrNoRows {
-			return nil, ErrSessionNotFound
+			return nil, errSessionNotFound
 		}
 		return nil, err
 	}
-	ps.incQueries(metrics.Field{Key: "query", Value: "set_value_select"})
 
 	entity.Bag.set(key, value)
 
 	_, err = tx.Exec(updateQuery, accessToken, entity.Bag)
+	ps.incQueries(prometheus.Labels{"query": "set_value_update"})
 	if err != nil {
-		ps.incError(metrics.Field{Key: "query", Value: "set_value_update"})
+		ps.incError(prometheus.Labels{"query": "set_value_update"})
 		tx.Rollback()
 		return nil, err
 	}
-	ps.incQueries(metrics.Field{Key: "query", Value: "set_value_update"})
 
 	tx.Commit()
 
@@ -289,14 +288,14 @@ func (ps *postgresStorage) Delete(accessToken string, expiredAtFrom, expiredAtTo
 
 	where, args := ps.where(accessToken, expiredAtFrom, expiredAtTo)
 	query := "DELETE FROM mnemosyne." + ps.table + " WHERE " + where
-	field := metrics.Field{Key: "query", Value: "delete"}
+	labels := prometheus.Labels{"query": "delete"}
 
 	result, err := ps.db.Exec(query, args...)
+	ps.incQueries(labels)
 	if err != nil {
-		ps.incError(field)
+		ps.incError(labels)
 		return 0, err
 	}
-	ps.incQueries(field)
 
 	return result.RowsAffected()
 }
@@ -327,15 +326,15 @@ func (ps *postgresStorage) TearDown() error {
 	return err
 }
 
-func (ps *postgresStorage) incQueries(field metrics.Field) {
+func (ps *postgresStorage) incQueries(field prometheus.Labels) {
 	if ps.monitor.postgres.enabled {
-		ps.monitor.postgres.queries.With(field).Add(1)
+		ps.monitor.postgres.queries.With(field).Inc()
 	}
 }
 
-func (ps *postgresStorage) incError(field metrics.Field) {
+func (ps *postgresStorage) incError(field prometheus.Labels) {
 	if ps.monitor.postgres.enabled {
-		ps.monitor.postgres.errors.With(field).Add(1)
+		ps.monitor.postgres.errors.With(field).Inc()
 	}
 }
 

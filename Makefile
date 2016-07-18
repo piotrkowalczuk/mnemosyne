@@ -20,13 +20,13 @@ FLAGS=-host=$(MNEMOSYNE_HOST) \
 	-ttc=$(MNEMOSYNE_TTC) \
 	-subsystem=$(MNEMOSYNE_SUBSYSTEM) \
 	-namespace=$(MNEMOSYNE_NAMESPACE) \
-	-l.format=$(MNEMOSYNE_LOGGER_FORMAT) \
-	-l.adapter=$(MNEMOSYNE_LOGGER_ADAPTER) \
-	-l.level=$(MNEMOSYNE_LOGGER_LEVEL) \
-	-m.engine=$(MNEMOSYNE_MONITORING_ENGINE) \
-	-s.engine=$(MNEMOSYNE_STORAGE_ENGINE) \
-	-s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS) \
-	-s.p.table=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE)
+	-log.format=$(MNEMOSYNE_LOGGER_FORMAT) \
+	-log.adapter=$(MNEMOSYNE_LOGGER_ADAPTER) \
+	-log.level=$(MNEMOSYNE_LOGGER_LEVEL) \
+	-monitoring=$(MNEMOSYNE_MONITORING_ENGINE) \
+	-storage.engine=$(MNEMOSYNE_STORAGE_ENGINE) \
+	-storage.postgres.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS) \
+	-storage.postgres.table=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE)
 
 CMD_TEST=go test -race -coverprofile=.tmp/profile.out -covermode=atomic
 
@@ -58,9 +58,9 @@ test-short:
 	@${CMD_TEST} -short ${PACKAGE_TEST}
 
 test:
-	@${CMD_TEST} ${PACKAGE} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
+	@${CMD_TEST} ${PACKAGE} -storage.postgres.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
 	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
-	@${CMD_TEST} ${PACKAGE_DAEMON} -s.p.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
+	@${CMD_TEST} ${PACKAGE_DAEMON} -storage.postgres.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
 	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
 	@${CMD_TEST} ${PACKAGE_RPC}
 	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out

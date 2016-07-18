@@ -5,62 +5,66 @@ import (
 	"fmt"
 
 	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/metrics/prometheus"
 	"github.com/piotrkowalczuk/sklog"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
-const (
-	// MonitoringEnginePrometheus is currently only supported monitoring system.
-	MonitoringEnginePrometheus = "prometheus"
-)
-
-func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Labels) *monitoring {
-	generalErrors := prometheus.NewCounter(
-		stdprometheus.CounterOpts{
+func initPrometheus(namespace string, enabled bool, constLabels prometheus.Labels) *monitoring {
+	generalErrors := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
 			Namespace:   namespace,
-			Subsystem:   subsystem,
+			Subsystem:   "rpc",
 			Name:        "general_errors_total",
 			Help:        "Total number of errors that happen during execution (other than grpc and postgres).",
 			ConstLabels: constLabels,
 		},
 		monitoringGeneralLabels,
 	)
-	rpcRequests := prometheus.NewCounter(
-		stdprometheus.CounterOpts{
+	rpcRequests := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
 			Namespace:   namespace,
-			Subsystem:   subsystem,
-			Name:        "rpc_requests_total",
+			Subsystem:   "rpc",
+			Name:        "requests_total",
 			Help:        "Total number of RPC requests made.",
 			ConstLabels: constLabels,
 		},
 		monitoringRPCLabels,
 	)
-	rpcErrors := prometheus.NewCounter(
-		stdprometheus.CounterOpts{
+	rpcDuration := prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
 			Namespace:   namespace,
-			Subsystem:   subsystem,
-			Name:        "rpc_errors_total",
+			Subsystem:   "rpc",
+			Name:        "request_duration_microseconds",
+			Help:        "The RPC request latencies in microseconds.",
+			ConstLabels: constLabels,
+		},
+		[]string{"handler", "code"},
+	)
+	rpcErrors := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace:   namespace,
+			Subsystem:   "rpc",
+			Name:        "errors_total",
 			Help:        "Total number of errors that happen during RPC calles.",
 			ConstLabels: constLabels,
 		},
 		monitoringRPCLabels,
 	)
 
-	postgresQueries := prometheus.NewCounter(
-		stdprometheus.CounterOpts{
+	postgresQueries := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
 			Namespace:   namespace,
-			Subsystem:   subsystem,
+			Subsystem:   "storage",
 			Name:        "postgres_queries_total",
 			Help:        "Total number of SQL queries made.",
 			ConstLabels: constLabels,
 		},
 		monitoringPostgresLabels,
 	)
-	postgresErrors := prometheus.NewCounter(
-		stdprometheus.CounterOpts{
+	postgresErrors := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
 			Namespace:   namespace,
-			Subsystem:   subsystem,
+			Subsystem:   "storage",
 			Name:        "postgres_errors_total",
 			Help:        "Total number of errors that happen during SQL queries.",
 			ConstLabels: constLabels,
@@ -68,19 +72,29 @@ func initPrometheus(namespace, subsystem string, constLabels stdprometheus.Label
 		monitoringPostgresLabels,
 	)
 
+	if enabled {
+		prometheus.MustRegister(generalErrors)
+		prometheus.MustRegister(rpcRequests)
+		prometheus.MustRegister(rpcDuration)
+		prometheus.MustRegister(rpcErrors)
+		prometheus.MustRegister(postgresQueries)
+		prometheus.MustRegister(postgresErrors)
+	}
+
 	return &monitoring{
-		enabled: true,
+		enabled: enabled,
 		general: monitoringGeneral{
-			enabled: true,
+			enabled: enabled,
 			errors:  generalErrors,
 		},
 		rpc: monitoringRPC{
-			enabled:  true,
+			enabled:  enabled,
+			duration: rpcDuration,
 			requests: rpcRequests,
 			errors:   rpcErrors,
 		},
 		postgres: monitoringPostgres{
-			enabled: true,
+			enabled: enabled,
 			queries: postgresQueries,
 			errors:  postgresErrors,
 		},
@@ -97,7 +111,7 @@ func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
 	return postgres, nil
 }
 
-func initStorage(env string, s Storage, l log.Logger) (Storage, error) {
+func initStorage(env string, s storage, l log.Logger) (storage, error) {
 	if env == EnvironmentTest {
 		if err := s.TearDown(); err != nil {
 			return nil, err

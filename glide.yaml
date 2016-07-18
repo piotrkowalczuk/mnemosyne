@@ -31,7 +31,7 @@ import:
   - context
 - package: golang.org/x/oauth2
 - package: google.golang.org/grpc
-  version: e78224b060cf3215247b7be455f80ea22e469b66
+  version: ~1.0.0
   subpackages:
   - codes
   - credentials

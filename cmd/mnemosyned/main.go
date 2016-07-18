@@ -31,7 +31,7 @@ func main() {
 		TLS:                    config.tls.enabled,
 		TLSCertFile:            config.tls.certFile,
 		TLSKeyFile:             config.tls.keyFile,
-		MonitoringEngine:       config.monitoring.engine,
+		Monitoring:             config.monitoring.enabled,
 		StorageEngine:          config.storage.engine,
 		StoragePostgresAddress: config.storage.postgres.address,
 		StoragePostgresTable:   config.storage.postgres.table,

@@ -13,4 +13,4 @@ RUN rm -rf /go/src
 EXPOSE 8080
 
 ENTRYPOINT ["/go/bin/mnemosyned"]
-CMD ["-host=0.0.0.0", "-namespace=mnemosyne","-s.p.address=postgres://postgres:postgres@postgres/postgres?sslmode=disable"]
+CMD ["-host=0.0.0.0", "-namespace=mnemosyne"]

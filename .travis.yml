@@ -22,7 +22,7 @@ script:
 after_success:
 - bash <(curl -s https://codecov.io/bash)
 - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
-  if  [ ! -z "$TRAVIS_TAG" ]) && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+  if  [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
     make publish
   fi
 notifications:

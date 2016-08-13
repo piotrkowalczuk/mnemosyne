@@ -22,13 +22,14 @@ install:
 	@go install -ldflags "${LDFLAGS}" ${PACKAGE_CMD_DAEMON}
 
 test:
-	@touch .tmp/coverage.out
-	@echo "mode: atomic" > .tmp/coverage-all.out
-	@$(foreach pkg,$(PACKAGES),\
-		go test -coverprofile=.tmp/coverage.out -covermode=atomic $(pkg) || exit;\
-		tail -n +2 .tmp/coverage.out >> .tmp/coverage-all.out \
-	;)
-	@go tool cover -func=.tmp/coverage-all.out | tail -n 1
+	@set -e; \
+	touch .tmp/coverage.out; \
+	echo "mode: atomic" > .tmp/coverage-all.out; \
+	for pkg in $(PACKAGES); do \
+		go test -coverprofile=.tmp/coverage.out -covermode=atomic $$pkg; \
+		tail -n +2 .tmp/coverage.out >> .tmp/coverage-all.out; \
+	done; \
+	go tool cover -func=.tmp/coverage-all.out | tail -n 1
 
 cover: test
 	@go tool cover -html=.tmp/coverage-all.out

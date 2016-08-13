@@ -25,7 +25,7 @@ $ go get -d github.com/piotrkowalczuk/mnemosyne/...
 $ cd $GOPATH/src/github.com/piotrkowalczuk/mnemosyne
 $ glide install
 $ go install ./cmd/mnemosyned
-$ mnemosyned -log.format=humane -storage.postgres.address='postgres://localhost/example?sslmode=disable'
+$ mnemosyned -log.format=humane -postgres.address='postgres://localhost/example?sslmode=disable'
 ```
 
 Simpliest implementation could looks like that:
@@ -103,21 +103,19 @@ $ go install ./cmd/mnemosyned
 | time to clear | `-ttc` | 1m | duration |
 | logger format | `-log.format` | json | enum(json, humane, logfmt) |
 | logger adapter | `-log.adapter` | stdout | enum(stdout) |
-| namespace | `-namespace` |  | string |
-| subsystem | `-subsystem` | mnemosyne|string |
 | monitoring | `-monitoring ` | false | boolean |
-| storage engine | `-storage.engine` | postgres | enum(postgres) |
-| storage postgres address | `-storage.postgres.address` | postgres://postgres:postgres@postgres/postgres?sslmode=disable | string |
+| storage | `-storage` | postgres | enum(postgres) |
+| postgres address | `-postgres.address` | postgres://postgres:postgres@postgres/postgres?sslmode=disable | string |
 | tls | `-tls` | false | boolean |
-| tls certificate file | `-tls.certfile` | | string |
-| tls key file |`-tls.keyfile` | | string |
+| tls certificate file | `-tls.cert` | | string |
+| tls key file |`-tls.key` | | string |
 
 ### Running
 
 As we know, mnemosyne can be configured in many ways. For the beginning we can start simple:
 
 ```bash
-$ mnemosyned -namespace=acme -storage.postgres.address="postgres://localhost/test?sslmode=disable"
+$ mnemosyned postgres.address="postgres://localhost/test?sslmode=disable"
 ```
 
 Mnemosyne will automatically create all required tables/indexes for specified database.

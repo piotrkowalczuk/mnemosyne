@@ -13,10 +13,10 @@ import (
 const version = "0.2.1"
 
 type configuration struct {
-	host      string
-	port      int
+	host    string
+	port    int
 	storage string
-	logger    struct {
+	logger  struct {
 		adapter string
 		format  string
 		level   int
@@ -28,9 +28,9 @@ type configuration struct {
 	monitoring struct {
 		enabled bool
 	}
-		postgres struct {
-			address string
-		}
+	postgres struct {
+		address string
+	}
 	tls struct {
 		enabled  bool
 		certFile string
@@ -54,8 +54,8 @@ func (c *configuration) init() {
 	flag.StringVar(&c.storage, "storage", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://postgres:postgres@postgres/postgres?sslmode=disable", "storage postgres connection string")
 	flag.BoolVar(&c.tls.enabled, "tls", false, "tls enable flag")
-	flag.StringVar(&c.tls.certFile, "tls.certfile", "", "path to tls cert file")
-	flag.StringVar(&c.tls.keyFile, "tls.keyfile", "", "path to tls key file")
+	flag.StringVar(&c.tls.certFile, "tls.cert", "", "path to tls cert file")
+	flag.StringVar(&c.tls.keyFile, "tls.key", "", "path to tls key file")
 }
 
 func (c *configuration) parse() {

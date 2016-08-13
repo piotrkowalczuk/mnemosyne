@@ -1,6 +1,8 @@
 language: go
 go:
 - tip
+services:
+  - docker
 addons:
   postgresql: '9.3'
   code_climate:

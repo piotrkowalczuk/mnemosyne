@@ -2,6 +2,7 @@
 .idea
 vendor
 .tmp
+bin
 *.iml
 run.sh
 test.sh

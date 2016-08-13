@@ -28,13 +28,12 @@ func (es *e2eSuite) setup(t *testing.T) {
 
 	es.listener = listenTCP(t)
 	es.daemon, err = NewDaemon(&DaemonOpts{
-		Namespace:              "mnemosyne_e2e",
-		Subsystem:              "mnemosyne",
-		RPCOptions:             []grpc.ServerOption{},
-		RPCListener:            es.listener,
-		StorageEngine:          StorageEnginePostgres,
-		Logger:                 logger,
-		StoragePostgresAddress: testPostgresAddress,
+		IsTest:          true,
+		RPCOptions:      []grpc.ServerOption{},
+		RPCListener:     es.listener,
+		Storage:         StorageEnginePostgres,
+		Logger:          logger,
+		PostgresAddress: testPostgresAddress,
 	})
 	if err != nil {
 		t.Fatalf("unexpected deamon instantiation error: %s", err.Error())
@@ -42,7 +41,7 @@ func (es *e2eSuite) setup(t *testing.T) {
 	if err = es.daemon.Run(); err != nil {
 		t.Fatalf("unexpected deamon run error: %s", err.Error())
 	} else {
-		t.Logf("test daemon started")
+		t.Log("test daemon started")
 	}
 
 	es.clientConn, err = grpc.Dial(
@@ -68,7 +67,7 @@ func (es *e2eSuite) teardown(t *testing.T) {
 	if err := es.daemon.storage.TearDown(); err != nil {
 		t.Fatalf("e2e suite storage unexpected error on teardown: %s", err.Error())
 	} else {
-		t.Logf("e2e suite storage teardown")
+		t.Log("e2e suite storage teardown")
 	}
 }
 

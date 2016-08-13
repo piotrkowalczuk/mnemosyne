@@ -21,32 +21,22 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-const (
-	// EnvironmentProduction ...
-	EnvironmentProduction = "prod"
-	// EnvironmentTest ...
-	EnvironmentTest = "test"
-)
-
 // DaemonOpts it is constructor argument that can be passed to
 // the NewDaemon constructor function.
 type DaemonOpts struct {
-	Environment            string
-	Namespace              string
-	Subsystem              string
-	SessionTTL             time.Duration
-	SessionTTC             time.Duration
-	Monitoring             bool
-	TLS                    bool
-	TLSCertFile            string
-	TLSKeyFile             string
-	StorageEngine          string
-	StoragePostgresAddress string
-	StoragePostgresTable   string
-	Logger                 log.Logger
-	RPCOptions             []grpc.ServerOption
-	RPCListener            net.Listener
-	DebugListener          net.Listener
+	IsTest          bool
+	SessionTTL      time.Duration
+	SessionTTC      time.Duration
+	Monitoring      bool
+	TLS             bool
+	TLSCertFile     string
+	TLSKeyFile      string
+	Storage         string
+	PostgresAddress string
+	Logger          log.Logger
+	RPCOptions      []grpc.ServerOption
+	RPCListener     net.Listener
+	DebugListener   net.Listener
 }
 
 // TestDaemonOpts set of options that are used with TestDaemon instance.
@@ -86,11 +76,8 @@ func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 	if d.opts.SessionTTC == 0 {
 		d.opts.SessionTTC = DefaultTTC
 	}
-	if d.opts.StorageEngine == "" {
-		d.opts.StorageEngine = StorageEnginePostgres
-	}
-	if d.opts.StoragePostgresTable == "" {
-		d.opts.StoragePostgresTable = "session"
+	if d.opts.Storage == "" {
+		d.opts.Storage = StorageEnginePostgres
 	}
 
 	return d, nil
@@ -107,11 +94,11 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
 
 	d, err := NewDaemon(&DaemonOpts{
-		Namespace:              "mnemosyne_test",
-		Monitoring:             false,
-		Logger:                 logger,
-		StoragePostgresAddress: opts.StoragePostgresAddress,
-		RPCListener:            l,
+		IsTest:          true,
+		Monitoring:      false,
+		Logger:          logger,
+		PostgresAddress: opts.StoragePostgresAddress,
+		RPCListener:     l,
 	})
 	if err != nil {
 		t.Fatalf("mnemosyne daemon cannot be instantiated: %s", err.Error())
@@ -146,7 +133,7 @@ func (d *Daemon) Run() (err error) {
 	mnemosynerpc.RegisterSessionManagerServer(gRPCServer, mnemosyneServer)
 
 	go func() {
-		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String(), "subsystem", d.opts.Subsystem, "namespace", d.opts.Namespace)
+		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String())
 
 		if err := gRPCServer.Serve(d.rpcListener); err != nil {
 			if err == grpc.ErrServerStopped {
@@ -160,7 +147,7 @@ func (d *Daemon) Run() (err error) {
 
 	if d.debugListener != nil {
 		go func() {
-			sklog.Info(d.logger, "debug server is running", "address", d.debugListener.Addr().String(), "subsystem", d.opts.Subsystem, "namespace", d.opts.Namespace)
+			sklog.Info(d.logger, "debug server is running", "address", d.debugListener.Addr().String())
 			// TODO: implement keep alive
 
 			mux := http.NewServeMux()
@@ -199,20 +186,20 @@ func (d *Daemon) Addr() net.Addr {
 func (d *Daemon) initStorage() (err error) {
 	var db *sql.DB
 
-	switch d.opts.StorageEngine {
+	switch d.opts.Storage {
 	case StorageEngineInMemory:
 		return errors.New("in memory storage is not implemented yet")
 	case StorageEnginePostgres:
 		db, err = initPostgres(
-			d.opts.StoragePostgresAddress,
+			d.opts.PostgresAddress,
 			d.logger,
 		)
 		if err != nil {
 			return
 		}
 		if d.storage, err = initStorage(
-			d.opts.Environment,
-			newPostgresStorage(d.opts.StoragePostgresTable, db, d.monitor, d.opts.SessionTTL),
+			d.opts.IsTest,
+			newPostgresStorage("session", db, d.monitor, d.opts.SessionTTL),
 			d.logger,
 		); err != nil {
 			return
@@ -226,14 +213,14 @@ func (d *Daemon) initStorage() (err error) {
 }
 
 func (d *Daemon) setPostgresConnectionParameters() error {
-	u, err := url.Parse(d.opts.StoragePostgresAddress)
+	u, err := url.Parse(d.opts.PostgresAddress)
 	if err != nil {
 		return err
 	}
 	v := u.Query()
 	v.Set("timezone", "utc")
 	u.RawQuery = v.Encode()
-	d.opts.StoragePostgresAddress = u.String()
+	d.opts.PostgresAddress = u.String()
 	return nil
 }
 
@@ -243,6 +230,6 @@ func (d *Daemon) initMonitoring() (err error) {
 		return errors.New("getting hostname failed")
 	}
 
-	d.monitor = initPrometheus(d.opts.Namespace, d.opts.Monitoring, prometheus.Labels{"server": hostname})
+	d.monitor = initPrometheus("mnemosyne", d.opts.Monitoring, prometheus.Labels{"server": hostname})
 	return
 }

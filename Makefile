@@ -1,36 +1,11 @@
-PROTOC=/usr/local/bin/protoc
+VERSION=$(shell git describe --tags --always --dirty)
 SERVICE=mnemosyne
+
 PACKAGE=github.com/piotrkowalczuk/mnemosyne
-PACKAGE_TEST=$(PACKAGE)/$(SERVICE)test
-PACKAGE_DAEMON=$(PACKAGE)/$(SERVICE)d
-PACKAGE_RPC=$(PACKAGE)/$(SERVICE)rpc
 PACKAGE_CMD_DAEMON=$(PACKAGE)/cmd/$(SERVICE)d
-BINARY_CMD_DAEMON=cmd/${SERVICE}d/${SERVICE}d
+PACKAGES=$(shell go list ./... | grep -v /vendor/ | grep -v /mnemosynerpc| grep -v /mnemosynetest)
 
-#packaging
-DIST_PACKAGE_BUILD_DIR=temp
-DIST_PACKAGE_DIR=dist
-DIST_PACKAGE_TYPE=deb
-DIST_PREFIX=/usr
-DIST_BINDIR=${DESTDIR}${DIST_PREFIX}/bin
-
-FLAGS=-host=$(MNEMOSYNE_HOST) \
-	-port=$(MNEMOSYNE_PORT) \
-	-ttl=$(MNEMOSYNE_TTL) \
-	-ttc=$(MNEMOSYNE_TTC) \
-	-subsystem=$(MNEMOSYNE_SUBSYSTEM) \
-	-namespace=$(MNEMOSYNE_NAMESPACE) \
-	-log.format=$(MNEMOSYNE_LOGGER_FORMAT) \
-	-log.adapter=$(MNEMOSYNE_LOGGER_ADAPTER) \
-	-log.level=$(MNEMOSYNE_LOGGER_LEVEL) \
-	-monitoring=$(MNEMOSYNE_MONITORING_ENGINE) \
-	-storage.engine=$(MNEMOSYNE_STORAGE_ENGINE) \
-	-storage.postgres.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS) \
-	-storage.postgres.table=$(MNEMOSYNE_STORAGE_POSTGRES_TABLE)
-
-CMD_TEST=go test -race -coverprofile=.tmp/profile.out -covermode=atomic
-
-.PHONY:	all gen build rebuild run test test-short get install
+.PHONY:	all gen build install test cover get
 
 all: get install
 
@@ -41,35 +16,27 @@ gen:
 	@ls -al ./${SERVICE}rpc | grep "pb.go"
 
 build:
-	@go build -o .tmp/${SERVICE}d ${PACKAGE_CMD_DAEMON}
+	@CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -o bin/${SERVICE}d ${PACKAGE_CMD_DAEMON}
 
-rebuild: gen build
-
-run:
-	@.tmp/${SERVICE}d ${FLAGS}
-
-test-short:
-	@${CMD_TEST} -short ${PACKAGE}
-	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
-	@${CMD_TEST} -short ${PACKAGE_DAEMON}
-	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
-	@${CMD_TEST} -short ${PACKAGE_RPC}
-	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
-	@${CMD_TEST} -short ${PACKAGE_TEST}
+install:
+	@go install -ldflags "${LDFLAGS}" ${PACKAGE_CMD_DAEMON}
 
 test:
-	@${CMD_TEST} ${PACKAGE} -storage.postgres.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
-	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
-	@${CMD_TEST} ${PACKAGE_DAEMON} -storage.postgres.address=$(MNEMOSYNE_STORAGE_POSTGRES_ADDRESS)
-	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
-	@${CMD_TEST} ${PACKAGE_RPC}
-	@cat .tmp/profile.out >> .tmp/coverage.txt && rm .tmp/profile.out
-	@${CMD_TEST} ${PACKAGE_TEST}
+	@touch .tmp/coverage.out
+	@echo "mode: atomic" > .tmp/coverage-all.out
+	@$(foreach pkg,$(PACKAGES),\
+		go test -coverprofile=.tmp/coverage.out -covermode=atomic $(pkg) || exit;\
+		tail -n +2 .tmp/coverage.out >> .tmp/coverage-all.out \
+	;)
+	@go tool cover -func=.tmp/coverage-all.out | tail -n 1
+
+cover: test
+	@go tool cover -html=.tmp/coverage-all.out
 
 get:
 	@go get github.com/Masterminds/glide
-	@go get github.com/smartystreets/goconvey/...
 	@glide --no-color install
 
-install:
-	@go install ${PACKAGE_CMD_DAEMON}
+publish:
+	@docker build -t piotrkowalczuk/${SERVICE}:${VERSION} .
+	@docker push piotrkowalczuk/${SERVICE}:${VERSION}

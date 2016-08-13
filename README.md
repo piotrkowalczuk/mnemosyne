@@ -108,7 +108,6 @@ $ go install ./cmd/mnemosyned
 | monitoring | `-monitoring ` | false | boolean |
 | storage engine | `-storage.engine` | postgres | enum(postgres) |
 | storage postgres address | `-storage.postgres.address` | postgres://postgres:postgres@postgres/postgres?sslmode=disable | string |
-| storage postgres table name |`-storage.postgres.table` | session |string|
 | tls | `-tls` | false | boolean |
 | tls certificate file | `-tls.certfile` | | string |
 | tls key file |`-tls.keyfile` | | string |

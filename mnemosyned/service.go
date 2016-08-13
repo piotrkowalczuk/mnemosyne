@@ -111,8 +111,8 @@ func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
 	return postgres, nil
 }
 
-func initStorage(env string, s storage, l log.Logger) (storage, error) {
-	if env == EnvironmentTest {
+func initStorage(isTest bool, s storage, l log.Logger) (storage, error) {
+	if isTest {
 		if err := s.TearDown(); err != nil {
 			return nil, err
 		}
@@ -122,22 +122,4 @@ func initStorage(env string, s storage, l log.Logger) (storage, error) {
 	}
 
 	return s, nil
-	//	switch e := err.(type) {
-	//	case *pq.Error:
-	//		sklog.Fatal(l, fmt.Errorf("storage setup failure: %s", e.Error()),
-	//			"code", e.Code,
-	//			"constraint", e.Constraint,
-	//			"internal_query", e.InternalQuery,
-	//			"column", e.Column,
-	//			"detail", e.Detail,
-	//			"hint", e.Hint,
-	//			"line", e.Line,
-	//			"schema", e.Schema,
-	//		)
-	//	default:
-	//		sklog.Fatal(l, fmt.Errorf("storage setup failure: %s", e.Error()))
-	//	}
-	//}
-	//
-	//return s
 }

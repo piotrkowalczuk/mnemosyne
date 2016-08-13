@@ -19,25 +19,22 @@ func init() {
 func main() {
 	config.parse()
 
-	logger := initLogger(config.logger.adapter, config.logger.format, config.logger.level, sklog.KeySubsystem, config.subsystem)
+	logger := initLogger(config.logger.adapter, config.logger.format, config.logger.level)
 	rpcListener := initListener(logger, config.host, config.port)
 	debugListener := initListener(logger, config.host, config.port+1)
 
 	daemon, err := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
-		Namespace:              config.namespace,
-		Subsystem:              config.subsystem,
-		SessionTTL:             config.session.ttl,
-		SessionTTC:             config.session.ttc,
-		TLS:                    config.tls.enabled,
-		TLSCertFile:            config.tls.certFile,
-		TLSKeyFile:             config.tls.keyFile,
-		Monitoring:             config.monitoring.enabled,
-		StorageEngine:          config.storage.engine,
-		StoragePostgresAddress: config.storage.postgres.address,
-		StoragePostgresTable:   config.storage.postgres.table,
-		Logger:                 logger,
-		RPCListener:            rpcListener,
-		DebugListener:          debugListener,
+		SessionTTL:      config.session.ttl,
+		SessionTTC:      config.session.ttc,
+		Storage:         config.storage,
+		Monitoring:      config.monitoring.enabled,
+		PostgresAddress: config.postgres.address,
+		TLS:             config.tls.enabled,
+		TLSCertFile:     config.tls.certFile,
+		TLSKeyFile:      config.tls.keyFile,
+		RPCListener:     rpcListener,
+		Logger:          logger,
+		DebugListener:   debugListener,
 	})
 	if err != nil {
 		sklog.Fatal(logger, err)

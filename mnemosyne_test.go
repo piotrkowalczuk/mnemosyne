@@ -33,13 +33,13 @@ func TestMnemosyne_Start(t *testing.T) {
 	}
 
 	if res.AccessToken == "" {
-		t.Errorf("access token cannot be nil")
+		t.Error("access token cannot be nil")
 	}
 	if len(res.AccessToken) == 0 {
-		t.Errorf("access token should not be empty")
+		t.Error("access token should not be empty")
 	}
 	if res.ExpireAt.Seconds == 0 || res.ExpireAt.Nanos == 0 {
-		t.Errorf("expire at should not be zero value")
+		t.Error("expire at should not be zero value")
 	}
 	if res.SubjectId != subjectID {
 		t.Errorf("wrong subject id, expected %s but got %s", res.SubjectId, subjectID)

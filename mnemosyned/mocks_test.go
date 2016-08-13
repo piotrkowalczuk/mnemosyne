@@ -1,19 +1,18 @@
-package mnemosynetest
+package mnemosyned
 
 import (
-	"testing"
 	"time"
 
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/stretchr/testify/mock"
 )
 
-type randomBytesGenerator struct {
+type mockRandomBytesGenerator struct {
 	mock.Mock
 }
 
 // generateRandomBytes provides a mock function with given fields: _a0
-func (_m *randomBytesGenerator) generateRandomBytes(_a0 int) ([]byte, error) {
+func (_m *mockRandomBytesGenerator) generateRandomBytes(_a0 int) ([]byte, error) {
 	ret := _m.Called(_a0)
 
 	var r0 []byte
@@ -35,12 +34,12 @@ func (_m *randomBytesGenerator) generateRandomBytes(_a0 int) ([]byte, error) {
 	return r0, r1
 }
 
-type Storage struct {
+type mockStorage struct {
 	mock.Mock
 }
 
 // Setup provides a mock function with given fields:
-func (_m *Storage) Setup() error {
+func (_m *mockStorage) Setup() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -54,7 +53,7 @@ func (_m *Storage) Setup() error {
 }
 
 // TearDown provides a mock function with given fields:
-func (_m *Storage) TearDown() error {
+func (_m *mockStorage) TearDown() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -68,7 +67,7 @@ func (_m *Storage) TearDown() error {
 }
 
 // Start provides a mock function with given fields: _a0, _a1, _a2
-func (_m *Storage) Start(_a0 string, _a1 string, _a2 map[string]string) (*mnemosynerpc.Session, error) {
+func (_m *mockStorage) Start(_a0 string, _a1 string, _a2 map[string]string) (*mnemosynerpc.Session, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 *mnemosynerpc.Session
@@ -91,7 +90,7 @@ func (_m *Storage) Start(_a0 string, _a1 string, _a2 map[string]string) (*mnemos
 }
 
 // Abandon provides a mock function with given fields: _a0
-func (_m *Storage) Abandon(_a0 string) (bool, error) {
+func (_m *mockStorage) Abandon(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
@@ -112,7 +111,7 @@ func (_m *Storage) Abandon(_a0 string) (bool, error) {
 }
 
 // Get provides a mock function with given fields: _a0
-func (_m *Storage) Get(_a0 string) (*mnemosynerpc.Session, error) {
+func (_m *mockStorage) Get(_a0 string) (*mnemosynerpc.Session, error) {
 	ret := _m.Called(_a0)
 
 	var r0 *mnemosynerpc.Session
@@ -135,7 +134,7 @@ func (_m *Storage) Get(_a0 string) (*mnemosynerpc.Session, error) {
 }
 
 // List provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *Storage) List(_a0 int64, _a1 int64, _a2 *time.Time, _a3 *time.Time) ([]*mnemosynerpc.Session, error) {
+func (_m *mockStorage) List(_a0 int64, _a1 int64, _a2 *time.Time, _a3 *time.Time) ([]*mnemosynerpc.Session, error) {
 	ret := _m.Called(_a0, _a1, _a2, _a3)
 
 	var r0 []*mnemosynerpc.Session
@@ -158,7 +157,7 @@ func (_m *Storage) List(_a0 int64, _a1 int64, _a2 *time.Time, _a3 *time.Time) ([
 }
 
 // Exists provides a mock function with given fields: _a0
-func (_m *Storage) Exists(_a0 string) (bool, error) {
+func (_m *mockStorage) Exists(_a0 string) (bool, error) {
 	ret := _m.Called(_a0)
 
 	var r0 bool
@@ -179,7 +178,7 @@ func (_m *Storage) Exists(_a0 string) (bool, error) {
 }
 
 // Delete provides a mock function with given fields: _a0, _a1, _a2
-func (_m *Storage) Delete(_a0 string, _a1 *time.Time, _a2 *time.Time) (int64, error) {
+func (_m *mockStorage) Delete(_a0 string, _a1 *time.Time, _a2 *time.Time) (int64, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 int64
@@ -200,7 +199,7 @@ func (_m *Storage) Delete(_a0 string, _a1 *time.Time, _a2 *time.Time) (int64, er
 }
 
 // SetValue provides a mock function with given fields: _a0, _a1, _a2
-func (_m *Storage) SetValue(_a0 string, _a1 string, _a2 string) (map[string]string, error) {
+func (_m *mockStorage) SetValue(_a0 string, _a1 string, _a2 string) (map[string]string, error) {
 	ret := _m.Called(_a0, _a1, _a2)
 
 	var r0 map[string]string
@@ -220,18 +219,4 @@ func (_m *Storage) SetValue(_a0 string, _a1 string, _a2 string) (map[string]stri
 	}
 
 	return r0, r1
-}
-
-type suite struct {
-	mock.Mock
-}
-
-// setup provides a mock function with given fields: _a0
-func (_m *suite) setup(_a0 testing.T) {
-	_m.Called(_a0)
-}
-
-// teardown provides a mock function with given fields: _a0
-func (_m *suite) teardown(_a0 testing.T) {
-	_m.Called(_a0)
 }

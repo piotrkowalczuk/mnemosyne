@@ -31,15 +31,15 @@ func TestDaemon_Run(t *testing.T) {
 		t.Fatal(err)
 	}
 	d, err := NewDaemon(&DaemonOpts{
-		Environment:   EnvironmentTest,
+		IsTest:        true,
 		SessionTTL:    ttl,
 		SessionTTC:    ttc,
 		RPCListener:   rl,
 		DebugListener: dl,
 		// Use this logger to debug issues
 		//Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
-		Logger:                 sklog.NewTestLogger(t),
-		StoragePostgresAddress: testPostgresAddress,
+		Logger:          sklog.NewTestLogger(t),
+		PostgresAddress: testPostgresAddress,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -94,7 +94,7 @@ func TestTestDaemon(t *testing.T) {
 		StoragePostgresAddress: testPostgresAddress,
 	})
 	if addr.String() == "" {
-		t.Errorf("address should not be empty")
+		t.Error("address should not be empty")
 	}
 	if err := closer.Close(); err != nil {
 		t.Errorf("unexpected error: %s", err.Error())

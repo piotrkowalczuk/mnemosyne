@@ -4,6 +4,9 @@ import (
 	"reflect"
 	"testing"
 
+	"crypto/x509"
+	"time"
+
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"golang.org/x/net/context"
@@ -63,6 +66,43 @@ func TestMnemosyne(t *testing.T) {
 	}
 	if !reflect.DeepEqual(ses.Bag, bag) {
 		t.Errorf("wrong bag, expected:\n%s\nbut got:\n %s", ses.Bag, bag)
+	}
+
+	exists, err := m.Exists(ctx, ses.AccessToken)
+	if err != nil {
+		t.Fatalf("unexpected error %s", err.Error())
+	}
+	if !exists {
+		t.Error("session should exists")
+	}
+
+	expectedBag := map[string]string{
+		"key":      "value",
+		"username": "johnsnow@gmail.com",
+	}
+	gotBag, err := m.SetValue(ctx, ses.AccessToken, "key", "value")
+	if err != nil {
+		t.Fatalf("unexpected error %s", err.Error())
+	}
+	if !reflect.DeepEqual(expectedBag, gotBag) {
+		t.Errorf("wrong bag, expected:\n%s\nbut got:\n %s", expectedBag, gotBag)
+	}
+
+	if err = m.Abandon(ctx, ses.AccessToken); err != nil {
+		t.Fatalf("unexpected error %s", err.Error())
+	}
+}
+
+func TestNew_dialTimeout(t *testing.T) {
+	_, err := New(MnemosyneOpts{
+		Addresses:   []string{"127.0.0.1:8080"},
+		Certificate: &x509.CertPool{},
+		Block:       true,
+		Timeout:     5 * time.Second,
+		UserAgent:   "mnemosyne-test",
+	})
+	if err == nil {
+		t.Fatal("error expected, got nil")
 	}
 }
 

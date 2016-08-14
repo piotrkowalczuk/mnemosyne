@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-set -e
 rm coverage.txt
+set -e
 echo "mode: atomic" > coverage.txt
 
 for d in $(go list ./... | grep -v /vendor/ | grep -v /mnemosynerpc| grep -v /mnemosynetest); do

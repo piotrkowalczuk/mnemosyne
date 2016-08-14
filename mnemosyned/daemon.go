@@ -50,6 +50,7 @@ type Daemon struct {
 	opts          *DaemonOpts
 	monitor       *monitoring
 	rpcOptions    []grpc.ServerOption
+	postgres      *sql.DB
 	storage       storage
 	logger        log.Logger
 	rpcListener   net.Listener
@@ -157,6 +158,9 @@ func (d *Daemon) Run() (err error) {
 			mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 			mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 			mux.Handle("/metrics", prometheus.Handler())
+			mux.Handle("/health", &healthHandler{
+				postgres: d.postgres,
+			})
 			sklog.Error(d.logger, http.Serve(d.debugListener, mux))
 		}()
 	}
@@ -184,13 +188,11 @@ func (d *Daemon) Addr() net.Addr {
 }
 
 func (d *Daemon) initStorage() (err error) {
-	var db *sql.DB
-
 	switch d.opts.Storage {
 	case StorageEngineInMemory:
 		return errors.New("in memory storage is not implemented yet")
 	case StorageEnginePostgres:
-		db, err = initPostgres(
+		d.postgres, err = initPostgres(
 			d.opts.PostgresAddress,
 			d.logger,
 		)
@@ -199,7 +201,7 @@ func (d *Daemon) initStorage() (err error) {
 		}
 		if d.storage, err = initStorage(
 			d.opts.IsTest,
-			newPostgresStorage("session", db, d.monitor, d.opts.SessionTTL),
+			newPostgresStorage("session", d.postgres, d.monitor, d.opts.SessionTTL),
 			d.logger,
 		); err != nil {
 			return

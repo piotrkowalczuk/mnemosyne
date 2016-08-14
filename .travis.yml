@@ -21,9 +21,7 @@ script:
 - make build
 - make test
 after_success:
-- bash <(curl -s https://codecov.io/bash)
-- docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-- if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then make publish; fi
+- scripts/after_success.sh
 notifications:
   slack:
     secure: rESrYeV8CmkavyOq7K5i3LySax3BMK+ZGlUVpq7+ikBCO+kYJWty0CmyAPn2b9zG2PLy1wjWt1oEiDeBaDfR2RZU7rlYv1OcVkPARzN3JgR5+6LlC62SeokvopKWOORVxOwsnTZUyc3MRUU2AxG6BWwm5lPDkvngvthw/g7FNQ3hje4em+ovVTcGpEdF5p2kYT1zYDliJuOUTHkd9MaqjJVuyQbwzWxpvVNUy+xydS7q+sKtUcxSqus9ljySKFXAzUkK7Hlq2kKImpoXvt2v8T4zbYrZHKFnDHZL+6c6g8bkszrlsCkCvJzKK5m4iA8R2s6WsEZQkHBrLXaKHFmBzS9Iua0eLt5zwgzmJ6PqaEZmafo2uXpOWhCu1tpwjvOesdkBx4XJ3yI+kVzA40SlFxKwzV18NRT0yHWkBiOF8FNq1DHmXmpzG1+KcIVv1SvD5z8mpqKKUWV3+d40R1iicNJDqNYFxwJdVGkFhuVHuxSM3JagleysEKNMU591d0WXUuGqLdXH280ephlL92epeE5b5Wk6rLomSxaJIrTiQXSwbvWuAChtk/Uch7Oe04uYA5nDkrYcbHO/CW958xMonA9Buv6tSVcGX0j61m7LRUFOO2p877RBhADgCgb/uv9XgjOhjlsCUEVsdnVg1GaMyV+l3LM3g6sGH2MGyIivCGM=

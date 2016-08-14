@@ -7,7 +7,6 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"

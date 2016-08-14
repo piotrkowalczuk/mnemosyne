@@ -4,8 +4,6 @@ import:
   version: ~0.1.0
   subpackages:
   - log
-  - metrics
-  - metrics/prometheus
 - package: github.com/golang/protobuf
   version: 0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0
   subpackages:

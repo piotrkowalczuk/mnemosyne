@@ -73,12 +73,12 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 	)
 
 	if enabled {
-		prometheus.MustRegister(generalErrors)
-		prometheus.MustRegister(rpcRequests)
-		prometheus.MustRegister(rpcDuration)
-		prometheus.MustRegister(rpcErrors)
-		prometheus.MustRegister(postgresQueries)
-		prometheus.MustRegister(postgresErrors)
+		prometheus.MustRegisterOrGet(generalErrors)
+		prometheus.MustRegisterOrGet(rpcRequests)
+		prometheus.MustRegisterOrGet(rpcDuration)
+		prometheus.MustRegisterOrGet(rpcErrors)
+		prometheus.MustRegisterOrGet(postgresQueries)
+		prometheus.MustRegisterOrGet(postgresErrors)
 	}
 
 	return &monitoring{

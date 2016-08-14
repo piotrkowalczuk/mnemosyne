@@ -5,7 +5,7 @@ vendor
 bin
 *.iml
 run.sh
-test.sh
+coverage.txt
 *.sublime-project
 *.sublime-workspace
 .vscode

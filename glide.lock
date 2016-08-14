@@ -1,5 +1,5 @@
 hash: 5a141d2536b8c4dd6f3e5cc8f898253243c014543f959af049dcbfbbaea7c7b4
-updated: 2016-08-13T17:32:44.188689042+02:00
+updated: 2016-08-14T00:29:55.637530353+02:00
 imports:
 - name: bitbucket.org/ww/goautoneg
   version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
@@ -67,7 +67,7 @@ imports:
   - assert
   - require
 - name: golang.org/x/crypto
-  version: 6c932297e16070bd20e9384ea78e8afabaa3fae2
+  version: a548aac93ed489257b9d959b40fe1e8c1e20778c
   subpackages:
   - sha3
 - name: golang.org/x/net
@@ -105,6 +105,10 @@ imports:
   - naming
   - transport
 testImports:
+- name: github.com/coreos/etcd
+  version: d788eb8d92fed3cc81c050ab8cb4f506dedf0431
+  subpackages:
+  - Godeps/_workspace/src/google.golang.org/grpc/metadata
 - name: github.com/gopherjs/gopherjs
   version: 72e303cb5f235b23471872477b57e573dc1c71d0
   subpackages:
@@ -113,6 +117,9 @@ testImports:
   version: 8ddce2a84170772b95dd5d576c48d517b22cac63
 - name: github.com/smartystreets/assertions
   version: 2063fd1cc7c975db70502811a34b06ad034ccdf2
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
 - name: github.com/smartystreets/goconvey
   version: d4c757aa9afd1e2fc1832aaab209b5794eb336e1
   subpackages:

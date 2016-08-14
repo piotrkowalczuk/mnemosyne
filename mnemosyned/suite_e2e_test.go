@@ -34,6 +34,7 @@ func (es *e2eSuite) setup(t *testing.T) {
 		Storage:         StorageEnginePostgres,
 		Logger:          logger,
 		PostgresAddress: testPostgresAddress,
+		Monitoring:      true,
 	})
 	if err != nil {
 		t.Fatalf("unexpected deamon instantiation error: %s", err.Error())

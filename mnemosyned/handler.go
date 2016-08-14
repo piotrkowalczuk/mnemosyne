@@ -33,11 +33,11 @@ func newHandlerFunc(endpoint string) handlerFunc {
 func (h *handler) context(ctx context.Context) (*mnemosynerpc.Session, error) {
 	md, ok := metadata.FromContext(ctx)
 	if !ok {
-		return nil, grpc.Errorf(codes.InvalidArgument, "missing metadata in context, session token cannot be retrieved")
+		return nil, grpc.Errorf(codes.InvalidArgument, "missing metadata in context, access token cannot be retrieved")
 	}
 
 	if len(md[mnemosynerpc.AccessTokenMetadataKey]) == 0 {
-		return nil, grpc.Errorf(codes.InvalidArgument, "missing sesion token in metadata")
+		return nil, grpc.Errorf(codes.InvalidArgument, "missing access token in metadata")
 	}
 
 	token := md[mnemosynerpc.AccessTokenMetadataKey][0]

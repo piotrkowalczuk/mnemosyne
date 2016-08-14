@@ -21,7 +21,7 @@ install:
 	@go install -ldflags "${LDFLAGS}" ${PACKAGE_CMD_DAEMON}
 
 test:
-	@./test.sh
+	@scripts/test.sh
 	@go tool cover -func=coverage.txt | tail -n 1
 
 cover: test

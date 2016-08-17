@@ -32,5 +32,8 @@ get:
 	@glide --no-color install
 
 publish:
-	@docker build -t piotrkowalczuk/${SERVICE}:${VERSION} .
+	@docker build \
+		--build-arg VCS_REF=${VCS_REF} \
+		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
+		-t piotrkowalczuk/${SERVICE}:${VERSION} .
 	@docker push piotrkowalczuk/${SERVICE}:${VERSION}

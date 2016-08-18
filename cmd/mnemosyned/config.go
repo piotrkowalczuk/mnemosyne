@@ -52,7 +52,7 @@ func (c *configuration) init() {
 	flag.IntVar(&c.logger.level, "log.level", 6, "logger level")
 	flag.BoolVar(&c.monitoring.enabled, "monitoring", false, "toggle application monitoring")
 	flag.StringVar(&c.storage, "storage", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
-	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://postgres:postgres@postgres/postgres?sslmode=disable", "storage postgres connection string")
+	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://localhost?sslmode=disable", "storage postgres connection string")
 	flag.BoolVar(&c.tls.enabled, "tls", false, "tls enable flag")
 	flag.StringVar(&c.tls.certFile, "tls.cert", "", "path to tls cert file")
 	flag.StringVar(&c.tls.keyFile, "tls.key", "", "path to tls key file")

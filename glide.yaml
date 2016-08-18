@@ -14,11 +14,11 @@ import:
 - package: github.com/lib/pq
 - package: github.com/piotrkowalczuk/sklog
 - package: github.com/prometheus/client_golang
-  version: ~0.7.0
+  version: ~0.8.0
   subpackages:
   - prometheus
 - package: github.com/stretchr/testify
-  version: ~1.1.3
+  version: ~1.1.0
   subpackages:
   - mock
 - package: golang.org/x/crypto

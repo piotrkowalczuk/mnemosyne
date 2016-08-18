@@ -1,5 +1,5 @@
-hash: c43ca5d907334b738806bb24edc6c2494f9bb5edc7dbd29d3ba44434a9bcff4e
-updated: 2016-08-18T12:39:19.744173296+02:00
+hash: 286ab6ebb1664f6195565a6f42801a9262581fbc9da8870c63ea9a6a84b13b5b
+updated: 2016-08-18T12:44:48.331706336+02:00
 imports:
 - name: github.com/beorn7/perks
   version: b965b613227fddccbfffe13eae360ed3fa822f8d
@@ -10,7 +10,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/go-kit/kit
-  version: 12508679d6601843bacae19be6a8f0e84c8b19ed
+  version: 6fb874ce59bb45b2f60ee3d289829db02142ecc6
   subpackages:
   - log
 - name: github.com/go-logfmt/logfmt

@@ -9,7 +9,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 )
 
 type handlerFunc func(logger log.Logger, storage storage, monitor monitoringRPC) *handler
@@ -30,30 +29,6 @@ func newHandlerFunc(endpoint string) handlerFunc {
 	}
 }
 
-func (h *handler) context(ctx context.Context) (*mnemosynerpc.Session, error) {
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		return nil, grpc.Errorf(codes.InvalidArgument, "missing metadata in context, access token cannot be retrieved")
-	}
-
-	if len(md[mnemosynerpc.AccessTokenMetadataKey]) == 0 {
-		return nil, grpc.Errorf(codes.InvalidArgument, "missing access token in metadata")
-	}
-
-	token := md[mnemosynerpc.AccessTokenMetadataKey][0]
-
-	h.logger = log.NewContext(h.logger).With("access_token", token)
-
-	ses, err := h.storage.Get(token)
-	if err != nil {
-		if err == errSessionNotFound {
-			return nil, grpc.Errorf(codes.NotFound, "session (context) does not exists")
-		}
-		return nil, err
-	}
-	return ses, nil
-}
-
 func (h *handler) get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemosynerpc.Session, error) {
 	if req.AccessToken == "" {
 		return nil, errMissingAccessToken
@@ -64,7 +39,7 @@ func (h *handler) get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemo
 	ses, err := h.storage.Get(req.AccessToken)
 	if err != nil {
 		if err == errSessionNotFound {
-			return nil, grpc.Errorf(codes.NotFound, "session (get) does not exists")
+			return nil, grpc.Errorf(codes.NotFound, "session does not exists")
 		}
 		return nil, err
 	}
@@ -100,13 +75,13 @@ func (h *handler) list(ctx context.Context, req *mnemosynerpc.ListRequest) ([]*m
 }
 
 func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*mnemosynerpc.Session, error) {
-	if req.SubjectId == "" {
+	if req.Session.SubjectId == "" {
 		return nil, errMissingSubjectID
 	}
 
-	h.logger = log.NewContext(h.logger).With("subject_id", req.SubjectId)
+	h.logger = log.NewContext(h.logger).With("subject_id", req.Session.SubjectId)
 
-	ses, err := h.storage.Start(req.SubjectId, req.SubjectClient, req.Bag)
+	ses, err := h.storage.Start(req.Session.AccessToken, req.Session.SubjectId, req.Session.SubjectClient, req.Session.Bag)
 	if err != nil {
 		return nil, err
 	}

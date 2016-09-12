@@ -1,14 +1,13 @@
-package mnemosyne
+package mnemosyne_test
 
 import (
+	"crypto/x509"
 	"reflect"
 	"testing"
-
-	"crypto/x509"
 	"time"
 
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 )
@@ -24,7 +23,7 @@ func TestMnemosyne(t *testing.T) {
 	})
 	defer closer.Close()
 
-	m, err := New(MnemosyneOpts{
+	m, err := mnemosyne.New(mnemosyne.MnemosyneOpts{
 		Addresses: []string{addr.String()},
 	})
 	defer m.Close()
@@ -42,7 +41,7 @@ func TestMnemosyne(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 
-	meta := metadata.Pairs(mnemosynerpc.AccessTokenMetadataKey, ses.AccessToken)
+	meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, ses.AccessToken)
 	ctx = metadata.NewContext(context.Background(), meta)
 	ses, err = m.FromContext(ctx)
 	if err != nil {
@@ -94,7 +93,7 @@ func TestMnemosyne(t *testing.T) {
 }
 
 func TestNew_dialTimeout(t *testing.T) {
-	_, err := New(MnemosyneOpts{
+	_, err := mnemosyne.New(mnemosyne.MnemosyneOpts{
 		Addresses:   []string{"127.0.0.1:8080"},
 		Certificate: &x509.CertPool{},
 		Block:       true,
@@ -107,7 +106,7 @@ func TestNew_dialTimeout(t *testing.T) {
 }
 
 func TestNew_missingAddresses(t *testing.T) {
-	_, err := New(MnemosyneOpts{})
+	_, err := mnemosyne.New(mnemosyne.MnemosyneOpts{})
 	if err == nil {
 		t.Fatal("error expected, got nil")
 	}

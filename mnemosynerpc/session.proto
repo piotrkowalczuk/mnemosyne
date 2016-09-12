@@ -53,10 +53,9 @@ message ExistsResponse {
 }
 
 message StartRequest {
-    string subject_id = 1;
-    string subject_client = 2;
-    map<string, string> bag = 3;
+    Session session = 1;
 }
+
 message StartResponse {
     Session session = 1;
 }

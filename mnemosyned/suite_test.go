@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
@@ -95,7 +96,7 @@ func ShouldBeValidSession(expected ...interface{}) (s string) {
 	if s = convey.ShouldNotBeNil(sr); s != "" {
 		return
 	}
-	if s = convey.ShouldHaveLength(string(sr.AccessToken), 138); s != "" {
+	if s = convey.ShouldHaveLength(string(sr.AccessToken), 128); s != "" {
 		return
 	}
 	return
@@ -139,4 +140,12 @@ func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) 
 		return
 	}
 	return
+}
+
+func randomAccessToken(t *testing.T) string {
+	at, err := mnemosyne.RandomAccessToken()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	return at
 }

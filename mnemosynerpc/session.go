@@ -8,12 +8,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-const (
-	accessTokenContextKey = "mnemosyne_access_token"
-	// AccessTokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
-	AccessTokenMetadataKey = "authorization"
-)
-
 // Token implements oauth2.TokenSource interface.
 func (s *Session) Token() (*oauth2.Token, error) {
 	var (

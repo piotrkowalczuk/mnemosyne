@@ -106,9 +106,11 @@ func (m *mnemosyne) Exists(ctx context.Context, token string) (bool, error) {
 // Create implements Mnemosyne interface.
 func (m *mnemosyne) Start(ctx context.Context, subjectID, subjectClient string, data map[string]string) (*mnemosynerpc.Session, error) {
 	res, err := m.client.Start(ctx, &mnemosynerpc.StartRequest{
-		SubjectId:     subjectID,
-		SubjectClient: subjectClient,
-		Bag:           data,
+		Session: &mnemosynerpc.Session{
+			SubjectId:     subjectID,
+			SubjectClient: subjectClient,
+			Bag:           data,
+		},
 	})
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package mnemosyne
+package mnemosyne_test
 
 import (
 	"flag"

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/sklog"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
@@ -36,7 +37,17 @@ func (is *integrationSuite) setup(t *testing.T) {
 	is.store = &mockStorage{}
 	is.listener = listenTCP(t)
 	is.server = grpc.NewServer()
-	is.serviceServer = newSessionManager(logger, is.store, monitor, DefaultTTC)
+	is.serviceServer, err = newSessionManager(sessionManagerOpts{
+		addr:       is.listener.Addr().String(),
+		logger:     logger,
+		storage:    is.store,
+		monitoring: monitor,
+		cluster:    is.initCluster(t),
+		ttc:        DefaultTTC,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
 
 	mnemosynerpc.RegisterSessionManagerServer(is.server, is.serviceServer)
 
@@ -60,4 +71,12 @@ func (is *integrationSuite) teardown(t *testing.T) {
 	if err := is.listener.Close(); err != nil {
 		t.Errorf("integration suite unexpected error on listener close: %s", err.Error())
 	}
+}
+
+func (is *integrationSuite) initCluster(t *testing.T) *cluster.Cluster {
+	csr, err := cluster.New(is.listener.Addr().String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return csr
 }

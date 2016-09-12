@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,19 +25,23 @@ import (
 // DaemonOpts it is constructor argument that can be passed to
 // the NewDaemon constructor function.
 type DaemonOpts struct {
-	IsTest          bool
-	SessionTTL      time.Duration
-	SessionTTC      time.Duration
-	Monitoring      bool
-	TLS             bool
-	TLSCertFile     string
-	TLSKeyFile      string
-	Storage         string
-	PostgresAddress string
-	Logger          log.Logger
-	RPCOptions      []grpc.ServerOption
-	RPCListener     net.Listener
-	DebugListener   net.Listener
+	IsTest            bool
+	SessionTTL        time.Duration
+	SessionTTC        time.Duration
+	Monitoring        bool
+	TLS               bool
+	TLSCertFile       string
+	TLSKeyFile        string
+	Storage           string
+	PostgresAddress   string
+	PostgresTable     string
+	PostgresSchema    string
+	Logger            log.Logger
+	RPCOptions        []grpc.ServerOption
+	RPCListener       net.Listener
+	DebugListener     net.Listener
+	ClusterListenAddr string
+	ClusterSeeds      []string
 }
 
 // TestDaemonOpts set of options that are used with TestDaemon instance.
@@ -49,7 +54,8 @@ type Daemon struct {
 	done          chan struct{}
 	opts          *DaemonOpts
 	monitor       *monitoring
-	rpcOptions    []grpc.ServerOption
+	serverOptions []grpc.ServerOption
+	clientOptions []grpc.DialOption
 	postgres      *sql.DB
 	storage       storage
 	logger        log.Logger
@@ -63,7 +69,7 @@ func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 		done:          make(chan struct{}, 0),
 		opts:          opts,
 		logger:        opts.Logger,
-		rpcOptions:    opts.RPCOptions,
+		serverOptions: opts.RPCOptions,
 		rpcListener:   opts.RPCListener,
 		debugListener: opts.DebugListener,
 	}
@@ -80,6 +86,12 @@ func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 	if d.opts.Storage == "" {
 		d.opts.Storage = StorageEnginePostgres
 	}
+	if d.opts.PostgresTable == "" {
+		d.opts.PostgresTable = "session"
+	}
+	if d.opts.PostgresSchema == "" {
+		d.opts.PostgresSchema = "mnemosyne"
+	}
 
 	return d, nil
 }
@@ -95,11 +107,14 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
 
 	d, err := NewDaemon(&DaemonOpts{
-		IsTest:          true,
-		Monitoring:      false,
-		Logger:          logger,
-		PostgresAddress: opts.StoragePostgresAddress,
-		RPCListener:     l,
+		IsTest:            true,
+		Monitoring:        false,
+		ClusterListenAddr: l.Addr().String(),
+		Logger:            logger,
+		PostgresAddress:   opts.StoragePostgresAddress,
+		PostgresTable:     "session",
+		PostgresSchema:    "mnemosyne",
+		RPCListener:       l,
 	})
 	if err != nil {
 		t.Fatalf("mnemosyne daemon cannot be instantiated: %s", err.Error())
@@ -113,10 +128,16 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 
 // Run starts daemon and all services within.
 func (d *Daemon) Run() (err error) {
+	var (
+		cluster *cluster.Cluster
+	)
+	if cluster, err = initCluster(d.logger, d.opts.ClusterListenAddr, d.opts.ClusterSeeds...); err != nil {
+		return
+	}
 	if err = d.initMonitoring(); err != nil {
 		return
 	}
-	if err = d.initStorage(); err != nil {
+	if err = d.initStorage(d.logger, d.opts.PostgresTable, d.opts.PostgresSchema); err != nil {
 		return
 	}
 
@@ -125,13 +146,30 @@ func (d *Daemon) Run() (err error) {
 		if err != nil {
 			return err
 		}
-		d.rpcOptions = append(d.rpcOptions, grpc.Creds(creds))
+		d.serverOptions = append(d.serverOptions, grpc.Creds(creds))
+		d.clientOptions = append(d.clientOptions, grpc.WithTransportCredentials(creds))
+	} else {
+		d.clientOptions = append(d.clientOptions, grpc.WithInsecure())
 	}
 
 	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
-	gRPCServer := grpc.NewServer(append(d.rpcOptions, grpc.UnaryInterceptor(initUnaryServerInterceptor(d.monitor.rpc)))...)
-	mnemosyneServer := newSessionManager(d.logger, d.storage, d.monitor, d.opts.SessionTTC)
+	gRPCServer := grpc.NewServer(append(d.serverOptions, grpc.UnaryInterceptor(initUnaryServerInterceptor(d.monitor.rpc)))...)
+	mnemosyneServer, err := newSessionManager(sessionManagerOpts{
+		addr:       d.opts.ClusterListenAddr,
+		cluster:    cluster,
+		logger:     d.logger,
+		storage:    d.storage,
+		monitoring: d.monitor,
+		ttc:        d.opts.SessionTTC,
+	})
+	if err != nil {
+		return err
+	}
 	mnemosynerpc.RegisterSessionManagerServer(gRPCServer, mnemosyneServer)
+
+	if err = cluster.Connect(d.clientOptions...); err != nil {
+		return err
+	}
 
 	go func() {
 		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String())
@@ -157,7 +195,9 @@ func (d *Daemon) Run() (err error) {
 			mux.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
 			mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 			mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
-			mux.Handle("/metrics", prometheus.Handler())
+			if d.opts.Monitoring {
+				mux.Handle("/metrics", prometheus.Handler())
+			}
 			mux.Handle("/health", &healthHandler{
 				postgres: d.postgres,
 			})
@@ -187,7 +227,7 @@ func (d *Daemon) Addr() net.Addr {
 	return d.rpcListener.Addr()
 }
 
-func (d *Daemon) initStorage() (err error) {
+func (d *Daemon) initStorage(l log.Logger, table, schema string) (err error) {
 	switch d.opts.Storage {
 	case StorageEngineInMemory:
 		return errors.New("in memory storage is not implemented yet")
@@ -201,11 +241,13 @@ func (d *Daemon) initStorage() (err error) {
 		}
 		if d.storage, err = initStorage(
 			d.opts.IsTest,
-			newPostgresStorage("session", d.postgres, d.monitor, d.opts.SessionTTL),
+			newPostgresStorage(table, schema, d.postgres, d.monitor, d.opts.SessionTTL),
 			d.logger,
 		); err != nil {
 			return
 		}
+
+		sklog.Info(l, "postgres storage initialized", "schema", schema, "table", table)
 		return
 	case StorageEngineRedis:
 		return errors.New("redis storage is not implemented yet")

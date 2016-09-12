@@ -43,7 +43,7 @@ func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration)
 	}
 }
 
-// Create implements Storage interface.
+// Start implements storage interface.
 func (ps *postgresStorage) Start(sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
 	at, err := mnemosynerpc.RandomAccessToken(tmpKey)
 	if err != nil {
@@ -82,7 +82,7 @@ func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
 	return
 }
 
-// Get implements Storage interface.
+// Get implements storage interface.
 func (ps *postgresStorage) Get(accessToken string) (*mnemosynerpc.Session, error) {
 	var entity sessionEntity
 	labels := prometheus.Labels{"query": "get"}
@@ -115,7 +115,7 @@ func (ps *postgresStorage) Get(accessToken string) (*mnemosynerpc.Session, error
 	}, nil
 }
 
-// List implements Storage interface.
+// List implements storage interface.
 func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
 	if limit == 0 {
 		return nil, errors.New("cannot retrieve list of sessions, limit needs to be higher than 0")
@@ -185,7 +185,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 	return sessions, nil
 }
 
-// Exists implements Storage interface.
+// Exists implements storage interface.
 func (ps *postgresStorage) Exists(accessToken string) (exists bool, err error) {
 	labels := prometheus.Labels{"query": "exists"}
 
@@ -200,7 +200,7 @@ func (ps *postgresStorage) Exists(accessToken string) (exists bool, err error) {
 	return
 }
 
-// Abandon ...
+// Abandon implements storage interface.
 func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
 	labels := prometheus.Labels{"query": "abandon"}
 
@@ -223,7 +223,7 @@ func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
 	return true, nil
 }
 
-// SetData implements Storage interface.
+// SetValue implements storage interface.
 func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[string]string, error) {
 	var err error
 	if accessToken == "" {
@@ -280,7 +280,7 @@ func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[
 	return entity.Bag, nil
 }
 
-// Delete implements Storage interface.
+// Delete implements storage interface.
 func (ps *postgresStorage) Delete(accessToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	if accessToken == "" && expiredAtFrom == nil && expiredAtTo == nil {
 		return 0, errors.New("session cannot be deleted, no where parameter provided")
@@ -300,7 +300,7 @@ func (ps *postgresStorage) Delete(accessToken string, expiredAtFrom, expiredAtTo
 	return result.RowsAffected()
 }
 
-// Setup implements Storage interface.
+// Setup implements storage interface.
 func (ps *postgresStorage) Setup() error {
 	_, err := ps.db.Exec(fmt.Sprintf(`
 		CREATE SCHEMA IF NOT EXISTS mnemosyne;
@@ -319,7 +319,7 @@ func (ps *postgresStorage) Setup() error {
 	return err
 }
 
-// TearDown implements Storage interface.
+// TearDown implements storage interface.
 func (ps *postgresStorage) TearDown() error {
 	_, err := ps.db.Exec(`DROP SCHEMA IF EXISTS mnemosyne CASCADE`)
 

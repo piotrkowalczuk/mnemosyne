@@ -4,9 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/boltdb/bolt"
 	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
+	"time"
 )
 
 func initPrometheus(namespace string, enabled bool, constLabels prometheus.Labels) *monitoring {
@@ -109,6 +111,16 @@ func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
 	sklog.Info(logger, "postgres connection has been established", "address", address)
 
 	return postgres, nil
+}
+
+func initBolt(path string) (bolt.DB, error) {
+	db, err := bolt.Open(path, 0600, &bolt.Options{Timeout: 5 * time.Second})
+	if err != nil {
+		return nil, fmt.Errorf("BoltDB opening failure: %s", err.Error())
+	}
+	sklog.Info(logger, "BoltDB database file openened", "path", path)
+
+	return db, nil
 }
 
 func initStorage(isTest bool, s storage, l log.Logger) (storage, error) {

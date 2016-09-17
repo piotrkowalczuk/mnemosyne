@@ -19,6 +19,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
+	"github.com/boltdb/bolt"
 )
 
 // DaemonOpts it is constructor argument that can be passed to
@@ -51,6 +52,7 @@ type Daemon struct {
 	monitor       *monitoring
 	rpcOptions    []grpc.ServerOption
 	postgres      *sql.DB
+	boltdb        *bolt.DB
 	storage       storage
 	logger        log.Logger
 	rpcListener   net.Listener
@@ -190,28 +192,33 @@ func (d *Daemon) Addr() net.Addr {
 func (d *Daemon) initStorage() (err error) {
 	switch d.opts.Storage {
 	case StorageEngineInMemory:
-		return errors.New("in memory storage is not implemented yet")
+		d.boltdb, err = initBolt("bolt.db")
+		if err != nil {
+			return err
+		}
+
 	case StorageEnginePostgres:
 		d.postgres, err = initPostgres(
 			d.opts.PostgresAddress,
 			d.logger,
 		)
 		if err != nil {
-			return
+			return err
 		}
-		if d.storage, err = initStorage(
-			d.opts.IsTest,
-			newPostgresStorage("session", d.postgres, d.monitor, d.opts.SessionTTL),
-			d.logger,
-		); err != nil {
-			return
-		}
-		return
 	case StorageEngineRedis:
 		return errors.New("redis storage is not implemented yet")
 	default:
 		return errors.New("unknown storage engine")
 	}
+
+	if d.storage, err = initStorage(
+		d.opts.IsTest,
+		newPostgresStorage("session", d.postgres, d.monitor, d.opts.SessionTTL),
+		d.logger,
+	); err != nil {
+		return
+	}
+	return
 }
 
 func (d *Daemon) setPostgresConnectionParameters() error {

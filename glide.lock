@@ -1,10 +1,18 @@
-hash: 286ab6ebb1664f6195565a6f42801a9262581fbc9da8870c63ea9a6a84b13b5b
-updated: 2016-08-18T12:44:48.331706336+02:00
+hash: f1e2e27b0c990125b86bfad2e94727d50d40acb0a86ecc4e42b3d56c4d4d3dcf
+updated: 2016-08-29T23:54:18.504388333+02:00
 imports:
+- name: bitbucket.org/ww/goautoneg
+  version: 75cd24fc2f2c2a2088577d12123ddee5f54e0675
 - name: github.com/beorn7/perks
   version: b965b613227fddccbfffe13eae360ed3fa822f8d
   subpackages:
   - quantile
+- name: github.com/coreos/etcd
+  version: 9efa00d1030d4bf62eb8e5ec130023aeb1b8e2d0
+  subpackages:
+  - client
+  - pkg/pathutil
+  - pkg/types
 - name: github.com/davecgh/go-spew
   version: 2df174808ee097f90d259e432cc04442cf60be21
   subpackages:
@@ -33,7 +41,7 @@ imports:
   subpackages:
   - oid
 - name: github.com/matttproud/golang_protobuf_extensions
-  version: fc2b8d3a73c4867e51861bbdd5ae3c1f0869dd6a
+  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
 - name: github.com/piotrkowalczuk/sklog
@@ -51,11 +59,10 @@ imports:
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: ebdfc6da46522d58825777cf1f90490a5b1ef1d8
+  version: ffe929a3f4c4faeaa10f2b9535c2b1be3ad15650
   subpackages:
   - expfmt
   - model
-  - internal/bitbucket.org/ww/goautoneg
 - name: github.com/prometheus/procfs
   version: abf152e5f3e97f2fafac028d2cc06c1feb87ffa5
 - name: github.com/stretchr/objx
@@ -66,25 +73,28 @@ imports:
   - mock
   - assert
   - require
+- name: github.com/ugorji/go
+  version: 5cd0f2b3b6cca8e3a0a4101821e41a73cb59bed6
+  subpackages:
+  - codec
 - name: golang.org/x/crypto
-  version: a548aac93ed489257b9d959b40fe1e8c1e20778c
+  version: 351dc6a5bf92a5f2ae22fadeee08eb6a45aa2d93
   subpackages:
   - sha3
 - name: golang.org/x/net
-  version: 07b51741c1d6423d4a6abab1c49940ec09cb1aaf
+  version: 6acef71eb69611914f7a30939ea9f6e194c78172
   subpackages:
   - context
   - http2
   - trace
   - http2/hpack
-  - lex/httplex
   - internal/timeseries
 - name: golang.org/x/oauth2
-  version: 4784bb855e56a530f1ce5d788959359ed6cb4a16
+  version: 4d549c893be7d4011bab739cc585d091a7188d27
   subpackages:
   - internal
 - name: google.golang.org/appengine
-  version: e951d3868b377b14f4e60efa3a301532ee3c1ebf
+  version: 4f7eeb5305a4ba1966344836ba4af9996b7b4e05
   subpackages:
   - urlfetch
   - internal
@@ -94,7 +104,7 @@ imports:
   - internal/log
   - internal/remote_api
 - name: google.golang.org/grpc
-  version: 13edeeffdea7a41d5aad96c28deb4c7bd01a9397
+  version: 0032a855ba5c8a3c8e0d71c2deef354b70af1584
   subpackages:
   - codes
   - credentials
@@ -105,10 +115,6 @@ imports:
   - naming
   - transport
 testImports:
-- name: github.com/gopherjs/gopherjs
-  version: 72e303cb5f235b23471872477b57e573dc1c71d0
-  subpackages:
-  - js
 - name: github.com/jtolds/gls
   version: 8ddce2a84170772b95dd5d576c48d517b22cac63
 - name: github.com/smartystreets/assertions

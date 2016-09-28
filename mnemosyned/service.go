@@ -2,9 +2,13 @@ package mnemosyned
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"net/url"
+	"time"
 
 	"github.com/go-kit/kit/log"
+	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -71,6 +75,27 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 		},
 		monitoringPostgresLabels,
 	)
+	cacheHits := prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace:   namespace,
+		Subsystem:   "cache",
+		Name:        "hits_total",
+		Help:        "Total number of cache hits.",
+		ConstLabels: constLabels,
+	})
+	cacheMisses := prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace:   namespace,
+		Subsystem:   "cache",
+		Name:        "misses_total",
+		Help:        "Total number of cache misses.",
+		ConstLabels: constLabels,
+	})
+	cacheRefresh := prometheus.NewCounter(prometheus.CounterOpts{
+		Namespace:   namespace,
+		Subsystem:   "cache",
+		Name:        "refresh_total",
+		Help:        "Total number of times cache refresh.",
+		ConstLabels: constLabels,
+	})
 
 	if enabled {
 		prometheus.MustRegisterOrGet(generalErrors)
@@ -79,6 +104,9 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 		prometheus.MustRegisterOrGet(rpcErrors)
 		prometheus.MustRegisterOrGet(postgresQueries)
 		prometheus.MustRegisterOrGet(postgresErrors)
+		prometheus.MustRegisterOrGet(cacheHits)
+		prometheus.MustRegisterOrGet(cacheMisses)
+		prometheus.MustRegisterOrGet(cacheRefresh)
 	}
 
 	return &monitoring{
@@ -98,17 +126,53 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 			queries: postgresQueries,
 			errors:  postgresErrors,
 		},
+		cache: monitoringCache{
+			enabled: enabled,
+			hits:    cacheHits,
+			misses:  cacheMisses,
+			refresh: cacheRefresh,
+		},
 	}
 }
 
 func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
-	postgres, err := sql.Open("postgres", address)
+	db, err := sql.Open("postgres", address)
 	if err != nil {
 		return nil, fmt.Errorf("postgres connection failure: %s", err.Error())
 	}
+
+	u, err := url.Parse(address)
+	if err != nil {
+		return nil, err
+	}
+	username := ""
+	if u.User != nil {
+		username = u.User.Username()
+	}
+
+	// Otherwise 1 second cooldown is going to be multiplied by number of tests.
+	if err := db.Ping(); err != nil {
+		cancel := time.NewTimer(10 * time.Second)
+
+	PingLoop:
+		for {
+			select {
+			case <-time.After(1 * time.Second):
+				if err := db.Ping(); err != nil {
+					sklog.Debug(logger, "postgres connection ping failure", "postgres_host", u.Host, "postgres_user", username)
+					continue PingLoop
+				}
+				sklog.Info(logger, "postgres connection has been established", "postgres_host", u.Host, "postgres_user", username)
+				break PingLoop
+			case <-cancel.C:
+				return nil, errors.New("postgres connection timout")
+			}
+		}
+	}
+
 	sklog.Info(logger, "postgres connection has been established", "address", address)
 
-	return postgres, nil
+	return db, nil
 }
 
 func initStorage(isTest bool, s storage, l log.Logger) (storage, error) {
@@ -122,4 +186,14 @@ func initStorage(isTest bool, s storage, l log.Logger) (storage, error) {
 	}
 
 	return s, nil
+}
+
+func initCluster(l log.Logger, addr string, seeds ...string) (*cluster.Cluster, error) {
+	csr, err := cluster.New(addr, seeds...)
+	if err != nil {
+		return nil, err
+	}
+
+	sklog.Debug(l, "cluster initialized", "seeds", len(seeds), "listen", addr)
+	return csr, nil
 }

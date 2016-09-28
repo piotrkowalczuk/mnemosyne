@@ -1,0 +1,59 @@
+version: '2'
+
+services:
+  postgres:
+    image: postgres:9.5
+    ports:
+      - 5434:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  mnemosyned-1:
+#    image: piotrkowalczuk/mnemosyne:v0.4.0
+    container_name: mnemosyned-1
+    image: mnemosyne
+    environment:
+      MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-1:8080
+      MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-2:8080,mnemosyned-3:8080
+      MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne1
+    links:
+      - postgres
+    volumes:
+      - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+  mnemosyned-2:
+    container_name: mnemosyned-2
+#    image: piotrkowalczuk/mnemosyne:v0.4.0
+    environment:
+      MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-2:8080
+      MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-3:8080
+      MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne2
+    image: mnemosyne
+    links:
+      - postgres
+    volumes:
+      - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+  mnemosyned-3:
+    container_name: mnemosyned-3
+#    image: piotrkowalczuk/mnemosyne:v0.4.0
+    environment:
+      MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-3:8080
+      MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-2:8080
+      MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne3
+    image: mnemosyne
+    links:
+      - postgres
+    volumes:
+      - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+  mnemosynestress:
+#    image: piotrkowalczuk/mnemosyne:v0.4.0
+    image: mnemosyne
+    volumes:
+      - ./bin/mnemosynestress:/usr/local/bin/mnemosynestress
+    links:
+      - mnemosyned-1
+      - mnemosyned-2
+    command: mnemosynestress -verbose -cluster.static -cluster.static.members=mnemosyned-1:8080 -cluster.static.members=mnemosyned-2:8080 -cluster.static.members=mnemosyned-3:8080
+volumes:
+  postgres-data:
+    external: false
+  prometheus-data:
+    external: false

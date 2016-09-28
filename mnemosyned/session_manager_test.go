@@ -9,6 +9,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/lib/pq"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
@@ -18,7 +19,7 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func TestRPCServer_mockedStore(t *testing.T) {
+func TestSessionManager_mockedStore(t *testing.T) {
 	var (
 		err         error
 		suite       *integrationSuite
@@ -41,18 +42,18 @@ func TestRPCServer_mockedStore(t *testing.T) {
 			expectedErr = nil
 			subjectID = "subject_id"
 			bag = map[string]string{"key": "value"}
-			token := mnemosynerpc.NewAccessToken("key", "hash")
+			token := "supertoken"
 
 			itSuccess := func() {
 				Convey("Not return any error", func() {
 					So(err, ShouldBeNil)
 				})
 				Convey("Return session with same bag", func() {
-					So(res.Session.Bag, ShouldResemble, req.Bag)
+					So(res.Session.Bag, ShouldResemble, req.Session.Bag)
 				})
 				Convey("Return session with same subject id", func() {
 					So(res.Session, ShouldNotBeNil)
-					So(res.Session.SubjectId, ShouldEqual, req.SubjectId)
+					So(res.Session.SubjectId, ShouldEqual, req.Session.SubjectId)
 				})
 				Convey("Return session with expire at timestamp", func() {
 					So(res.Session.ExpireAt, ShouldNotBeNil)
@@ -68,11 +69,11 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				expireAt, err := ptypes.TimestampProto(time.Now())
 				So(err, ShouldBeNil)
 
-				req = &mnemosynerpc.StartRequest{SubjectId: subjectID, Bag: bag}
+				req = &mnemosynerpc.StartRequest{Session: &mnemosynerpc.Session{SubjectId: subjectID, Bag: bag}}
 				session = &mnemosynerpc.Session{AccessToken: token, SubjectId: subjectID, Bag: bag, ExpireAt: expireAt}
 
 				Convey("Without storage error", func() {
-					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 						Once().
 						Return(session, expectedErr)
 
@@ -83,7 +84,7 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				})
 				Convey("With storage postgres error", func() {
 					expectedErr = pq.Error{Message: "fake postgres error"}
-					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+					suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 						Once().
 						Return(nil, expectedErr)
 
@@ -101,9 +102,9 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				expireAt, err := ptypes.TimestampProto(time.Now())
 				So(err, ShouldBeNil)
 
-				req = &mnemosynerpc.StartRequest{SubjectId: subjectID}
+				req = &mnemosynerpc.StartRequest{Session: &mnemosynerpc.Session{SubjectId: subjectID}}
 				session = &mnemosynerpc.Session{AccessToken: token, SubjectId: subjectID, ExpireAt: expireAt}
-				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
 
@@ -113,9 +114,9 @@ func TestRPCServer_mockedStore(t *testing.T) {
 				Convey("Should", itSuccess)
 			})
 			Convey("Without subject and with bag", func() {
-				req = &mnemosynerpc.StartRequest{Bag: bag}
+				req = &mnemosynerpc.StartRequest{Session: &mnemosynerpc.Session{Bag: bag}}
 				expectedErr = errors.New("session cannot be started, subject id is missing")
-				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+				suite.store.On("Start", mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
 
@@ -134,13 +135,13 @@ func TestRPCServer_mockedStore(t *testing.T) {
 	suite.teardown(t)
 }
 
-func TestRPCServer_Start_postgresStore(t *testing.T) {
+func TestSessionManager_Start_postgresStore(t *testing.T) {
 	Convey("Start", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With subject id", func() {
 			sid := "entity:1"
 			Convey("Should return newly created session", func() {
 				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-					SubjectId: sid,
+					Session: &mnemosynerpc.Session{SubjectId: sid},
 				})
 
 				So(err, ShouldBeNil)
@@ -152,13 +153,13 @@ func TestRPCServer_Start_postgresStore(t *testing.T) {
 				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingSubjectID))
+				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingSession))
 			})
 		})
 	}))
 }
 
-func TestRPCServer_Get_postgresStore(t *testing.T) {
+func TestSessionManager_Get_postgresStore(t *testing.T) {
 	var (
 		sid string
 		at  string
@@ -167,7 +168,7 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 		Convey("With existing session", func() {
 			sid = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				SubjectId: sid,
+				Session: &mnemosynerpc.Session{SubjectId: sid},
 			})
 
 			So(err, ShouldBeNil)
@@ -200,13 +201,13 @@ func TestRPCServer_Get_postgresStore(t *testing.T) {
 				})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session (get) does not exists")
+				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session does not exists")
 			})
 		})
 	}))
 }
 
-func TestRPCServer_Context_postgresStore(t *testing.T) {
+func TestSessionManager_Context_postgresStore(t *testing.T) {
 	var (
 		sid string
 		at  string
@@ -215,7 +216,7 @@ func TestRPCServer_Context_postgresStore(t *testing.T) {
 		Convey("With existing session", func() {
 			sid = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				SubjectId: sid,
+				Session: &mnemosynerpc.Session{SubjectId: sid},
 			})
 
 			So(err, ShouldBeNil)
@@ -224,7 +225,7 @@ func TestRPCServer_Context_postgresStore(t *testing.T) {
 			at = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return corresponding session", func() {
-					meta := metadata.Pairs(mnemosynerpc.AccessTokenMetadataKey, string(at))
+					meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, string(at))
 					ctx := metadata.NewContext(context.Background(), meta)
 					resp, err := s.client.Context(ctx, &empty.Empty{})
 
@@ -252,18 +253,18 @@ func TestRPCServer_Context_postgresStore(t *testing.T) {
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return not found gRPC error", func() {
-				meta := metadata.Pairs(mnemosynerpc.AccessTokenMetadataKey, "0000000000test")
+				meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, "0000000000test")
 				ctx := metadata.NewContext(context.Background(), meta)
 				resp, err := s.client.Context(ctx, &empty.Empty{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session (context) does not exists")
+				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session does not exists")
 			})
 		})
 	}))
 }
 
-func TestRPCServer_Exists_postgresStore(t *testing.T) {
+func TestSessionManager_Exists_postgresStore(t *testing.T) {
 	var (
 		sid string
 		at  string
@@ -272,7 +273,7 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 		Convey("With existing session", func() {
 			sid = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				SubjectId: sid,
+				Session: &mnemosynerpc.Session{SubjectId: sid},
 			})
 
 			So(err, ShouldBeNil)
@@ -311,7 +312,7 @@ func TestRPCServer_Exists_postgresStore(t *testing.T) {
 	}))
 }
 
-func TestRPCServer_Abandon_postgresStore(t *testing.T) {
+func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 	var (
 		sid string
 		at  string
@@ -320,7 +321,7 @@ func TestRPCServer_Abandon_postgresStore(t *testing.T) {
 		Convey("With existing session", func() {
 			sid = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				SubjectId: sid,
+				Session: &mnemosynerpc.Session{SubjectId: sid},
 			})
 
 			So(err, ShouldBeNil)
@@ -359,7 +360,7 @@ func TestRPCServer_Abandon_postgresStore(t *testing.T) {
 	}))
 }
 
-func TestRPCServer_Delete_postgresStore(t *testing.T) {
+func TestSessionManager_Delete_postgresStore(t *testing.T) {
 	var (
 		sid string
 		at  string
@@ -368,7 +369,7 @@ func TestRPCServer_Delete_postgresStore(t *testing.T) {
 		Convey("With existing session", func() {
 			sid = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				SubjectId: sid,
+				Session: &mnemosynerpc.Session{SubjectId: sid},
 			})
 
 			So(err, ShouldBeNil)
@@ -407,7 +408,7 @@ func TestRPCServer_Delete_postgresStore(t *testing.T) {
 	}))
 }
 
-func TestRPCServer_SetValue_postgresStore(t *testing.T) {
+func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 	var (
 		sid string
 		at  string
@@ -416,7 +417,7 @@ func TestRPCServer_SetValue_postgresStore(t *testing.T) {
 		Convey("With existing session", func() {
 			sid = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				SubjectId: sid,
+				Session: &mnemosynerpc.Session{SubjectId: sid},
 			})
 
 			So(err, ShouldBeNil)
@@ -462,7 +463,7 @@ func TestRPCServer_SetValue_postgresStore(t *testing.T) {
 	}))
 }
 
-func TestRPCServer_List_postgresStore(t *testing.T) {
+func TestSessionManager_List_postgresStore(t *testing.T) {
 	var (
 		sid string
 	)
@@ -471,7 +472,7 @@ func TestRPCServer_List_postgresStore(t *testing.T) {
 		Convey("Having multiple sessions active", func() {
 			for i := 0; i < nb; i++ {
 				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-					SubjectId: strconv.Itoa(i),
+					Session: &mnemosynerpc.Session{SubjectId: strconv.Itoa(i)},
 				})
 				So(err, ShouldBeNil)
 				So(resp, ShouldBeValidStartResponse, sid)

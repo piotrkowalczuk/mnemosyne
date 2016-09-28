@@ -2,7 +2,6 @@ package mnemosyned
 
 import (
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -12,44 +11,36 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var (
-	// TODO: change at some point to dynamic value that represents single instance
-	tmpKey = hex.EncodeToString([]byte("1"))
-)
-
 type postgresStorage struct {
 	db                                             *sql.DB
+	schema                                         string
 	table                                          string
 	ttl                                            time.Duration
 	monitor                                        *monitoring
 	querySave, queryGet, queryExists, queryAbandon string
 }
 
-func newPostgresStorage(tb string, db *sql.DB, m *monitoring, ttl time.Duration) storage {
+func newPostgresStorage(tb, schema string, db *sql.DB, m *monitoring, ttl time.Duration) storage {
 	return &postgresStorage{
 		db:      db,
 		table:   tb,
+		schema:  schema,
 		ttl:     ttl,
 		monitor: m,
-		querySave: `INSERT INTO mnemosyne.` + tb + ` (access_token, subject_id, subject_client, bag)
+		querySave: `INSERT INTO ` + schema + ` .` + tb + ` (access_token, subject_id, subject_client, bag)
 			VALUES ($1, $2, $3, $4)
 			RETURNING expire_at`,
-		queryGet: fmt.Sprintf(`UPDATE mnemosyne.`+tb+`
+		queryGet: fmt.Sprintf(`UPDATE `+schema+` .`+tb+`
 			SET expire_at = (NOW() + '%d seconds')
 			WHERE access_token = $1
 			RETURNING subject_id, subject_client, bag, expire_at`, int64(ttl.Seconds())),
-		queryExists:  `SELECT EXISTS(SELECT 1 FROM mnemosyne.` + tb + ` WHERE access_token = $1)`,
-		queryAbandon: `DELETE FROM mnemosyne.` + tb + ` WHERE access_token = $1`,
+		queryExists:  `SELECT EXISTS(SELECT 1 FROM ` + schema + ` .` + tb + ` WHERE access_token = $1)`,
+		queryAbandon: `DELETE FROM ` + schema + ` .` + tb + ` WHERE access_token = $1`,
 	}
 }
 
 // Start implements storage interface.
-func (ps *postgresStorage) Start(sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
-	at, err := mnemosynerpc.RandomAccessToken(tmpKey)
-	if err != nil {
-		return nil, err
-	}
-
+func (ps *postgresStorage) Start(at, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
 	ent := &sessionEntity{
 		AccessToken:   at,
 		SubjectID:     sid,
@@ -122,7 +113,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 	}
 
 	args := []interface{}{offset, limit}
-	query := "SELECT access_token, subject_id, subject_client, bag, expire_at FROM mnemosyne." + ps.table + " "
+	query := "SELECT access_token, subject_id, subject_client, bag, expire_at FROM " + ps.schema + "." + ps.table + " "
 	if expiredAtFrom != nil || expiredAtTo != nil {
 		query += " WHERE "
 	}
@@ -235,12 +226,12 @@ func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[
 	}
 	selectQuery := `
 		SELECT bag
-		FROM mnemosyne.` + ps.table + `
+		FROM ` + ps.schema + `.` + ps.table + `
 		WHERE access_token = $1
 		FOR UPDATE
 	`
 	updateQuery := `
-		UPDATE mnemosyne.` + ps.table + `
+		UPDATE ` + ps.schema + `.` + ps.table + `
 		SET
 			bag = $2
 		WHERE access_token = $1
@@ -287,7 +278,7 @@ func (ps *postgresStorage) Delete(accessToken string, expiredAtFrom, expiredAtTo
 	}
 
 	where, args := ps.where(accessToken, expiredAtFrom, expiredAtTo)
-	query := "DELETE FROM mnemosyne." + ps.table + " WHERE " + where
+	query := "DELETE FROM " + ps.schema + "." + ps.table + " WHERE " + where
 	labels := prometheus.Labels{"query": "delete"}
 
 	result, err := ps.db.Exec(query, args...)
@@ -302,9 +293,9 @@ func (ps *postgresStorage) Delete(accessToken string, expiredAtFrom, expiredAtTo
 
 // Setup implements storage interface.
 func (ps *postgresStorage) Setup() error {
-	_, err := ps.db.Exec(fmt.Sprintf(`
-		CREATE SCHEMA IF NOT EXISTS mnemosyne;
-		CREATE TABLE IF NOT EXISTS mnemosyne.%s (
+	query := fmt.Sprintf(`
+		CREATE SCHEMA IF NOT EXISTS %s;
+		CREATE TABLE IF NOT EXISTS %s.%s (
 			access_token BYTEA PRIMARY KEY,
 			subject_id TEXT NOT NULL,
 			subject_client TEXT,
@@ -312,16 +303,17 @@ func (ps *postgresStorage) Setup() error {
 			expire_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + '%d seconds')
 
 		);
-		CREATE INDEX ON mnemosyne.%s (subject_id);
-		CREATE INDEX ON mnemosyne.%s (expire_at DESC);
-	`, ps.table, int64(ps.ttl.Seconds()), ps.table, ps.table))
+		CREATE INDEX ON %s.%s (subject_id);
+		CREATE INDEX ON %s.%s (expire_at DESC);
+	`, ps.schema, ps.schema, ps.table, int64(ps.ttl.Seconds()), ps.schema, ps.table, ps.schema, ps.table)
+	_, err := ps.db.Exec(query)
 
 	return err
 }
 
 // TearDown implements storage interface.
 func (ps *postgresStorage) TearDown() error {
-	_, err := ps.db.Exec(`DROP SCHEMA IF EXISTS mnemosyne CASCADE`)
+	_, err := ps.db.Exec(`DROP SCHEMA IF EXISTS ` + ps.schema + ` CASCADE`)
 
 	return err
 }

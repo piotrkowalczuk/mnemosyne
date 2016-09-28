@@ -12,11 +12,8 @@ import (
 
 var config configuration
 
-func init() {
-	config.init()
-}
-
 func main() {
+	config.init()
 	config.parse()
 
 	logger := initLogger(config.logger.adapter, config.logger.format, config.logger.level)
@@ -24,17 +21,21 @@ func main() {
 	debugListener := initListener(logger, config.host, config.port+1)
 
 	daemon, err := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
-		SessionTTL:      config.session.ttl,
-		SessionTTC:      config.session.ttc,
-		Storage:         config.storage,
-		Monitoring:      config.monitoring.enabled,
-		PostgresAddress: config.postgres.address,
-		TLS:             config.tls.enabled,
-		TLSCertFile:     config.tls.certFile,
-		TLSKeyFile:      config.tls.keyFile,
-		RPCListener:     rpcListener,
-		Logger:          logger,
-		DebugListener:   debugListener,
+		SessionTTL:        config.session.ttl,
+		SessionTTC:        config.session.ttc,
+		Storage:           config.storage,
+		Monitoring:        config.monitoring.enabled,
+		PostgresAddress:   config.postgres.address,
+		PostgresTable:     config.postgres.table,
+		PostgresSchema:    config.postgres.schema,
+		TLS:               config.tls.enabled,
+		TLSCertFile:       config.tls.certFile,
+		TLSKeyFile:        config.tls.keyFile,
+		ClusterListenAddr: config.cluster.listen,
+		ClusterSeeds:      config.cluster.seeds,
+		RPCListener:       rpcListener,
+		Logger:            logger,
+		DebugListener:     debugListener,
 	})
 	if err != nil {
 		sklog.Fatal(logger, err)

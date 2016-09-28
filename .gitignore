@@ -4,11 +4,13 @@ vendor
 .tmp
 bin
 *.iml
+*.out
 run.sh
 coverage.txt
 *.sublime-project
 *.sublime-workspace
 .vscode
+swarm.sh
 
 # Golang
 *.o

@@ -17,17 +17,17 @@ func testStorage_Start(t *testing.T, s storage) {
 	bag := map[string]string{
 		"username": "test",
 	}
-	session, err := s.Start(subjectID, subjectClient, bag)
+	session, err := s.Start(randomAccessToken(t), subjectID, subjectClient, bag)
 
 	if assert.NoError(t, err) {
-		assert.Len(t, session.AccessToken[10:], 128)
+		assert.Len(t, session.AccessToken, 128)
 		assert.Equal(t, subjectID, session.SubjectId)
 		assert.Equal(t, bag, session.Bag)
 	}
 }
 
 func testStorage_Get(t *testing.T, s storage) {
-	ses, err := s.Start("subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -55,7 +55,7 @@ func testStorage_List(t *testing.T, s storage) {
 	sc := "subjectClient"
 
 	for i := 1; i <= nb; i++ {
-		_, err := s.Start(sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		_, err := s.Start(randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -89,7 +89,7 @@ func testStorage_List_between(t *testing.T, s storage) {
 	)
 
 	for i := 1; i <= nb; i++ {
-		res, err := s.Start(sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		res, err := s.Start(randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -117,7 +117,7 @@ func testStorage_List_between(t *testing.T, s storage) {
 }
 
 func testStorage_Exists(t *testing.T, s storage) {
-	new, err := s.Start("subjectID", "subjectClient", map[string]string{
+	new, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -135,7 +135,7 @@ func testStorage_Exists(t *testing.T, s storage) {
 }
 
 func testStorage_Abandon(t *testing.T, s storage) {
-	new, err := s.Start("subjectID", "subjectClient", map[string]string{
+	new, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -157,7 +157,7 @@ func testStorage_Abandon(t *testing.T, s storage) {
 }
 
 func testStorage_SetValue(t *testing.T, s storage) {
-	new, err := s.Start("subjectID", "subjectClient", map[string]string{
+	new, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	if err != nil {
@@ -235,7 +235,7 @@ func testStorage_Delete(t *testing.T, s storage) {
 	sc := "subjectClient"
 
 	for i := int64(1); i <= nb; i++ {
-		_, err := s.Start(sid, sc, map[string]string{key: strconv.FormatInt(i, 10)})
+		_, err := s.Start(randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(i, 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -283,7 +283,7 @@ func testStorage_Delete(t *testing.T, s storage) {
 
 DataLoop:
 	for _, args := range data {
-		new, err := s.Start("subjectID", "subjectID", nil)
+		new, err := s.Start(randomAccessToken(t), "subjectID", "subjectID", nil)
 		require.NoError(t, err)
 
 		if !assert.NoError(t, err) {

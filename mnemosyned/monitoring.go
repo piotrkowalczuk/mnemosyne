@@ -28,6 +28,7 @@ type monitoring struct {
 	general  monitoringGeneral
 	rpc      monitoringRPC
 	postgres monitoringPostgres
+	cache    monitoringCache
 }
 
 type monitoringGeneral struct {
@@ -46,6 +47,13 @@ type monitoringPostgres struct {
 	enabled bool
 	queries *prometheus.CounterVec
 	errors  *prometheus.CounterVec
+}
+
+type monitoringCache struct {
+	enabled bool
+	hits    prometheus.Counter
+	misses  prometheus.Counter
+	refresh prometheus.Counter
 }
 
 func initUnaryServerInterceptor(monitor monitoringRPC) grpc.UnaryServerInterceptor {
@@ -85,7 +93,7 @@ func interceptError(err error) error {
 	}
 
 	switch err {
-	case errMissingAccessToken, errMissingSubjectID, errSessionNotFound:
+	case errMissingSession, errMissingAccessToken, errMissingSubjectID, errSessionNotFound:
 		return err
 	}
 	code := grpc.Code(err)

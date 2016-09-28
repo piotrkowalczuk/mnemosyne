@@ -36,8 +36,6 @@ import:
   - grpclog
   - metadata
   - peer
-- package: github.com/prometheus/procfs
-  version: abf152e5f3e97f2fafac028d2cc06c1feb87ffa5
 testImport:
 - package: github.com/smartystreets/goconvey
   version: ~1.6.0

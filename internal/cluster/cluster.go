@@ -16,19 +16,21 @@ type Cluster struct {
 
 // New ...
 func New(listen string, seeds ...string) (csr *Cluster, err error) {
-	l := len(seeds) + 1
-	nodes := make([]string, 0, l)
+	var nodes []string
 	nodes = append(nodes, listen)
 	nodes = append(nodes, seeds...)
 	sort.Strings(nodes)
 
 	csr = &Cluster{
-		nodes:   make([]*Node, 0, l),
-		buckets: l,
-		listen:  listen,
+		nodes:  make([]*Node, 0),
+		listen: listen,
 	}
 
 	for _, addr := range nodes {
+		if addr == "" {
+			continue
+		}
+		csr.buckets++
 		csr.nodes = append(csr.nodes, &Node{
 			Addr: addr,
 		})

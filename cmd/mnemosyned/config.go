@@ -11,7 +11,9 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 )
 
-const version = "0.0.0"
+var (
+	version string
+)
 
 type configuration struct {
 	host    string

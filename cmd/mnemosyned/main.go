@@ -25,7 +25,7 @@ func main() {
 		SessionTTC:        config.session.ttc,
 		Storage:           config.storage,
 		Monitoring:        config.monitoring.enabled,
-		PostgresAddress:   config.postgres.address,
+		PostgresAddress:   config.postgres.address + "&application_name=mnemosyned_" + version,
 		PostgresTable:     config.postgres.table,
 		PostgresSchema:    config.postgres.schema,
 		TLS:               config.tls.enabled,

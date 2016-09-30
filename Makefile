@@ -5,6 +5,8 @@ PACKAGE=github.com/piotrkowalczuk/mnemosyne
 PACKAGE_CMD_DAEMON=$(PACKAGE)/cmd/$(SERVICE)d
 PACKAGE_CMD_STRESS=$(PACKAGE)/cmd/$(SERVICE)stress
 
+LDFLAGS = -X 'main.version=$(VERSION)'
+
 .PHONY:	all gen build install test cover get
 
 all: get install
@@ -40,7 +42,3 @@ publish:
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
 		-t piotrkowalczuk/${SERVICE}:${VERSION} .
 	@docker push piotrkowalczuk/${SERVICE}:${VERSION}
-
-run-discovery:
-	docker-compose -f docker-compose.discovery.yml up -d
-#	@docker run --net=host -p 53:8600/tcp -p 53:8600/udp consul

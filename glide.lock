@@ -1,8 +1,8 @@
-hash: f1e2e27b0c990125b86bfad2e94727d50d40acb0a86ecc4e42b3d56c4d4d3dcf
-updated: 2016-11-04T11:45:55.357952603+01:00
+hash: bd1e4181bd242462500aa9fc4c77ac37131964383d32ecdb69172a144c42d691
+updated: 2016-11-22T13:14:07.104191456+01:00
 imports:
 - name: github.com/beorn7/perks
-  version: b965b613227fddccbfffe13eae360ed3fa822f8d
+  version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
   subpackages:
   - quantile
 - name: github.com/davecgh/go-spew
@@ -14,7 +14,7 @@ imports:
   subpackages:
   - log
 - name: github.com/go-logfmt/logfmt
-  version: d4327190ff838312623b09bfeb50d7c93c8d9c1d
+  version: 390ab7935ee28ec6b286364bba9b4dd6410cb3d5
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
@@ -29,13 +29,15 @@ imports:
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/lib/pq
-  version: ae8357db35d721c58dcdc911318b55bef6b1b001
+  version: d8eeeb8bae8896dd8e1b7e514ab0d396c4f12a1b
   subpackages:
   - oid
 - name: github.com/matttproud/golang_protobuf_extensions
-  version: fc2b8d3a73c4867e51861bbdd5ae3c1f0869dd6a
+  version: c12348ce28de40eed0136aa2b644d0ee0650e56c
   subpackages:
   - pbutil
+- name: github.com/piotrkowalczuk/promgrpc
+  version: f5d7b0a17000f051d8b94ba7026be0b826d1143f
 - name: github.com/piotrkowalczuk/sklog
   version: ec5c8660c571ff906c65341ba96de449706d63fa
 - name: github.com/pmezard/go-difflib
@@ -67,11 +69,11 @@ imports:
   - mock
   - require
 - name: golang.org/x/crypto
-  version: 5f4e837b98443e9e7a65072235205993af565d85
+  version: 9477e0b78b9ac3d0b03822fd95422e2fe07627cd
   subpackages:
   - sha3
 - name: golang.org/x/net
-  version: f4b625ec9b21d620bb5ce57f2dfc3e08ca97fce6
+  version: 0e2717dc3cc05907dc23096ef3a9086ea93f567f
   subpackages:
   - context
   - http2
@@ -85,7 +87,7 @@ imports:
   subpackages:
   - internal
 - name: google.golang.org/appengine
-  version: 3f4dbbc0ec153a39878fd524ece9f39732bd4998
+  version: c7b8227c83007befd67b324a64c969ebc1d7475d
   subpackages:
   - internal
   - internal/base
@@ -107,13 +109,13 @@ imports:
   - transport
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: be543c9733215e9146ce12ee932d0a52ee9b82e5
+  version: e34a5cd6a1bc7c4fde759f2d3039852fc68b5fcc
   subpackages:
   - js
 - name: github.com/jtolds/gls
   version: 8ddce2a84170772b95dd5d576c48d517b22cac63
 - name: github.com/smartystreets/assertions
-  version: 2063fd1cc7c975db70502811a34b06ad034ccdf2
+  version: e60cfa771e3f4d18723a4119f1833898c9c62066
   subpackages:
   - internal/go-render/render
   - internal/oglematchers

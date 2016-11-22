@@ -14,15 +14,14 @@ import (
 )
 
 func initPrometheus(namespace string, enabled bool, constLabels prometheus.Labels) *monitoring {
-	generalErrors := prometheus.NewCounterVec(
+	cleanupErrors := prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace:   namespace,
-			Subsystem:   "rpc",
-			Name:        "general_errors_total",
-			Help:        "Total number of errors that happen during execution (other than grpc and postgres).",
+			Subsystem:   "cleanup",
+			Name:        "errors_total",
+			Help:        "Total number of errors that happen during cleanup.",
 			ConstLabels: constLabels,
 		},
-		monitoringGeneralLabels,
 	)
 	rpcRequests := prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -98,22 +97,22 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 	})
 
 	if enabled {
-		prometheus.MustRegisterOrGet(generalErrors)
-		prometheus.MustRegisterOrGet(rpcRequests)
-		prometheus.MustRegisterOrGet(rpcDuration)
-		prometheus.MustRegisterOrGet(rpcErrors)
-		prometheus.MustRegisterOrGet(postgresQueries)
-		prometheus.MustRegisterOrGet(postgresErrors)
-		prometheus.MustRegisterOrGet(cacheHits)
-		prometheus.MustRegisterOrGet(cacheMisses)
-		prometheus.MustRegisterOrGet(cacheRefresh)
+		cleanupErrors = prometheus.MustRegisterOrGet(cleanupErrors).(prometheus.Counter)
+		rpcRequests = prometheus.MustRegisterOrGet(rpcRequests).(*prometheus.CounterVec)
+		rpcDuration = prometheus.MustRegisterOrGet(rpcDuration).(*prometheus.SummaryVec)
+		rpcErrors = prometheus.MustRegisterOrGet(rpcErrors).(*prometheus.CounterVec)
+		postgresQueries = prometheus.MustRegisterOrGet(postgresQueries).(*prometheus.CounterVec)
+		postgresErrors = prometheus.MustRegisterOrGet(postgresErrors).(*prometheus.CounterVec)
+		cacheHits = prometheus.MustRegisterOrGet(cacheHits).(prometheus.Counter)
+		cacheMisses = prometheus.MustRegisterOrGet(cacheMisses).(prometheus.Counter)
+		cacheRefresh = prometheus.MustRegisterOrGet(cacheRefresh).(prometheus.Counter)
 	}
 
 	return &monitoring{
 		enabled: enabled,
-		general: monitoringGeneral{
+		cleanup: monitoringCleanup{
 			enabled: enabled,
-			errors:  generalErrors,
+			errors:  cleanupErrors,
 		},
 		rpc: monitoringRPC{
 			enabled:  enabled,

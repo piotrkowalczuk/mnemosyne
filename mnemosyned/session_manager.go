@@ -12,7 +12,6 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/sklog"
-	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -294,7 +293,7 @@ InfLoop:
 			affected, err := sm.storage.Delete("", nil, &t)
 			if err != nil {
 				if sm.monitor.enabled {
-					sm.monitor.general.errors.With(prometheus.Labels{"action": "cleanup"}).Inc()
+					sm.monitor.cleanup.errors.Inc()
 				}
 				sklog.Error(logger, fmt.Errorf("session cleanup failure: %s", err.Error()), "expire_at_to", t)
 				return

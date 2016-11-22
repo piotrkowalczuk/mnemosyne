@@ -15,9 +15,12 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
+	"github.com/piotrkowalczuk/promgrpc"
 	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/grpclog"
 )
@@ -152,8 +155,37 @@ func (d *Daemon) Run() (err error) {
 		d.clientOptions = append(d.clientOptions, grpc.WithInsecure())
 	}
 
+	interceptor := promgrpc.NewInterceptor(nil)
 	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
-	gRPCServer := grpc.NewServer(append(d.serverOptions, grpc.UnaryInterceptor(initUnaryServerInterceptor(d.monitor.rpc)))...)
+	gRPCServer := grpc.NewServer(append(
+		d.serverOptions,
+		// No stream endpoint available at the moment.
+		grpc.UnaryInterceptor(unaryServerInterceptors(
+			func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+				res, err := handler(ctx, req)
+
+				if err != nil && grpc.Code(err) != codes.OK {
+					switch err {
+					case errMissingSession, errMissingAccessToken, errMissingSubjectID, errSessionNotFound:
+						return nil, err
+					}
+
+					code := grpc.Code(err)
+					switch code {
+					case codes.Unknown:
+						sklog.Debug(d.logger, "request handled successfully", "handler", info.FullMethod)
+						return nil, grpc.Errorf(codes.Internal, "mnemosyned: %s", grpc.ErrorDesc(err))
+					default:
+						sklog.Error(d.logger, err, "handler", info.FullMethod)
+						return nil, grpc.Errorf(code, "mnemosyned: %s", grpc.ErrorDesc(err))
+					}
+				}
+				return res, err
+			},
+			interceptor.UnaryServer(),
+		)),
+	)...)
+
 	mnemosyneServer, err := newSessionManager(sessionManagerOpts{
 		addr:       d.opts.ClusterListenAddr,
 		cluster:    cluster,

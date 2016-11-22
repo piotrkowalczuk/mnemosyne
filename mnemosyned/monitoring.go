@@ -2,18 +2,12 @@ package mnemosyned
 
 // asdasd
 import (
-	"time"
-
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 )
 
 var (
-	monitoringGeneralLabels = []string{
-		"action",
-	}
 	monitoringRPCLabels = []string{
 		"handler",
 		"code",
@@ -25,15 +19,15 @@ var (
 
 type monitoring struct {
 	enabled  bool
-	general  monitoringGeneral
+	cleanup  monitoringCleanup
 	rpc      monitoringRPC
 	postgres monitoringPostgres
 	cache    monitoringCache
 }
 
-type monitoringGeneral struct {
+type monitoringCleanup struct {
 	enabled bool
-	errors  *prometheus.CounterVec
+	errors  prometheus.Counter
 }
 
 type monitoringRPC struct {
@@ -56,51 +50,17 @@ type monitoringCache struct {
 	refresh prometheus.Counter
 }
 
-func initUnaryServerInterceptor(monitor monitoringRPC) grpc.UnaryServerInterceptor {
-	return grpc.UnaryServerInterceptor(func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-		start := time.Now()
-		res, err := handler(ctx, req)
-		if err != nil {
-			err = interceptError(err)
-			if monitor.enabled {
-				elapsed := float64(time.Since(start)) / float64(time.Microsecond)
-				labels := prometheus.Labels{
-					"handler": info.FullMethod,
-					"code":    grpc.Code(err).String(),
-				}
-				monitor.duration.With(labels).Observe(elapsed)
-				monitor.errors.With(labels).Add(1)
+func unaryServerInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		wrap := func(current grpc.UnaryServerInterceptor, next grpc.UnaryHandler) grpc.UnaryHandler {
+			return func(currentCtx context.Context, currentReq interface{}) (interface{}, error) {
+				return current(currentCtx, currentReq, info, next)
 			}
-
-			return nil, err
 		}
-		if monitor.enabled {
-			elapsed := float64(time.Since(start)) / float64(time.Microsecond)
-			labels := prometheus.Labels{
-				"handler": info.FullMethod,
-				"code":    grpc.Code(err).String(),
-			}
-			monitor.duration.With(labels).Observe(elapsed)
-			monitor.requests.With(labels).Add(1)
+		chain := handler
+		for _, i := range interceptors {
+			chain = wrap(i, chain)
 		}
-		return res, nil
-	})
-}
-
-func interceptError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	switch err {
-	case errMissingSession, errMissingAccessToken, errMissingSubjectID, errSessionNotFound:
-		return err
-	}
-	code := grpc.Code(err)
-	switch code {
-	case codes.Unknown:
-		return grpc.Errorf(codes.Internal, "mnemosyned: %s", grpc.ErrorDesc(err))
-	default:
-		return grpc.Errorf(code, "mnemosyned: %s", grpc.ErrorDesc(err))
+		return chain(ctx, req)
 	}
 }

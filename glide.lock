@@ -1,5 +1,5 @@
-hash: bd1e4181bd242462500aa9fc4c77ac37131964383d32ecdb69172a144c42d691
-updated: 2016-11-22T13:14:07.104191456+01:00
+hash: 7dcbafde3d9b0805de4fb44ac495fed708d11a6ba70c008e5ed7658115682564
+updated: 2016-11-23T11:33:16.520032106+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -37,7 +37,7 @@ imports:
   subpackages:
   - pbutil
 - name: github.com/piotrkowalczuk/promgrpc
-  version: f5d7b0a17000f051d8b94ba7026be0b826d1143f
+  version: 6dcaf1a8dc829dcea441330ba639d04472b696af
 - name: github.com/piotrkowalczuk/sklog
   version: ec5c8660c571ff906c65341ba96de449706d63fa
 - name: github.com/pmezard/go-difflib

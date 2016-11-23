@@ -155,7 +155,7 @@ func (d *Daemon) Run() (err error) {
 		d.clientOptions = append(d.clientOptions, grpc.WithInsecure())
 	}
 
-	interceptor := promgrpc.NewInterceptor(nil)
+	interceptor := promgrpc.NewInterceptor()
 	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
 	gRPCServer := grpc.NewServer(append(
 		d.serverOptions,

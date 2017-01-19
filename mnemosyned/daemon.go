@@ -198,6 +198,7 @@ func (d *Daemon) Run() (err error) {
 		return err
 	}
 	mnemosynerpc.RegisterSessionManagerServer(gRPCServer, mnemosyneServer)
+	promgrpc.RegisterInterceptor(gRPCServer, interceptor)
 
 	if err = cluster.Connect(d.clientOptions...); err != nil {
 		return err

@@ -5,7 +5,6 @@ import:
   subpackages:
   - log
 - package: github.com/golang/protobuf
-  version: 0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0
   subpackages:
   - proto
   - ptypes
@@ -37,7 +36,7 @@ import:
   - metadata
   - peer
 - package: github.com/piotrkowalczuk/promgrpc
-  version: ~0.2.0
+  version: ~0.3.0
 testImport:
 - package: github.com/smartystreets/goconvey
   version: ~1.6.0

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"context"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/prometheus/client_golang/prometheus"
@@ -40,7 +42,7 @@ func newPostgresStorage(tb, schema string, db *sql.DB, m *monitoring, ttl time.D
 }
 
 // Start implements storage interface.
-func (ps *postgresStorage) Start(at, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
+func (ps *postgresStorage) Start(ctx context.Context, at, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
 	ent := &sessionEntity{
 		AccessToken:   at,
 		SubjectID:     sid,
@@ -48,16 +50,17 @@ func (ps *postgresStorage) Start(at, sid, sc string, b map[string]string) (*mnem
 		Bag:           bag(b),
 	}
 
-	if err := ps.save(ent); err != nil {
+	if err := ps.save(ctx, ent); err != nil {
 		return nil, err
 	}
 
 	return ent.session()
 }
 
-func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
+func (ps *postgresStorage) save(ctx context.Context, entity *sessionEntity) (err error) {
 	labels := prometheus.Labels{"query": "save"}
-	err = ps.db.QueryRow(
+	err = ps.db.QueryRowContext(
+		ctx,
 		ps.querySave,
 		entity.AccessToken,
 		entity.SubjectID,
@@ -74,11 +77,11 @@ func (ps *postgresStorage) save(entity *sessionEntity) (err error) {
 }
 
 // Get implements storage interface.
-func (ps *postgresStorage) Get(accessToken string) (*mnemosynerpc.Session, error) {
+func (ps *postgresStorage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Session, error) {
 	var entity sessionEntity
 	labels := prometheus.Labels{"query": "get"}
 
-	err := ps.db.QueryRow(ps.queryGet, accessToken).Scan(
+	err := ps.db.QueryRowContext(ctx, ps.queryGet, accessToken).Scan(
 		&entity.SubjectID,
 		&entity.SubjectClient,
 		&entity.Bag,
@@ -107,7 +110,7 @@ func (ps *postgresStorage) Get(accessToken string) (*mnemosynerpc.Session, error
 }
 
 // List implements storage interface.
-func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
+func (ps *postgresStorage) List(ctx context.Context, offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
 	if limit == 0 {
 		return nil, errors.New("cannot retrieve list of sessions, limit needs to be higher than 0")
 	}
@@ -132,7 +135,7 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 	query += " OFFSET $1 LIMIT $2"
 	labels := prometheus.Labels{"query": "list"}
 
-	rows, err := ps.db.Query(query, args...)
+	rows, err := ps.db.QueryContext(ctx, query, args...)
 	ps.incQueries(labels)
 	if err != nil {
 		ps.incError(labels)
@@ -177,10 +180,10 @@ func (ps *postgresStorage) List(offset, limit int64, expiredAtFrom, expiredAtTo 
 }
 
 // Exists implements storage interface.
-func (ps *postgresStorage) Exists(accessToken string) (exists bool, err error) {
+func (ps *postgresStorage) Exists(ctx context.Context, accessToken string) (exists bool, err error) {
 	labels := prometheus.Labels{"query": "exists"}
 
-	err = ps.db.QueryRow(ps.queryExists, accessToken).Scan(
+	err = ps.db.QueryRowContext(ctx, ps.queryExists, accessToken).Scan(
 		&exists,
 	)
 	if err != nil {
@@ -192,10 +195,10 @@ func (ps *postgresStorage) Exists(accessToken string) (exists bool, err error) {
 }
 
 // Abandon implements storage interface.
-func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
+func (ps *postgresStorage) Abandon(ctx context.Context, accessToken string) (bool, error) {
 	labels := prometheus.Labels{"query": "abandon"}
 
-	result, err := ps.db.Exec(ps.queryAbandon, accessToken)
+	result, err := ps.db.ExecContext(ctx, ps.queryAbandon, accessToken)
 	ps.incQueries(labels)
 	if err != nil {
 		ps.incError(labels)
@@ -215,7 +218,7 @@ func (ps *postgresStorage) Abandon(accessToken string) (bool, error) {
 }
 
 // SetValue implements storage interface.
-func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[string]string, error) {
+func (ps *postgresStorage) SetValue(ctx context.Context, accessToken string, key, value string) (map[string]string, error) {
 	var err error
 	if accessToken == "" {
 		return nil, errMissingAccessToken
@@ -237,13 +240,13 @@ func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[
 		WHERE access_token = $1
 	`
 
-	tx, err := ps.db.Begin()
+	tx, err := ps.db.BeginTx(ctx, nil)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
 	}
 
-	err = tx.QueryRow(selectQuery, accessToken).Scan(
+	err = tx.QueryRowContext(ctx, selectQuery, accessToken).Scan(
 		&entity.Bag,
 	)
 	ps.incQueries(prometheus.Labels{"query": "set_value_select"})
@@ -258,7 +261,7 @@ func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[
 
 	entity.Bag.set(key, value)
 
-	_, err = tx.Exec(updateQuery, accessToken, entity.Bag)
+	_, err = tx.ExecContext(ctx, updateQuery, accessToken, entity.Bag)
 	ps.incQueries(prometheus.Labels{"query": "set_value_update"})
 	if err != nil {
 		ps.incError(prometheus.Labels{"query": "set_value_update"})
@@ -272,7 +275,7 @@ func (ps *postgresStorage) SetValue(accessToken string, key, value string) (map[
 }
 
 // Delete implements storage interface.
-func (ps *postgresStorage) Delete(accessToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+func (ps *postgresStorage) Delete(ctx context.Context, accessToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	if accessToken == "" && expiredAtFrom == nil && expiredAtTo == nil {
 		return 0, errors.New("session cannot be deleted, no where parameter provided")
 	}

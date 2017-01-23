@@ -1,6 +1,7 @@
 package mnemosyned
 
 import (
+	"context"
 	"strconv"
 	"sync"
 	"testing"
@@ -17,7 +18,7 @@ func testStorage_Start(t *testing.T, s storage) {
 	bag := map[string]string{
 		"username": "test",
 	}
-	session, err := s.Start(randomAccessToken(t), subjectID, subjectClient, bag)
+	session, err := s.Start(context.Background(), randomAccessToken(t), subjectID, subjectClient, bag)
 
 	if assert.NoError(t, err) {
 		assert.Len(t, session.AccessToken, 128)
@@ -27,13 +28,13 @@ func testStorage_Start(t *testing.T, s storage) {
 }
 
 func testStorage_Get(t *testing.T, s storage) {
-	ses, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
 
 	// Check for existing Token
-	got, err := s.Get(ses.AccessToken)
+	got, err := s.Get(context.Background(), ses.AccessToken)
 	require.NoError(t, err)
 	assert.Equal(t, ses.AccessToken, got.AccessToken)
 	assert.Equal(t, ses.Bag, got.Bag)
@@ -42,7 +43,7 @@ func testStorage_Get(t *testing.T, s storage) {
 	}
 
 	// Check for non existing Token
-	got2, err2 := s.Get("keyhash")
+	got2, err2 := s.Get(context.Background(), "keyhash")
 	assert.Error(t, err2)
 	assert.EqualError(t, err2, errSessionNotFound.Error())
 	assert.Nil(t, got2)
@@ -55,13 +56,13 @@ func testStorage_List(t *testing.T, s storage) {
 	sc := "subjectClient"
 
 	for i := 1; i <= nb; i++ {
-		_, err := s.Start(randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		_, err := s.Start(context.Background(), randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
 	}
 
-	sessions, err := s.List(2, int64(nb), nil, nil)
+	sessions, err := s.List(context.Background(), 2, int64(nb), nil, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
@@ -89,7 +90,7 @@ func testStorage_List_between(t *testing.T, s storage) {
 	)
 
 	for i := 1; i <= nb; i++ {
-		res, err := s.Start(randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		res, err := s.Start(context.Background(), randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -107,7 +108,7 @@ func testStorage_List_between(t *testing.T, s storage) {
 		}
 	}
 
-	sessions, err := s.List(0, int64(nb), &from, &to)
+	sessions, err := s.List(context.Background(), 0, int64(nb), &from, &to)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
@@ -117,113 +118,113 @@ func testStorage_List_between(t *testing.T, s storage) {
 }
 
 func testStorage_Exists(t *testing.T, s storage) {
-	new, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
 
 	// Check for existing Token
-	exists, err := s.Exists(new.AccessToken)
+	exists, err := s.Exists(context.Background(), ses.AccessToken)
 	require.NoError(t, err)
 	assert.True(t, exists)
 
 	// Check for non existing Token
-	exists2, err2 := s.Exists("keyhash")
+	exists2, err2 := s.Exists(context.Background(), "keyhash")
 	if assert.NoError(t, err2) {
 		assert.False(t, exists2)
 	}
 }
 
 func testStorage_Abandon(t *testing.T, s storage) {
-	new, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
 
 	// Check for existing Token
-	ok2, err2 := s.Abandon(new.AccessToken)
+	ok2, err2 := s.Abandon(context.Background(), ses.AccessToken)
 	assert.True(t, ok2)
 	require.NoError(t, err2)
 
 	// Check for already abandoned session
-	ok3, err3 := s.Abandon(new.AccessToken)
+	ok3, err3 := s.Abandon(context.Background(), ses.AccessToken)
 	assert.False(t, ok3)
 	assert.EqualError(t, err3, errSessionNotFound.Error())
 
 	// Check for session that never exists
-	ok4, err4 := s.Abandon("keyhash")
+	ok4, err4 := s.Abandon(context.Background(), "keyhash")
 	assert.False(t, ok4)
 	assert.EqualError(t, err4, errSessionNotFound.Error())
 }
 
 func testStorage_SetValue(t *testing.T, s storage) {
-	new, err := s.Start(randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	if err != nil {
 		t.Fatalf("unexpected error on session start: %s", err.Error())
 	}
 	if s == nil {
-		t.Fatalf("storage is nil")
+		t.Fatal("storage is nil")
 	}
 
 	// Check for existing Token
-	got, err2 := s.SetValue(new.AccessToken, "email", "fake@email.com")
+	got, err2 := s.SetValue(context.Background(), ses.AccessToken, "email", "fake@email.com")
 	require.NoError(t, err2)
 	assert.Equal(t, 2, len(got))
 	assert.Equal(t, "fake@email.com", got["email"])
 	assert.Equal(t, "test", got["username"])
 
 	// Check for overwritten field
-	bag2, err2 := s.SetValue(new.AccessToken, "email", "morefakethanbefore@email.com")
+	bag2, err2 := s.SetValue(context.Background(), ses.AccessToken, "email", "morefakethanbefore@email.com")
 	require.NoError(t, err2)
 	assert.Equal(t, 2, len(bag2))
 	assert.Equal(t, "morefakethanbefore@email.com", bag2["email"])
 	assert.Equal(t, "test", bag2["username"])
 
 	// Check for non existing Token
-	bag3, err3 := s.SetValue("keyhash", "email", "fake@email.com")
+	bag3, err3 := s.SetValue(context.Background(), "keyhash", "email", "fake@email.com")
 	require.Error(t, err3, errSessionNotFound.Error())
 	assert.Nil(t, bag3)
 
 	wg := sync.WaitGroup{}
-	// Check for concurent access
-	concurent := func(t *testing.T, wg *sync.WaitGroup, key, value string) {
+	// Check for concurrent access
+	concurrent := func(t *testing.T, wg *sync.WaitGroup, key, value string) {
 		defer wg.Done()
 
 		// Check for overwritten field
-		_, err := s.SetValue(new.AccessToken, key, value)
+		_, err := s.SetValue(context.Background(), ses.AccessToken, key, value)
 
 		assert.NoError(t, err)
 	}
 
 	wg.Add(20)
-	go concurent(t, &wg, "k1", "v1")
-	go concurent(t, &wg, "k2", "v2")
-	go concurent(t, &wg, "k3", "v3")
-	go concurent(t, &wg, "k4", "v4")
-	go concurent(t, &wg, "k5", "v5")
-	go concurent(t, &wg, "k6", "v6")
-	go concurent(t, &wg, "k7", "v7")
-	go concurent(t, &wg, "k8", "v8")
-	go concurent(t, &wg, "k9", "v9")
-	go concurent(t, &wg, "k10", "v10")
-	go concurent(t, &wg, "k11", "v11")
-	go concurent(t, &wg, "k12", "v12")
-	go concurent(t, &wg, "k13", "v13")
-	go concurent(t, &wg, "k14", "v14")
-	go concurent(t, &wg, "k15", "v15")
-	go concurent(t, &wg, "k16", "v16")
-	go concurent(t, &wg, "k17", "v17")
-	go concurent(t, &wg, "k18", "v18")
-	go concurent(t, &wg, "k19", "v19")
-	go concurent(t, &wg, "k20", "v20")
+	go concurrent(t, &wg, "k1", "v1")
+	go concurrent(t, &wg, "k2", "v2")
+	go concurrent(t, &wg, "k3", "v3")
+	go concurrent(t, &wg, "k4", "v4")
+	go concurrent(t, &wg, "k5", "v5")
+	go concurrent(t, &wg, "k6", "v6")
+	go concurrent(t, &wg, "k7", "v7")
+	go concurrent(t, &wg, "k8", "v8")
+	go concurrent(t, &wg, "k9", "v9")
+	go concurrent(t, &wg, "k10", "v10")
+	go concurrent(t, &wg, "k11", "v11")
+	go concurrent(t, &wg, "k12", "v12")
+	go concurrent(t, &wg, "k13", "v13")
+	go concurrent(t, &wg, "k14", "v14")
+	go concurrent(t, &wg, "k15", "v15")
+	go concurrent(t, &wg, "k16", "v16")
+	go concurrent(t, &wg, "k17", "v17")
+	go concurrent(t, &wg, "k18", "v18")
+	go concurrent(t, &wg, "k19", "v19")
+	go concurrent(t, &wg, "k20", "v20")
 
 	wg.Wait()
 
-	got4, err4 := s.Get(new.AccessToken)
+	got4, err4 := s.Get(context.Background(), ses.AccessToken)
 	if assert.NoError(t, err4) {
-		assert.Equal(t, new.AccessToken, got4.AccessToken)
+		assert.Equal(t, ses.AccessToken, got4.AccessToken)
 		assert.Equal(t, 22, len(got4.Bag))
 	}
 }
@@ -235,7 +236,7 @@ func testStorage_Delete(t *testing.T, s storage) {
 	sc := "subjectClient"
 
 	for i := int64(1); i <= nb; i++ {
-		_, err := s.Start(randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(i, 10)})
+		_, err := s.Start(context.Background(), randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(i, 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -243,7 +244,7 @@ func testStorage_Delete(t *testing.T, s storage) {
 
 	expiredAtTo := time.Now().Add(35 * time.Minute)
 
-	affected, err := s.Delete("", nil, &expiredAtTo)
+	affected, err := s.Delete(context.Background(), "", nil, &expiredAtTo)
 	if assert.NoError(t, err) {
 		assert.Equal(t, nb, affected)
 	}
@@ -283,7 +284,7 @@ func testStorage_Delete(t *testing.T, s storage) {
 
 DataLoop:
 	for _, args := range data {
-		new, err := s.Start(randomAccessToken(t), "subjectID", "subjectID", nil)
+		ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectID", nil)
 		require.NoError(t, err)
 
 		if !assert.NoError(t, err) {
@@ -297,11 +298,11 @@ DataLoop:
 		)
 
 		if args.id {
-			id = new.AccessToken
+			id = ses.AccessToken
 		}
 
 		if args.expiredAtFrom {
-			expireAtFrom, err := ptypes.Timestamp(new.ExpireAt)
+			expireAtFrom, err := ptypes.Timestamp(ses.ExpireAt)
 			if assert.NoError(t, err) {
 				continue DataLoop
 			}
@@ -309,7 +310,7 @@ DataLoop:
 			expiredAtFrom = &eaf
 		}
 		if args.expiredAtTo {
-			expireAtTo, err := ptypes.Timestamp(new.ExpireAt)
+			expireAtTo, err := ptypes.Timestamp(ses.ExpireAt)
 			if assert.NoError(t, err) {
 				continue DataLoop
 			}
@@ -317,14 +318,14 @@ DataLoop:
 			expiredAtTo = &eat
 		}
 
-		affected, err = s.Delete(id, expiredAtFrom, expiredAtTo)
+		affected, err = s.Delete(context.Background(), id, expiredAtFrom, expiredAtTo)
 		if assert.NoError(t, err) {
 			if assert.Equal(t, int64(1), affected, "one session should be removed for id: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.id, args.expiredAtFrom, args.expiredAtTo) {
 				t.Logf("as expected session can be deleted with arguments id: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.id, args.expiredAtFrom, args.expiredAtTo)
 			}
 		}
 
-		affected, err = s.Delete(id, expiredAtFrom, expiredAtTo)
+		affected, err = s.Delete(context.Background(), id, expiredAtFrom, expiredAtTo)
 		if assert.NoError(t, err) {
 			assert.Equal(t, int64(0), affected)
 		}

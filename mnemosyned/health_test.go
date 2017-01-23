@@ -18,6 +18,7 @@ func TestHealthHandler_ServeHTTP(t *testing.T) {
 	)
 	srv := httptest.NewServer(&healthHandler{
 		postgres: s.db,
+		logger:   s.logger,
 	})
 	defer srv.Close()
 

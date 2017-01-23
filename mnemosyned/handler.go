@@ -36,7 +36,7 @@ func (h *handler) get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemo
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 
-	ses, err := h.storage.Get(req.AccessToken)
+	ses, err := h.storage.Get(ctx, req.AccessToken)
 	if err != nil {
 		if err == errSessionNotFound {
 			return nil, grpc.Errorf(codes.NotFound, "session does not exists")
@@ -71,7 +71,7 @@ func (h *handler) list(ctx context.Context, req *mnemosynerpc.ListRequest) ([]*m
 		req.Limit = 10
 	}
 
-	return h.storage.List(req.Offset, req.Limit, expireAtFrom, expireAtTo)
+	return h.storage.List(ctx, req.Offset, req.Limit, expireAtFrom, expireAtTo)
 }
 
 func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*mnemosynerpc.Session, error) {
@@ -81,7 +81,7 @@ func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*m
 
 	h.logger = log.NewContext(h.logger).With("subject_id", req.Session.SubjectId)
 
-	ses, err := h.storage.Start(req.Session.AccessToken, req.Session.SubjectId, req.Session.SubjectClient, req.Session.Bag)
+	ses, err := h.storage.Start(ctx, req.Session.AccessToken, req.Session.SubjectId, req.Session.SubjectClient, req.Session.Bag)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func (h *handler) exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 
-	exists, err := h.storage.Exists(req.AccessToken)
+	exists, err := h.storage.Exists(ctx, req.AccessToken)
 	if err != nil {
 		return false, err
 	}
@@ -119,7 +119,7 @@ func (h *handler) abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest)
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
 
-	abandoned, err := h.storage.Abandon(req.AccessToken)
+	abandoned, err := h.storage.Abandon(ctx, req.AccessToken)
 	if err != nil {
 		return false, err
 	}
@@ -137,7 +137,7 @@ func (h *handler) setValue(ctx context.Context, req *mnemosynerpc.SetValueReques
 
 	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken, "key", req.Key, "value", req.Value)
 
-	bag, err := h.storage.SetValue(req.AccessToken, req.Key, req.Value)
+	bag, err := h.storage.SetValue(ctx, req.AccessToken, req.Key, req.Value)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
 	}
 
-	affected, err := h.storage.Delete(req.AccessToken, expireAtFrom, expireAtTo)
+	affected, err := h.storage.Delete(ctx, req.AccessToken, expireAtFrom, expireAtTo)
 	if err != nil {
 		return 0, err
 	}

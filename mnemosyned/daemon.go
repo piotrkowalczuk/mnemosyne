@@ -232,6 +232,7 @@ func (d *Daemon) Run() (err error) {
 				mux.Handle("/metrics", prometheus.Handler())
 			}
 			mux.Handle("/health", &healthHandler{
+				logger:   d.logger,
 				postgres: d.postgres,
 			})
 			sklog.Error(d.logger, http.Serve(d.debugListener, mux))

@@ -290,7 +290,7 @@ InfLoop:
 		case <-time.After(sm.ttc):
 			t := time.Now()
 			sklog.Debug(logger, "session cleanup start", "start_at", t.Format(time.RFC3339))
-			affected, err := sm.storage.Delete("", nil, &t)
+			affected, err := sm.storage.Delete(context.Background(), "", nil, &t)
 			if err != nil {
 				if sm.monitor.enabled {
 					sm.monitor.cleanup.errors.Inc()

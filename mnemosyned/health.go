@@ -3,12 +3,13 @@ package mnemosyned
 import (
 	"database/sql"
 	"net/http"
+
 	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/sklog"
 )
 
 type healthHandler struct {
-	logger log.Logger
+	logger   log.Logger
 	postgres *sql.DB
 }
 

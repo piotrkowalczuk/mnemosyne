@@ -490,7 +490,7 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 			Convey("With proper access token", func() {
 				Convey("Should return that one record affected", func() {
 					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
-						DeleteBy: &mnemosynerpc.DeleteRequest_AccessToken{AccessToken: accessToken},
+						AccessToken: accessToken,
 					})
 
 					So(err, ShouldBeNil)
@@ -509,7 +509,7 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 		Convey("With unknown access token", func() {
 			Convey("Should return that even single record was affected", func() {
 				resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
-					DeleteBy: &mnemosynerpc.DeleteRequest_AccessToken{AccessToken: "0000000000test"},
+					AccessToken: "0000000000test",
 				})
 
 				So(err, ShouldBeNil)

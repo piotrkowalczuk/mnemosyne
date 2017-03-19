@@ -152,23 +152,13 @@ func (h *handler) setValue(ctx context.Context, req *mnemosynerpc.SetValueReques
 
 func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (int64, error) {
 	var (
-		accessToken, refreshToken string
-		expireAtFrom, expireAtTo  *time.Time
+		expireAtFrom, expireAtTo *time.Time
 	)
 
-	if req.DeleteBy == nil && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
+	if req.AccessToken == "" && req.RefreshToken == "" && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
 		return 0, grpc.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}
-	if req.DeleteBy != nil {
-		switch deleteBy := req.DeleteBy.(type) {
-		case *mnemosynerpc.DeleteRequest_AccessToken:
-			accessToken = deleteBy.AccessToken
-			h.logger = log.NewContext(h.logger).With("access_token", deleteBy.AccessToken)
-		case *mnemosynerpc.DeleteRequest_RefreshToken:
-			refreshToken = deleteBy.RefreshToken
-			h.logger = log.NewContext(h.logger).With("access_token", deleteBy.RefreshToken)
-		}
-	}
+	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken, "refresh_token", req.RefreshToken)
 
 	if req.ExpireAtFrom != nil {
 		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
@@ -187,7 +177,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
 	}
 
-	affected, err := h.storage.Delete(ctx, accessToken, refreshToken, expireAtFrom, expireAtTo)
+	affected, err := h.storage.Delete(ctx, req.AccessToken, req.RefreshToken, expireAtFrom, expireAtTo)
 	if err != nil {
 		return 0, err
 	}

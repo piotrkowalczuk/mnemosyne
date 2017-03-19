@@ -83,12 +83,10 @@ message SetValueResponse {
 }
 
 message DeleteRequest {
-    oneof delete_by {
-        string access_token = 1;
-        string refresh_token = 4;
-    }
+    string access_token = 1;
     google.protobuf.Timestamp expire_at_from = 2;
     google.protobuf.Timestamp expire_at_to = 3;
+    string refresh_token = 4;
 }
 message DeleteResponse {
     int64 count = 1;

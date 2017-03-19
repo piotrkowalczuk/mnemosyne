@@ -80,8 +80,13 @@ func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*m
 	}
 
 	h.logger = log.NewContext(h.logger).With("subject_id", req.Session.SubjectId)
-
-	ses, err := h.storage.Start(ctx, req.Session.AccessToken, req.Session.SubjectId, req.Session.SubjectClient, req.Session.Bag)
+	ses, err := h.storage.Start(ctx,
+		req.Session.AccessToken,
+		req.Session.RefreshToken,
+		req.Session.SubjectId,
+		req.Session.SubjectClient,
+		req.Session.Bag,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -147,14 +152,24 @@ func (h *handler) setValue(ctx context.Context, req *mnemosynerpc.SetValueReques
 
 func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (int64, error) {
 	var (
-		expireAtFrom, expireAtTo *time.Time
+		accessToken, refreshToken string
+		expireAtFrom, expireAtTo  *time.Time
 	)
-	if req.AccessToken == "" && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
+
+	if req.DeleteBy == nil && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
 		return 0, grpc.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}
-	if req.AccessToken != "" {
-		h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
+	if req.DeleteBy != nil {
+		switch deleteBy := req.DeleteBy.(type) {
+		case *mnemosynerpc.DeleteRequest_AccessToken:
+			accessToken = deleteBy.AccessToken
+			h.logger = log.NewContext(h.logger).With("access_token", deleteBy.AccessToken)
+		case *mnemosynerpc.DeleteRequest_RefreshToken:
+			refreshToken = deleteBy.RefreshToken
+			h.logger = log.NewContext(h.logger).With("access_token", deleteBy.RefreshToken)
+		}
 	}
+
 	if req.ExpireAtFrom != nil {
 		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
 		if err != nil {
@@ -172,7 +187,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
 	}
 
-	affected, err := h.storage.Delete(ctx, req.AccessToken, expireAtFrom, expireAtTo)
+	affected, err := h.storage.Delete(ctx, accessToken, refreshToken, expireAtFrom, expireAtTo)
 	if err != nil {
 		return 0, err
 	}

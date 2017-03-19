@@ -8,6 +8,8 @@ import (
 
 	"context"
 
+	"bytes"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/prometheus/client_golang/prometheus"
@@ -29,22 +31,23 @@ func newPostgresStorage(tb, schema string, db *sql.DB, m *monitoring, ttl time.D
 		schema:  schema,
 		ttl:     ttl,
 		monitor: m,
-		querySave: `INSERT INTO ` + schema + ` .` + tb + ` (access_token, subject_id, subject_client, bag)
-			VALUES ($1, $2, $3, $4)
+		querySave: `INSERT INTO ` + schema + ` .` + tb + ` (access_token, refresh_token, subject_id, subject_client, bag)
+			VALUES ($1, $2, $3, $4, $5)
 			RETURNING expire_at`,
 		queryGet: fmt.Sprintf(`UPDATE `+schema+` .`+tb+`
 			SET expire_at = (NOW() + '%d seconds')
 			WHERE access_token = $1
-			RETURNING subject_id, subject_client, bag, expire_at`, int64(ttl.Seconds())),
+			RETURNING refresh_token, subject_id, subject_client, bag, expire_at`, int64(ttl.Seconds())),
 		queryExists:  `SELECT EXISTS(SELECT 1 FROM ` + schema + ` .` + tb + ` WHERE access_token = $1)`,
 		queryAbandon: `DELETE FROM ` + schema + ` .` + tb + ` WHERE access_token = $1`,
 	}
 }
 
 // Start implements storage interface.
-func (ps *postgresStorage) Start(ctx context.Context, at, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
+func (ps *postgresStorage) Start(ctx context.Context, accessToken, refreshToken, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
 	ent := &sessionEntity{
-		AccessToken:   at,
+		AccessToken:   accessToken,
+		RefreshToken:  refreshToken,
 		SubjectID:     sid,
 		SubjectClient: sc,
 		Bag:           bag(b),
@@ -57,17 +60,18 @@ func (ps *postgresStorage) Start(ctx context.Context, at, sid, sc string, b map[
 	return ent.session()
 }
 
-func (ps *postgresStorage) save(ctx context.Context, entity *sessionEntity) (err error) {
+func (ps *postgresStorage) save(ctx context.Context, ent *sessionEntity) (err error) {
 	labels := prometheus.Labels{"query": "save"}
 	err = ps.db.QueryRowContext(
 		ctx,
 		ps.querySave,
-		entity.AccessToken,
-		entity.SubjectID,
-		entity.SubjectClient,
-		entity.Bag,
+		ent.AccessToken,
+		ent.RefreshToken,
+		ent.SubjectID,
+		ent.SubjectClient,
+		ent.Bag,
 	).Scan(
-		&entity.ExpireAt,
+		&ent.ExpireAt,
 	)
 	ps.incQueries(labels)
 	if err != nil {
@@ -82,6 +86,7 @@ func (ps *postgresStorage) Get(ctx context.Context, accessToken string) (*mnemos
 	labels := prometheus.Labels{"query": "get"}
 
 	err := ps.db.QueryRowContext(ctx, ps.queryGet, accessToken).Scan(
+		&entity.RefreshToken,
 		&entity.SubjectID,
 		&entity.SubjectClient,
 		&entity.Bag,
@@ -101,7 +106,8 @@ func (ps *postgresStorage) Get(ctx context.Context, accessToken string) (*mnemos
 		return nil, err
 	}
 	return &mnemosynerpc.Session{
-		AccessToken:   string(accessToken),
+		AccessToken:   accessToken,
+		RefreshToken:  entity.RefreshToken,
 		SubjectId:     entity.SubjectID,
 		SubjectClient: entity.SubjectClient,
 		Bag:           entity.Bag,
@@ -116,7 +122,7 @@ func (ps *postgresStorage) List(ctx context.Context, offset, limit int64, expire
 	}
 
 	args := []interface{}{offset, limit}
-	query := "SELECT access_token, subject_id, subject_client, bag, expire_at FROM " + ps.schema + "." + ps.table + " "
+	query := "SELECT access_token, refresh_token, subject_id, subject_client, bag, expire_at FROM " + ps.schema + "." + ps.table + " "
 	if expiredAtFrom != nil || expiredAtTo != nil {
 		query += " WHERE "
 	}
@@ -145,29 +151,31 @@ func (ps *postgresStorage) List(ctx context.Context, offset, limit int64, expire
 
 	sessions := make([]*mnemosynerpc.Session, 0, limit)
 	for rows.Next() {
-		var entity sessionEntity
+		var ent sessionEntity
 
 		err = rows.Scan(
-			&entity.AccessToken,
-			&entity.SubjectID,
-			&entity.SubjectClient,
-			&entity.Bag,
-			&entity.ExpireAt,
+			&ent.AccessToken,
+			&ent.RefreshToken,
+			&ent.SubjectID,
+			&ent.SubjectClient,
+			&ent.Bag,
+			&ent.ExpireAt,
 		)
 		if err != nil {
 			ps.incError(labels)
 			return nil, err
 		}
 
-		expireAt, err := ptypes.TimestampProto(entity.ExpireAt)
+		expireAt, err := ptypes.TimestampProto(ent.ExpireAt)
 		if err != nil {
 			return nil, err
 		}
 		sessions = append(sessions, &mnemosynerpc.Session{
-			AccessToken:   entity.AccessToken,
-			SubjectId:     entity.SubjectID,
-			SubjectClient: entity.SubjectClient,
-			Bag:           entity.Bag,
+			AccessToken:   ent.AccessToken,
+			RefreshToken:  ent.RefreshToken,
+			SubjectId:     ent.SubjectID,
+			SubjectClient: ent.SubjectClient,
+			Bag:           ent.Bag,
 			ExpireAt:      expireAt,
 		})
 	}
@@ -275,13 +283,12 @@ func (ps *postgresStorage) SetValue(ctx context.Context, accessToken string, key
 }
 
 // Delete implements storage interface.
-func (ps *postgresStorage) Delete(ctx context.Context, accessToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
-	if accessToken == "" && expiredAtFrom == nil && expiredAtTo == nil {
-		return 0, errors.New("session cannot be deleted, no where parameter provided")
+func (ps *postgresStorage) Delete(ctx context.Context, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+	where, args := ps.where(accessToken, refreshToken, expiredAtFrom, expiredAtTo)
+	if where.Len() == 0 {
+		return 0, fmt.Errorf("session cannot be deleted, no where parameter provided: %s", where.String())
 	}
-
-	where, args := ps.where(accessToken, expiredAtFrom, expiredAtTo)
-	query := "DELETE FROM " + ps.schema + "." + ps.table + " WHERE " + where
+	query := "DELETE FROM " + ps.schema + "." + ps.table + " WHERE " + where.String()
 	labels := prometheus.Labels{"query": "delete"}
 
 	result, err := ps.db.Exec(query, args...)
@@ -300,15 +307,21 @@ func (ps *postgresStorage) Setup() error {
 		CREATE SCHEMA IF NOT EXISTS %s;
 		CREATE TABLE IF NOT EXISTS %s.%s (
 			access_token BYTEA PRIMARY KEY,
+			refresh_token BYTEA,
 			subject_id TEXT NOT NULL,
 			subject_client TEXT,
 			bag bytea NOT NULL,
 			expire_at TIMESTAMPTZ NOT NULL DEFAULT (NOW() + '%d seconds')
 
 		);
+		CREATE INDEX ON %s.%s (refresh_token);
 		CREATE INDEX ON %s.%s (subject_id);
 		CREATE INDEX ON %s.%s (expire_at DESC);
-	`, ps.schema, ps.schema, ps.table, int64(ps.ttl.Seconds()), ps.schema, ps.table, ps.schema, ps.table)
+	`, ps.schema, ps.schema, ps.table, int64(ps.ttl.Seconds()),
+		ps.schema, ps.table,
+		ps.schema, ps.table,
+		ps.schema, ps.table,
+	)
 	_, err := ps.db.Exec(query)
 
 	return err
@@ -333,29 +346,36 @@ func (ps *postgresStorage) incError(field prometheus.Labels) {
 	}
 }
 
-func (ps *postgresStorage) where(accessToken string, expiredAtFrom, expiredAtTo *time.Time) (string, []interface{}) {
+func (ps *postgresStorage) where(accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (*bytes.Buffer, []interface{}) {
+	var count int
+	buf := bytes.NewBuffer(nil)
+	args := make([]interface{}, 0, 4)
+
 	switch {
-	case accessToken != "" && expiredAtFrom == nil && expiredAtTo == nil:
-		return " access_token = $1", []interface{}{accessToken}
-	case accessToken == "" && expiredAtFrom != nil && expiredAtTo == nil:
-		return " expire_at > $1", []interface{}{expiredAtFrom}
-	case accessToken == "" && expiredAtFrom == nil && expiredAtTo != nil:
-		return " expire_at < $1", []interface{}{expiredAtTo}
-	case accessToken != "" && expiredAtFrom != nil && expiredAtTo == nil:
-		return " access_token = $1 AND expire_at > $2", []interface{}{accessToken, expiredAtFrom}
-	case accessToken != "" && expiredAtFrom == nil && expiredAtTo != nil:
-		return " access_token = $1 AND expire_at < $2", []interface{}{accessToken, expiredAtTo}
-	case accessToken == "" && expiredAtFrom != nil && expiredAtTo != nil:
-		return " expire_at > $1 AND expire_at < $2", []interface{}{expiredAtFrom, expiredAtTo}
-	case accessToken != "" && expiredAtFrom != nil && expiredAtTo != nil:
-		return " access_token = $1 AND expire_at > $2 AND expire_at < $3", []interface{}{accessToken, expiredAtFrom, expiredAtTo}
-	default:
-		return " ", nil
+	case accessToken != "":
+		count++
+		fmt.Fprintf(buf, " access_token = $%d", count)
+		args = append(args, accessToken)
+	case refreshToken != "":
+		count++
+		fmt.Fprintf(buf, " refresh_token = $%d", count)
+		args = append(args, refreshToken)
+	case expiredAtFrom != nil:
+		count++
+		fmt.Fprintf(buf, " expire_at > $%d", count)
+		args = append(args, expiredAtFrom)
+	case expiredAtTo != nil:
+		count++
+		fmt.Fprintf(buf, " expire_at < $%d", count)
+		args = append(args, expiredAtTo)
 	}
+
+	return buf, args
 }
 
 type sessionEntity struct {
 	AccessToken   string    `json:"accessToken"`
+	RefreshToken  string    `json:"refreshToken"`
 	SubjectID     string    `json:"subjectId"`
 	SubjectClient string    `json:"subjectClient"`
 	Bag           bag       `json:"bag"`
@@ -369,6 +389,7 @@ func (se *sessionEntity) session() (*mnemosynerpc.Session, error) {
 	}
 	return &mnemosynerpc.Session{
 		AccessToken:   se.AccessToken,
+		RefreshToken:  se.RefreshToken,
 		SubjectId:     se.SubjectID,
 		SubjectClient: se.SubjectClient,
 		Bag:           se.Bag,

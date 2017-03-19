@@ -253,6 +253,7 @@ func (d *Daemon) Close() (err error) {
 	if d.debugListener != nil {
 		err = d.debugListener.Close()
 	}
+
 	return
 }
 

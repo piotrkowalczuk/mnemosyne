@@ -121,7 +121,9 @@ func (m *mnemosyne) Start(ctx context.Context, subjectID, subjectClient string, 
 
 // Abandon implements Mnemosyne interface.
 func (m *mnemosyne) Abandon(ctx context.Context, token string) error {
-	_, err := m.client.Abandon(ctx, &mnemosynerpc.AbandonRequest{AccessToken: token})
+	_, err := m.client.Abandon(ctx, &mnemosynerpc.AbandonRequest{
+		AccessToken: token,
+	})
 
 	return err
 }

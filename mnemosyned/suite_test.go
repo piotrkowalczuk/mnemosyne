@@ -102,22 +102,24 @@ func ShouldBeValidSession(expected ...interface{}) (s string) {
 	return
 }
 
-func ShouldBeGRPCError(actual interface{}, expected ...interface{}) (s string) {
-	if len(expected) != 2 {
-		return fmt.Sprintf("This assertion requires exactly 2 comparison values (you provided %d).", len(expected))
-	}
+func ShouldBeGRPCError(compare func(interface{}, ...interface{}) string) func(actual interface{}, expected ...interface{}) (s string) {
+	return func(actual interface{}, expected ...interface{}) (s string) {
+		if len(expected) != 2 {
+			return fmt.Sprintf("This assertion requires exactly 2 comparison values (you provided %d).", len(expected))
+		}
 
-	e, ok := actual.(error)
-	if !ok {
-		return "The given value must implement error interface."
-	}
-	if s = convey.ShouldEqual(grpc.ErrorDesc(e), expected[1]); s != "" {
+		e, ok := actual.(error)
+		if !ok {
+			return "The given value must implement error interface."
+		}
+		if s = compare(grpc.ErrorDesc(e), expected[1]); s != "" {
+			return
+		}
+		if s = convey.ShouldEqual(grpc.Code(e), expected[0]); s != "" {
+			return
+		}
 		return
 	}
-	if s = convey.ShouldEqual(grpc.Code(e), expected[0]); s != "" {
-		return
-	}
-	return
 }
 
 func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) {
@@ -142,7 +144,7 @@ func ShouldBeValidToken(actual interface{}, expected ...interface{}) (s string) 
 	return
 }
 
-func randomAccessToken(t *testing.T) string {
+func randomToken(t *testing.T) string {
 	at, err := mnemosyne.RandomAccessToken()
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())

@@ -1,6 +1,7 @@
 package mnemosyned
 
 import (
+	"fmt"
 	"net"
 	"testing"
 	"time"
@@ -11,30 +12,69 @@ import (
 	"google.golang.org/grpc"
 )
 
+type e2eSuites []*e2eSuite
+
+func (es *e2eSuites) setup(t *testing.T, factor int) {
+	if testing.Short() {
+		t.Skip("e2e suite ignored in short mode")
+	}
+	t.Logf("e2e suite setup start for factor %d", factor)
+
+	listeners := make([]net.Listener, 0, factor)
+	for i := 0; i < factor; i++ {
+		listeners = append(listeners, listenTCP(t))
+	}
+	for i, l := range listeners {
+		var seeds []string
+		for _, s := range listeners {
+			if s.Addr().String() != l.Addr().String() {
+				seeds = append(seeds, s.Addr().String())
+			}
+		}
+		s := &e2eSuite{
+			listener: l,
+			seeds:    seeds,
+		}
+		s.setup(t, i)
+		*es = append(*es, s)
+	}
+	t.Logf("e2e suite setup finish for factor %d", factor)
+}
+
+func (es e2eSuites) teardown(t *testing.T) {
+	for _, s := range es {
+		s.teardown(t)
+	}
+}
+
 type e2eSuite struct {
 	listener   net.Listener
+	seeds      []string
 	daemon     *Daemon
 	client     mnemosynerpc.SessionManagerClient
 	clientConn *grpc.ClientConn
 }
 
-func (es *e2eSuite) setup(t *testing.T) {
-	if testing.Short() {
-		t.Skip("e2e suite ignored in short mode")
-	}
+func (es *e2eSuite) setup(t *testing.T, i int) {
 	var err error
+
 	//logger := sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	logger := sklog.NewTestLogger(t)
 
-	es.listener = listenTCP(t)
+	if es.listener == nil {
+		es.listener = listenTCP(t)
+	}
 	es.daemon, err = NewDaemon(&DaemonOpts{
-		IsTest:          true,
-		RPCOptions:      []grpc.ServerOption{},
-		RPCListener:     es.listener,
-		Storage:         StorageEnginePostgres,
-		Logger:          logger,
-		PostgresAddress: testPostgresAddress,
-		Monitoring:      true,
+		IsTest:            true,
+		RPCOptions:        []grpc.ServerOption{},
+		RPCListener:       es.listener,
+		Storage:           StorageEnginePostgres,
+		Logger:            logger,
+		PostgresAddress:   testPostgresAddress,
+		PostgresSchema:    fmt.Sprintf("mnemosyne_test_%d", i),
+		Monitoring:        true,
+		ClusterListenAddr: es.listener.Addr().String(),
+		ClusterSeeds:      es.seeds,
 	})
 	if err != nil {
 		t.Fatalf("unexpected deamon instantiation error: %s", err.Error())
@@ -74,13 +114,26 @@ func (es *e2eSuite) teardown(t *testing.T) {
 
 func WithE2ESuite(t *testing.T, f func(*e2eSuite)) func() {
 	return func() {
-		s := &e2eSuite{}
-		s.setup(t)
+		s := e2eSuites{}
+		s.setup(t, 1)
 
 		Reset(func() {
 			s.teardown(t)
 		})
-		f(s)
 
+		f(s[0])
+	}
+}
+
+func WithE2ESuites(t *testing.T, factor int, f func(e2eSuites)) func() {
+	return func() {
+		s := e2eSuites{}
+		s.setup(t, factor)
+
+		Reset(func() {
+			s.teardown(t)
+		})
+
+		f(s)
 	}
 }

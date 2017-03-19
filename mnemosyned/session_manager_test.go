@@ -2,6 +2,7 @@ package mnemosyned
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -51,7 +52,7 @@ func TestSessionManager_mockedStore(t *testing.T) {
 				Convey("Return session with same bag", func() {
 					So(res.Session.Bag, ShouldResemble, req.Session.Bag)
 				})
-				Convey("Return session with same subject id", func() {
+				Convey("Return session with same subject accessToken", func() {
 					So(res.Session, ShouldNotBeNil)
 					So(res.Session.SubjectId, ShouldEqual, req.Session.SubjectId)
 				})
@@ -65,7 +66,7 @@ func TestSessionManager_mockedStore(t *testing.T) {
 				})
 			}
 
-			Convey("With subject id and bag", func() {
+			Convey("With subject accessToken and bag", func() {
 				expireAt, err := ptypes.TimestampProto(time.Now())
 				So(err, ShouldBeNil)
 
@@ -73,7 +74,7 @@ func TestSessionManager_mockedStore(t *testing.T) {
 				session = &mnemosynerpc.Session{AccessToken: token, SubjectId: subjectID, Bag: bag, ExpireAt: expireAt}
 
 				Convey("Without storage error", func() {
-					suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+					suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 						Once().
 						Return(session, expectedErr)
 
@@ -84,14 +85,14 @@ func TestSessionManager_mockedStore(t *testing.T) {
 				})
 				Convey("With storage postgres error", func() {
 					expectedErr = pq.Error{Message: "fake postgres error"}
-					suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+					suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 						Once().
 						Return(nil, expectedErr)
 
 					res, err = suite.service.Start(context.Background(), req)
 
 					Convey("Should return grpc error with code 13", func() {
-						So(err, ShouldBeGRPCError, codes.Unknown, expectedErr.Error())
+						So(err, ShouldBeGRPCError(ShouldEqual), codes.Unknown, expectedErr.Error())
 					})
 					Convey("Should return an nil response", func() {
 						So(res, ShouldBeNil)
@@ -104,7 +105,7 @@ func TestSessionManager_mockedStore(t *testing.T) {
 
 				req = &mnemosynerpc.StartRequest{Session: &mnemosynerpc.Session{SubjectId: subjectID}}
 				session = &mnemosynerpc.Session{AccessToken: token, SubjectId: subjectID, ExpireAt: expireAt}
-				suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+				suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
 
@@ -115,8 +116,8 @@ func TestSessionManager_mockedStore(t *testing.T) {
 			})
 			Convey("Without subject and with bag", func() {
 				req = &mnemosynerpc.StartRequest{Session: &mnemosynerpc.Session{Bag: bag}}
-				expectedErr = errors.New("session cannot be started, subject id is missing")
-				suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
+				expectedErr = errors.New("session cannot be started, subject accessToken is missing")
+				suite.store.On("Start", mock.Anything, mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("string"), mock.AnythingOfType("map[string]string")).
 					Once().
 					Return(session, expectedErr)
 
@@ -136,101 +137,211 @@ func TestSessionManager_mockedStore(t *testing.T) {
 }
 
 func TestSessionManager_Start_postgresStore(t *testing.T) {
-	Convey("Start", t, WithE2ESuite(t, func(s *e2eSuite) {
-		Convey("With subject id", func() {
-			sid := "entity:1"
-			Convey("Should return newly created session", func() {
-				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-					Session: &mnemosynerpc.Session{SubjectId: sid},
-				})
+	factor := 2
 
-				So(err, ShouldBeNil)
-				So(resp, ShouldBeValidStartResponse, sid)
-			})
-		})
-		Convey("Without subject id", func() {
-			Convey("Should return invalid argument gRPC error", func() {
-				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{})
-
-				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingSession))
-			})
-		})
-	}))
-}
-
-func TestSessionManager_Get_postgresStore(t *testing.T) {
-	var (
-		sid string
-		at  string
-	)
-	Convey("Get", t, WithE2ESuite(t, func(s *e2eSuite) {
-		Convey("With existing session", func() {
-			sid = "entity:1"
-			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				Session: &mnemosynerpc.Session{SubjectId: sid},
-			})
-
-			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, sid)
-
-			at = resp.Session.AccessToken
-			Convey("With proper access token", func() {
-				Convey("Should return corresponding session", func() {
-					resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{
-						AccessToken: at,
+	Convey("Start", t, func() {
+		Convey("With single node", WithE2ESuite(t, func(s *e2eSuite) {
+			Convey("With subject id", func() {
+				sid := "entity:1"
+				Convey("Should return newly created session", func() {
+					resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
+						Session: &mnemosynerpc.Session{SubjectId: sid},
 					})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldBeValidGetResponse, sid)
+					So(resp, ShouldBeValidStartResponse, sid)
 				})
 			})
-			Convey("Without access token", func() {
+			Convey("Without subject id", func() {
 				Convey("Should return invalid argument gRPC error", func() {
-					resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{})
+					resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingSession))
 				})
 			})
-		})
-		Convey("With unknown access token", func() {
-			Convey("Should return not found gRPC error", func() {
-				resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{
-					AccessToken: "0000000000test",
+		}))
+		Convey("With cluster", WithE2ESuites(t, factor, func(s e2eSuites) {
+			Convey("With subject id", func() {
+				Convey("Should return newly created session", func() {
+					for i := 0; i < factor; i++ {
+						sid := fmt.Sprintf("entity:%d", i)
+						resp, err := s[i].client.Start(context.Background(), &mnemosynerpc.StartRequest{
+							Session: &mnemosynerpc.Session{SubjectId: sid},
+						})
+						So(err, ShouldBeNil)
+						So(resp, ShouldBeValidStartResponse, sid)
+					}
+				})
+			})
+			Convey("Without subject id", func() {
+				Convey("Should return invalid argument gRPC error", func() {
+					for i := 0; i < factor; i++ {
+						resp, err := s[i].client.Start(context.Background(), &mnemosynerpc.StartRequest{})
+
+						So(resp, ShouldBeNil)
+						So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingSession))
+					}
+				})
+			})
+		}))
+	})
+}
+
+func TestSessionManager_Get_postgresStore(t *testing.T) {
+	factor := 2
+	var (
+		subjectID   string
+		accessToken string
+	)
+	Convey("Get", t, func() {
+		Convey("With single node", WithE2ESuite(t, func(s *e2eSuite) {
+			Convey("With existing session", func() {
+				subjectID = "entity:1"
+				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
+					Session: &mnemosynerpc.Session{SubjectId: subjectID},
 				})
 
-				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session does not exists")
+				So(err, ShouldBeNil)
+				So(resp, ShouldBeValidStartResponse, subjectID)
+
+				accessToken = resp.Session.AccessToken
+				Convey("With proper access token", func() {
+					Convey("Should return corresponding session", func() {
+						resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{
+							AccessToken: accessToken,
+						})
+
+						So(err, ShouldBeNil)
+						So(resp, ShouldBeValidGetResponse, subjectID)
+					})
+				})
+				Convey("Without access token", func() {
+					Convey("Should return invalid argument gRPC error", func() {
+						resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{})
+
+						So(resp, ShouldBeNil)
+						So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					})
+				})
 			})
-		})
-	}))
+			Convey("With unknown access token", func() {
+				Convey("Should return not found gRPC error", func() {
+					resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{
+						AccessToken: "0000000000test",
+					})
+
+					So(resp, ShouldBeNil)
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session does not exists")
+				})
+			})
+		}))
+		Convey("With cluster", WithE2ESuites(t, factor, func(s e2eSuites) {
+			Convey("With existing session", func() {
+				var tokens []string
+				for i := 0; i < factor; i++ {
+					subjectID := fmt.Sprintf("entity:%d", i)
+					resp, err := s[i].client.Start(context.Background(), &mnemosynerpc.StartRequest{
+						Session: &mnemosynerpc.Session{SubjectId: subjectID},
+					})
+
+					So(err, ShouldBeNil)
+					So(resp, ShouldBeValidStartResponse, subjectID)
+
+					tokens = append(tokens, resp.Session.AccessToken)
+				}
+
+				for i := 0; i < factor; i++ {
+					Convey(fmt.Sprintf("As node#%d", i), func() {
+						for j, tok := range tokens {
+							msg := fmt.Sprintf("With someones else access token: %d", j)
+							if i == j {
+								msg = "With it's own access token"
+							}
+							Convey(msg, func() {
+								Convey("Should return corresponding session", func() {
+									resp, err := s[i].client.Get(context.Background(), &mnemosynerpc.GetRequest{
+										AccessToken: tok,
+									})
+
+									So(err, ShouldBeNil)
+									So(resp, ShouldBeValidGetResponse, subjectID)
+									Printf("session retrieved from '%s' through '%s'\n", s[j].daemon.Addr().String(), s[i].daemon.Addr().String())
+								})
+							})
+						}
+						Convey("Without access token", func() {
+							Convey("Should return invalid argument gRPC error", func() {
+								resp, err := s[i].client.Get(context.Background(), &mnemosynerpc.GetRequest{})
+
+								So(resp, ShouldBeNil)
+								So(err, ShouldBeGRPCError(ShouldEndWith), codes.InvalidArgument, "missing access token")
+							})
+						})
+					})
+				}
+			})
+			Convey("With non-existing session", func() {
+				for i := 0; i < factor; i++ {
+					Convey(fmt.Sprintf("As node#%d", i), func() {
+						Convey("Should return corresponding session", func() {
+							resp, err := s[i].client.Get(context.Background(), &mnemosynerpc.GetRequest{
+								AccessToken: "non-existing-token",
+							})
+
+							So(resp, ShouldBeNil)
+							So(err, ShouldBeGRPCError(ShouldEndWith), codes.NotFound, "session does not exists")
+						})
+					})
+				}
+			})
+			//accessToken = resp.Session.AccessToken
+			//Convey("With proper access token", func() {
+			//	Convey("Should return corresponding session", func() {
+			//		resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{
+			//			AccessToken: accessToken,
+			//		})
+			//
+			//		So(err, ShouldBeNil)
+			//		So(resp, ShouldBeValidGetResponse, subjectID)
+			//	})
+			//})
+			//Convey("Without access token", func() {
+			//	Convey("Should return invalid argument gRPC error", func() {
+			//		resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{})
+			//
+			//		So(resp, ShouldBeNil)
+			//		So(err, ShouldBeGRPCError(ShouldEqual),codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+			//	})
+			//})
+		}))
+	})
 }
 
 func TestSessionManager_Context_postgresStore(t *testing.T) {
 	var (
-		sid string
-		at  string
+		subjectID   string
+		accessToken string
 	)
 	Convey("Context", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
-			sid = "entity:1"
+			subjectID = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				Session: &mnemosynerpc.Session{SubjectId: sid},
+				Session: &mnemosynerpc.Session{SubjectId: subjectID},
 			})
 
 			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, sid)
+			So(resp, ShouldBeValidStartResponse, subjectID)
 
-			at = resp.Session.AccessToken
+			accessToken = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return corresponding session", func() {
-					meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, string(at))
+					meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, string(accessToken))
 					ctx := metadata.NewContext(context.Background(), meta)
 					resp, err := s.client.Context(ctx, &empty.Empty{})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldBeValidContextResponse, sid)
+					So(resp, ShouldBeValidContextResponse, subjectID)
 				})
 			})
 			Convey("Without metadata", func() {
@@ -238,7 +349,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 					resp, err := s.client.Context(context.Background(), &empty.Empty{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: missing access token in metadata")
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, "mnemosyned: missing access token in metadata")
 				})
 			})
 			Convey("Without access token", func() {
@@ -247,7 +358,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 					resp, err := s.client.Context(ctx, &empty.Empty{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: missing access token in metadata")
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, "mnemosyned: missing access token in metadata")
 				})
 			})
 		})
@@ -258,7 +369,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 				resp, err := s.client.Context(ctx, &empty.Empty{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, "mnemosyned: session does not exists")
+				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session does not exists")
 			})
 		})
 	}))
@@ -266,24 +377,24 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 
 func TestSessionManager_Exists_postgresStore(t *testing.T) {
 	var (
-		sid string
-		at  string
+		subjectID   string
+		accessToken string
 	)
 	Convey("Exists", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
-			sid = "entity:1"
+			subjectID = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				Session: &mnemosynerpc.Session{SubjectId: sid},
+				Session: &mnemosynerpc.Session{SubjectId: subjectID},
 			})
 
 			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, sid)
+			So(resp, ShouldBeValidStartResponse, subjectID)
 
-			at = resp.Session.AccessToken
+			accessToken = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return true", func() {
 					resp, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{
-						AccessToken: at,
+						AccessToken: accessToken,
 					})
 
 					So(err, ShouldBeNil)
@@ -295,7 +406,7 @@ func TestSessionManager_Exists_postgresStore(t *testing.T) {
 					resp, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
@@ -314,24 +425,24 @@ func TestSessionManager_Exists_postgresStore(t *testing.T) {
 
 func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 	var (
-		sid string
-		at  string
+		subjectID   string
+		accessToken string
 	)
 	Convey("Abandon", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
-			sid = "entity:1"
+			subjectID = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				Session: &mnemosynerpc.Session{SubjectId: sid},
+				Session: &mnemosynerpc.Session{SubjectId: subjectID},
 			})
 
 			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, sid)
+			So(resp, ShouldBeValidStartResponse, subjectID)
 
-			at = resp.Session.AccessToken
+			accessToken = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return true", func() {
 					resp, err := s.client.Abandon(context.Background(), &mnemosynerpc.AbandonRequest{
-						AccessToken: at,
+						AccessToken: accessToken,
 					})
 
 					So(err, ShouldBeNil)
@@ -343,7 +454,7 @@ func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 					resp, err := s.client.Abandon(context.Background(), &mnemosynerpc.AbandonRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
@@ -354,7 +465,7 @@ func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 				})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
+				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
 			})
 		})
 	}))
@@ -362,24 +473,24 @@ func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 
 func TestSessionManager_Delete_postgresStore(t *testing.T) {
 	var (
-		sid string
-		at  string
+		subjectID   string
+		accessToken string
 	)
 	Convey("Delete", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
-			sid = "entity:1"
+			subjectID = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				Session: &mnemosynerpc.Session{SubjectId: sid},
+				Session: &mnemosynerpc.Session{SubjectId: subjectID},
 			})
 
 			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, sid)
+			So(resp, ShouldBeValidStartResponse, subjectID)
 
-			at = resp.Session.AccessToken
+			accessToken = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return that one record affected", func() {
 					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
-						AccessToken: at,
+						DeleteBy: &mnemosynerpc.DeleteRequest_AccessToken{AccessToken: accessToken},
 					})
 
 					So(err, ShouldBeNil)
@@ -391,14 +502,14 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, "mnemosyned: none of expected arguments was provided")
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, "mnemosyned: none of expected arguments was provided")
 				})
 			})
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return that even single record was affected", func() {
 				resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
-					AccessToken: "0000000000test",
+					DeleteBy: &mnemosynerpc.DeleteRequest_AccessToken{AccessToken: "0000000000test"},
 				})
 
 				So(err, ShouldBeNil)
@@ -410,24 +521,24 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 
 func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 	var (
-		sid string
-		at  string
+		subjectID   string
+		accessToken string
 	)
 	Convey("SetValue", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
-			sid = "entity:1"
+			subjectID = "entity:1"
 			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
-				Session: &mnemosynerpc.Session{SubjectId: sid},
+				Session: &mnemosynerpc.Session{SubjectId: subjectID},
 			})
 
 			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, sid)
+			So(resp, ShouldBeValidStartResponse, subjectID)
 
-			at = resp.Session.AccessToken
+			accessToken = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return that one record affected", func() {
 					resp, err := s.client.SetValue(context.Background(), &mnemosynerpc.SetValueRequest{
-						AccessToken: at,
+						AccessToken: accessToken,
 						Key:         "key",
 						Value:       "value",
 					})
@@ -444,7 +555,7 @@ func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 					})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError, codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
@@ -457,7 +568,7 @@ func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 				})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError, codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
+				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
 			})
 		})
 	}))
@@ -465,7 +576,7 @@ func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 
 func TestSessionManager_List_postgresStore(t *testing.T) {
 	var (
-		sid string
+		subjectID string
 	)
 	nb := 20
 	Convey("List", t, WithE2ESuite(t, func(s *e2eSuite) {
@@ -475,7 +586,7 @@ func TestSessionManager_List_postgresStore(t *testing.T) {
 					Session: &mnemosynerpc.Session{SubjectId: strconv.Itoa(i)},
 				})
 				So(err, ShouldBeNil)
-				So(resp, ShouldBeValidStartResponse, sid)
+				So(resp, ShouldBeValidStartResponse, subjectID)
 			}
 			Convey("With empty request", func() {
 				Convey("Should return last 10 sessions", func() {

@@ -18,7 +18,7 @@ func testStorage_Start(t *testing.T, s storage) {
 	bag := map[string]string{
 		"username": "test",
 	}
-	session, err := s.Start(context.Background(), randomAccessToken(t), subjectID, subjectClient, bag)
+	session, err := s.Start(context.Background(), randomToken(t), "", subjectID, subjectClient, bag)
 
 	if assert.NoError(t, err) {
 		assert.Len(t, session.AccessToken, 128)
@@ -28,7 +28,7 @@ func testStorage_Start(t *testing.T, s storage) {
 }
 
 func testStorage_Get(t *testing.T, s storage) {
-	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomToken(t), randomToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -37,6 +37,7 @@ func testStorage_Get(t *testing.T, s storage) {
 	got, err := s.Get(context.Background(), ses.AccessToken)
 	require.NoError(t, err)
 	assert.Equal(t, ses.AccessToken, got.AccessToken)
+	assert.Equal(t, ses.RefreshToken, got.RefreshToken)
 	assert.Equal(t, ses.Bag, got.Bag)
 	if ses.ExpireAt.Seconds > got.ExpireAt.Seconds || (ses.ExpireAt.Seconds == got.ExpireAt.Seconds && ses.ExpireAt.Nanos > got.ExpireAt.Nanos) {
 		t.Fatalf("after get expire at should be increased, got %s but expected %s", got.ExpireAt, ses.ExpireAt)
@@ -56,7 +57,7 @@ func testStorage_List(t *testing.T, s storage) {
 	sc := "subjectClient"
 
 	for i := 1; i <= nb; i++ {
-		_, err := s.Start(context.Background(), randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		_, err := s.Start(context.Background(), randomToken(t), randomToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -72,6 +73,7 @@ func testStorage_List(t *testing.T, s storage) {
 
 	for i, s := range sessions {
 		assert.NotEmpty(t, s.AccessToken)
+		assert.NotEmpty(t, s.RefreshToken)
 		assert.NotEmpty(t, s.ExpireAt)
 		assert.Equal(t, s.SubjectId, sid)
 
@@ -90,7 +92,7 @@ func testStorage_List_between(t *testing.T, s storage) {
 	)
 
 	for i := 1; i <= nb; i++ {
-		res, err := s.Start(context.Background(), randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
+		res, err := s.Start(context.Background(), randomToken(t), "", sid, sc, map[string]string{key: strconv.FormatInt(int64(i), 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -118,7 +120,7 @@ func testStorage_List_between(t *testing.T, s storage) {
 }
 
 func testStorage_Exists(t *testing.T, s storage) {
-	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -136,7 +138,7 @@ func testStorage_Exists(t *testing.T, s storage) {
 }
 
 func testStorage_Abandon(t *testing.T, s storage) {
-	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	require.NoError(t, err)
@@ -158,7 +160,7 @@ func testStorage_Abandon(t *testing.T, s storage) {
 }
 
 func testStorage_SetValue(t *testing.T, s storage) {
-	ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectClient", map[string]string{
+	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
 	if err != nil {
@@ -236,7 +238,7 @@ func testStorage_Delete(t *testing.T, s storage) {
 	sc := "subjectClient"
 
 	for i := int64(1); i <= nb; i++ {
-		_, err := s.Start(context.Background(), randomAccessToken(t), sid, sc, map[string]string{key: strconv.FormatInt(i, 10)})
+		_, err := s.Start(context.Background(), randomToken(t), "", sid, sc, map[string]string{key: strconv.FormatInt(i, 10)})
 		if err != nil {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
@@ -244,18 +246,22 @@ func testStorage_Delete(t *testing.T, s storage) {
 
 	expiredAtTo := time.Now().Add(35 * time.Minute)
 
-	affected, err := s.Delete(context.Background(), "", nil, &expiredAtTo)
+	affected, err := s.Delete(context.Background(), "", "", nil, &expiredAtTo)
 	if assert.NoError(t, err) {
 		assert.Equal(t, nb, affected)
 	}
 
 	data := []struct {
-		id            bool
+		accessToken   bool
+		refreshToken  bool
 		expiredAtFrom bool
 		expiredAtTo   bool
 	}{
 		{
-			id: true,
+			accessToken: true,
+		},
+		{
+			refreshToken: true,
 		},
 		{
 			expiredAtFrom: true,
@@ -264,11 +270,22 @@ func testStorage_Delete(t *testing.T, s storage) {
 			expiredAtTo: true,
 		},
 		{
-			id:            true,
+			accessToken:   true,
 			expiredAtFrom: true,
 		},
 		{
-			id:            true,
+			accessToken:   true,
+			refreshToken:  true,
+			expiredAtFrom: true,
+		},
+		{
+			accessToken:   true,
+			expiredAtFrom: true,
+			expiredAtTo:   true,
+		},
+		{
+			accessToken:   true,
+			refreshToken:  true,
 			expiredAtFrom: true,
 			expiredAtTo:   true,
 		},
@@ -277,14 +294,24 @@ func testStorage_Delete(t *testing.T, s storage) {
 			expiredAtTo:   true,
 		},
 		{
-			id:          true,
+			refreshToken:  true,
+			expiredAtFrom: true,
+			expiredAtTo:   true,
+		},
+		{
+			accessToken: true,
 			expiredAtTo: true,
+		},
+		{
+			accessToken:  true,
+			refreshToken: true,
+			expiredAtTo:  true,
 		},
 	}
 
 DataLoop:
 	for _, args := range data {
-		ses, err := s.Start(context.Background(), randomAccessToken(t), "subjectID", "subjectID", nil)
+		ses, err := s.Start(context.Background(), randomToken(t), randomToken(t), "subjectID", "subjectID", nil)
 		require.NoError(t, err)
 
 		if !assert.NoError(t, err) {
@@ -292,15 +319,17 @@ DataLoop:
 		}
 
 		var (
-			id            string
-			expiredAtTo   *time.Time
-			expiredAtFrom *time.Time
+			accessToken, refreshToken string
+			expiredAtTo               *time.Time
+			expiredAtFrom             *time.Time
 		)
 
-		if args.id {
-			id = ses.AccessToken
+		if args.accessToken {
+			accessToken = ses.AccessToken
 		}
-
+		if args.refreshToken {
+			refreshToken = ses.RefreshToken
+		}
 		if args.expiredAtFrom {
 			expireAtFrom, err := ptypes.Timestamp(ses.ExpireAt)
 			if assert.NoError(t, err) {
@@ -318,14 +347,14 @@ DataLoop:
 			expiredAtTo = &eat
 		}
 
-		affected, err = s.Delete(context.Background(), id, expiredAtFrom, expiredAtTo)
+		affected, err = s.Delete(context.Background(), accessToken, refreshToken, expiredAtFrom, expiredAtTo)
 		if assert.NoError(t, err) {
-			if assert.Equal(t, int64(1), affected, "one session should be removed for id: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.id, args.expiredAtFrom, args.expiredAtTo) {
-				t.Logf("as expected session can be deleted with arguments id: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.id, args.expiredAtFrom, args.expiredAtTo)
+			if assert.Equal(t, int64(1), affected, "one session should be removed for accessToken: %-5t, refreshToken: %-5t, ,expiredAtFrom: %-5t, expiredAtTo: %-5t", args.accessToken, args.refreshToken, args.expiredAtFrom, args.expiredAtTo) {
+				t.Logf("as expected session can be deleted with arguments accessToken: %-5t, refreshToken: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.accessToken, args.refreshToken, args.expiredAtFrom, args.expiredAtTo)
 			}
 		}
 
-		affected, err = s.Delete(context.Background(), id, expiredAtFrom, expiredAtTo)
+		affected, err = s.Delete(context.Background(), accessToken, refreshToken, expiredAtFrom, expiredAtTo)
 		if assert.NoError(t, err) {
 			assert.Equal(t, int64(0), affected)
 		}

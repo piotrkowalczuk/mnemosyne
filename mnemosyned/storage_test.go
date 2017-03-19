@@ -246,17 +246,21 @@ func testStorage_Delete(t *testing.T, s storage) {
 
 	expiredAtTo := time.Now().Add(35 * time.Minute)
 
-	affected, err := s.Delete(context.Background(), "", "", nil, &expiredAtTo)
+	affected, err := s.Delete(context.Background(), "", "", "", nil, &expiredAtTo)
 	if assert.NoError(t, err) {
 		assert.Equal(t, nb, affected)
 	}
 
 	data := []struct {
+		subjectID     bool
 		accessToken   bool
 		refreshToken  bool
 		expiredAtFrom bool
 		expiredAtTo   bool
 	}{
+		{
+			subjectID: true,
+		},
 		{
 			accessToken: true,
 		},
@@ -270,6 +274,11 @@ func testStorage_Delete(t *testing.T, s storage) {
 			expiredAtTo: true,
 		},
 		{
+			accessToken:   true,
+			expiredAtFrom: true,
+		},
+		{
+			subjectID:     true,
 			accessToken:   true,
 			expiredAtFrom: true,
 		},
@@ -319,11 +328,14 @@ DataLoop:
 		}
 
 		var (
-			accessToken, refreshToken string
-			expiredAtTo               *time.Time
-			expiredAtFrom             *time.Time
+			subjectID, accessToken, refreshToken string
+			expiredAtTo                          *time.Time
+			expiredAtFrom                        *time.Time
 		)
 
+		if args.subjectID {
+			subjectID = ses.SubjectId
+		}
 		if args.accessToken {
 			accessToken = ses.AccessToken
 		}
@@ -347,14 +359,14 @@ DataLoop:
 			expiredAtTo = &eat
 		}
 
-		affected, err = s.Delete(context.Background(), accessToken, refreshToken, expiredAtFrom, expiredAtTo)
+		affected, err = s.Delete(context.Background(), subjectID, accessToken, refreshToken, expiredAtFrom, expiredAtTo)
 		if assert.NoError(t, err) {
 			if assert.Equal(t, int64(1), affected, "one session should be removed for accessToken: %-5t, refreshToken: %-5t, ,expiredAtFrom: %-5t, expiredAtTo: %-5t", args.accessToken, args.refreshToken, args.expiredAtFrom, args.expiredAtTo) {
 				t.Logf("as expected session can be deleted with arguments accessToken: %-5t, refreshToken: %-5t, expiredAtFrom: %-5t, expiredAtTo: %-5t", args.accessToken, args.refreshToken, args.expiredAtFrom, args.expiredAtTo)
 			}
 		}
 
-		affected, err = s.Delete(context.Background(), accessToken, refreshToken, expiredAtFrom, expiredAtTo)
+		affected, err = s.Delete(context.Background(), subjectID, accessToken, refreshToken, expiredAtFrom, expiredAtTo)
 		if assert.NoError(t, err) {
 			assert.Equal(t, int64(0), affected)
 		}

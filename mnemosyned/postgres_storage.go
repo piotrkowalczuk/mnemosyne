@@ -283,8 +283,8 @@ func (ps *postgresStorage) SetValue(ctx context.Context, accessToken string, key
 }
 
 // Delete implements storage interface.
-func (ps *postgresStorage) Delete(ctx context.Context, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
-	where, args := ps.where(accessToken, refreshToken, expiredAtFrom, expiredAtTo)
+func (ps *postgresStorage) Delete(ctx context.Context, subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+	where, args := ps.where(subjectID, accessToken, refreshToken, expiredAtFrom, expiredAtTo)
 	if where.Len() == 0 {
 		return 0, fmt.Errorf("session cannot be deleted, no where parameter provided: %s", where.String())
 	}
@@ -346,12 +346,16 @@ func (ps *postgresStorage) incError(field prometheus.Labels) {
 	}
 }
 
-func (ps *postgresStorage) where(accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (*bytes.Buffer, []interface{}) {
+func (ps *postgresStorage) where(subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (*bytes.Buffer, []interface{}) {
 	var count int
 	buf := bytes.NewBuffer(nil)
 	args := make([]interface{}, 0, 4)
 
 	switch {
+	case subjectID != "":
+		count++
+		fmt.Fprintf(buf, " subject_id = $%d", count)
+		args = append(args, subjectID)
 	case accessToken != "":
 		count++
 		fmt.Fprintf(buf, " access_token = $%d", count)

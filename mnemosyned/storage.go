@@ -26,6 +26,6 @@ type storage interface {
 	Get(context.Context, string) (*mnemosynerpc.Session, error)
 	List(context.Context, int64, int64, *time.Time, *time.Time) ([]*mnemosynerpc.Session, error)
 	Exists(context.Context, string) (bool, error)
-	Delete(context.Context, string, string, *time.Time, *time.Time) (int64, error)
+	Delete(context.Context, string, string, string, *time.Time, *time.Time) (int64, error)
 	SetValue(context.Context, string, string, string) (map[string]string, error)
 }

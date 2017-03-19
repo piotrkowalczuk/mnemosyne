@@ -87,6 +87,7 @@ message DeleteRequest {
     google.protobuf.Timestamp expire_at_from = 2;
     google.protobuf.Timestamp expire_at_to = 3;
     string refresh_token = 4;
+    string subject_id = 5;
 }
 message DeleteResponse {
     int64 count = 1;

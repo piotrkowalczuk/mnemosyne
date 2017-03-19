@@ -177,7 +177,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
 	}
 
-	affected, err := h.storage.Delete(ctx, req.AccessToken, req.RefreshToken, expireAtFrom, expireAtTo)
+	affected, err := h.storage.Delete(ctx, req.SubjectId, req.AccessToken, req.RefreshToken, expireAtFrom, expireAtTo)
 	if err != nil {
 		return 0, err
 	}

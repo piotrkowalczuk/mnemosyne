@@ -17,6 +17,7 @@ RUN apk --no-cache add curl
 
 COPY ./bin /usr/local/bin/
 COPY ./scripts/docker-entrypoint.sh /
+COPY ./scripts/docker-healthcheck.sh /
 
 EXPOSE 8080 8081
 

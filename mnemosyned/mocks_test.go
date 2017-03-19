@@ -67,13 +67,13 @@ func (_m *mockStorage) TearDown() error {
 	return r0
 }
 
-// Start provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4
-func (_m *mockStorage) Start(_a0 context.Context, _a1 string, _a2 string, _a3 string, _a4 map[string]string) (*mnemosynerpc.Session, error) {
-	ret := _m.Called(_a0, _a1, _a2, _a3, _a4)
+// Start provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4, _a5
+func (_m *mockStorage) Start(_a0 context.Context, _a1 string, _a2 string, _a3 string, _a4 string, _a5 map[string]string) (*mnemosynerpc.Session, error) {
+	ret := _m.Called(_a0, _a1, _a2, _a3, _a4, _a5)
 
 	var r0 *mnemosynerpc.Session
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, map[string]string) *mnemosynerpc.Session); ok {
-		r0 = rf(_a0, _a1, _a2, _a3, _a4)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, map[string]string) *mnemosynerpc.Session); ok {
+		r0 = rf(_a0, _a1, _a2, _a3, _a4, _a5)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*mnemosynerpc.Session)
@@ -81,8 +81,8 @@ func (_m *mockStorage) Start(_a0 context.Context, _a1 string, _a2 string, _a3 st
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, map[string]string) error); ok {
-		r1 = rf(_a0, _a1, _a2, _a3, _a4)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, map[string]string) error); ok {
+		r1 = rf(_a0, _a1, _a2, _a3, _a4, _a5)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -178,20 +178,20 @@ func (_m *mockStorage) Exists(_a0 context.Context, _a1 string) (bool, error) {
 	return r0, r1
 }
 
-// Delete provides a mock function with given fields: _a0, _a1, _a2, _a3
-func (_m *mockStorage) Delete(_a0 context.Context, _a1 string, _a2 *time.Time, _a3 *time.Time) (int64, error) {
-	ret := _m.Called(_a0, _a1, _a2, _a3)
+// Delete provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4
+func (_m *mockStorage) Delete(_a0 context.Context, _a1 string, _a2 string, _a3 *time.Time, _a4 *time.Time) (int64, error) {
+	ret := _m.Called(_a0, _a1, _a2, _a3, _a4)
 
 	var r0 int64
-	if rf, ok := ret.Get(0).(func(context.Context, string, *time.Time, *time.Time) int64); ok {
-		r0 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, *time.Time, *time.Time) int64); ok {
+		r0 = rf(_a0, _a1, _a2, _a3, _a4)
 	} else {
 		r0 = ret.Get(0).(int64)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, *time.Time, *time.Time) error); ok {
-		r1 = rf(_a0, _a1, _a2, _a3)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, *time.Time, *time.Time) error); ok {
+		r1 = rf(_a0, _a1, _a2, _a3, _a4)
 	} else {
 		r1 = ret.Error(1)
 	}

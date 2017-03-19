@@ -21,11 +21,11 @@ const (
 type storage interface {
 	Setup() error
 	TearDown() error
-	Start(context.Context, string, string, string, map[string]string) (*mnemosynerpc.Session, error)
+	Start(context.Context, string, string, string, string, map[string]string) (*mnemosynerpc.Session, error)
 	Abandon(context.Context, string) (bool, error)
 	Get(context.Context, string) (*mnemosynerpc.Session, error)
 	List(context.Context, int64, int64, *time.Time, *time.Time) ([]*mnemosynerpc.Session, error)
 	Exists(context.Context, string) (bool, error)
-	Delete(context.Context, string, *time.Time, *time.Time) (int64, error)
+	Delete(context.Context, string, string, *time.Time, *time.Time) (int64, error)
 	SetValue(context.Context, string, string, string) (map[string]string, error)
 }

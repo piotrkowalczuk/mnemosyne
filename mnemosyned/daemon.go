@@ -156,7 +156,7 @@ func (d *Daemon) Run() (err error) {
 	}
 
 	interceptor := promgrpc.NewInterceptor()
-	grpclog.SetLogger(sklog.NewGRPCLogger(d.logger))
+
 	gRPCServer := grpc.NewServer(append(
 		d.serverOptions,
 		// No stream endpoint available at the moment.

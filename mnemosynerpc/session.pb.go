@@ -64,6 +64,27 @@ func (m *Session) String() string            { return proto.CompactTextString(m)
 func (*Session) ProtoMessage()               {}
 func (*Session) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+func (m *Session) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
+
+func (m *Session) GetSubjectId() string {
+	if m != nil {
+		return m.SubjectId
+	}
+	return ""
+}
+
+func (m *Session) GetSubjectClient() string {
+	if m != nil {
+		return m.SubjectClient
+	}
+	return ""
+}
+
 func (m *Session) GetBag() map[string]string {
 	if m != nil {
 		return m.Bag
@@ -78,6 +99,13 @@ func (m *Session) GetExpireAt() *google_protobuf.Timestamp {
 	return nil
 }
 
+func (m *Session) GetRefreshToken() string {
+	if m != nil {
+		return m.RefreshToken
+	}
+	return ""
+}
+
 type GetRequest struct {
 	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
 }
@@ -86,6 +114,13 @@ func (m *GetRequest) Reset()                    { *m = GetRequest{} }
 func (m *GetRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetRequest) ProtoMessage()               {}
 func (*GetRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *GetRequest) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
 
 type GetResponse struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
@@ -132,6 +167,20 @@ func (m *ListRequest) String() string            { return proto.CompactTextStrin
 func (*ListRequest) ProtoMessage()               {}
 func (*ListRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
+func (m *ListRequest) GetOffset() int64 {
+	if m != nil {
+		return m.Offset
+	}
+	return 0
+}
+
+func (m *ListRequest) GetLimit() int64 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
 func (m *ListRequest) GetExpireAtFrom() *google_protobuf.Timestamp {
 	if m != nil {
 		return m.ExpireAtFrom
@@ -144,6 +193,13 @@ func (m *ListRequest) GetExpireAtTo() *google_protobuf.Timestamp {
 		return m.ExpireAtTo
 	}
 	return nil
+}
+
+func (m *ListRequest) GetRefreshToken() string {
+	if m != nil {
+		return m.RefreshToken
+	}
+	return ""
 }
 
 type ListResponse struct {
@@ -171,6 +227,13 @@ func (m *ExistsRequest) String() string            { return proto.CompactTextStr
 func (*ExistsRequest) ProtoMessage()               {}
 func (*ExistsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
+func (m *ExistsRequest) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
+
 type ExistsResponse struct {
 	Exists bool `protobuf:"varint,1,opt,name=exists" json:"exists,omitempty"`
 }
@@ -179,6 +242,13 @@ func (m *ExistsResponse) Reset()                    { *m = ExistsResponse{} }
 func (m *ExistsResponse) String() string            { return proto.CompactTextString(m) }
 func (*ExistsResponse) ProtoMessage()               {}
 func (*ExistsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *ExistsResponse) GetExists() bool {
+	if m != nil {
+		return m.Exists
+	}
+	return false
+}
 
 type StartRequest struct {
 	Session *Session `protobuf:"bytes,1,opt,name=session" json:"session,omitempty"`
@@ -221,6 +291,13 @@ func (m *AbandonRequest) String() string            { return proto.CompactTextSt
 func (*AbandonRequest) ProtoMessage()               {}
 func (*AbandonRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
 
+func (m *AbandonRequest) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
+
 type AbandonResponse struct {
 	Abandoned bool `protobuf:"varint,1,opt,name=abandoned" json:"abandoned,omitempty"`
 }
@@ -229,6 +306,13 @@ func (m *AbandonResponse) Reset()                    { *m = AbandonResponse{} }
 func (m *AbandonResponse) String() string            { return proto.CompactTextString(m) }
 func (*AbandonResponse) ProtoMessage()               {}
 func (*AbandonResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *AbandonResponse) GetAbandoned() bool {
+	if m != nil {
+		return m.Abandoned
+	}
+	return false
+}
 
 type SetValueRequest struct {
 	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken" json:"access_token,omitempty"`
@@ -240,6 +324,27 @@ func (m *SetValueRequest) Reset()                    { *m = SetValueRequest{} }
 func (m *SetValueRequest) String() string            { return proto.CompactTextString(m) }
 func (*SetValueRequest) ProtoMessage()               {}
 func (*SetValueRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *SetValueRequest) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
+
+func (m *SetValueRequest) GetKey() string {
+	if m != nil {
+		return m.Key
+	}
+	return ""
+}
+
+func (m *SetValueRequest) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
 
 type SetValueResponse struct {
 	Bag map[string]string `protobuf:"bytes,1,rep,name=bag" json:"bag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
@@ -270,6 +375,13 @@ func (m *DeleteRequest) String() string            { return proto.CompactTextStr
 func (*DeleteRequest) ProtoMessage()               {}
 func (*DeleteRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
+func (m *DeleteRequest) GetAccessToken() string {
+	if m != nil {
+		return m.AccessToken
+	}
+	return ""
+}
+
 func (m *DeleteRequest) GetExpireAtFrom() *google_protobuf.Timestamp {
 	if m != nil {
 		return m.ExpireAtFrom
@@ -284,6 +396,20 @@ func (m *DeleteRequest) GetExpireAtTo() *google_protobuf.Timestamp {
 	return nil
 }
 
+func (m *DeleteRequest) GetRefreshToken() string {
+	if m != nil {
+		return m.RefreshToken
+	}
+	return ""
+}
+
+func (m *DeleteRequest) GetSubjectId() string {
+	if m != nil {
+		return m.SubjectId
+	}
+	return ""
+}
+
 type DeleteResponse struct {
 	Count int64 `protobuf:"varint,1,opt,name=count" json:"count,omitempty"`
 }
@@ -292,6 +418,13 @@ func (m *DeleteResponse) Reset()                    { *m = DeleteResponse{} }
 func (m *DeleteResponse) String() string            { return proto.CompactTextString(m) }
 func (*DeleteResponse) ProtoMessage()               {}
 func (*DeleteResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+
+func (m *DeleteResponse) GetCount() int64 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
 
 func init() {
 	proto.RegisterType((*Session)(nil), "mnemosynerpc.Session")
@@ -619,7 +752,7 @@ func init() { proto.RegisterFile("session.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
 	// 778 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0xa4, 0x55, 0xdb, 0x6e, 0xd3, 0x4a,
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xdb, 0x6e, 0xd3, 0x4a,
 	0x14, 0xad, 0xe3, 0x5c, 0x77, 0x2e, 0xad, 0x46, 0x3d, 0x95, 0x8f, 0x7b, 0x51, 0x8f, 0x8f, 0x80,
 	0x3c, 0x39, 0x90, 0x4a, 0x5c, 0x2b, 0xda, 0xa6, 0x84, 0x82, 0x80, 0x17, 0xb7, 0xe2, 0x09, 0x29,
 	0x72, 0x92, 0x89, 0x6b, 0x1a, 0x7b, 0x8c, 0x67, 0x82, 0x9a, 0x0f, 0xe0, 0xa7, 0x10, 0x1f, 0xc3,

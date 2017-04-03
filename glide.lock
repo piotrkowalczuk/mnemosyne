@@ -1,5 +1,5 @@
 hash: 18c7edb426b92b594b06d4d72315074424cfa251f09dcf5dd4ca6d890dda9de7
-updated: 2017-01-19T14:20:22.536042578+01:00
+updated: 2017-04-04T00:21:07.624188222+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -18,7 +18,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: 0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0
+  version: 2bc9827a78f95c6665b5fe0abd1fd66b496ae2d8
   subpackages:
   - proto
   - ptypes
@@ -29,7 +29,7 @@ imports:
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/lib/pq
-  version: 4a82388ebc5138c8289fe9bc602cb0b3e32cd617
+  version: 2704adc878c21e1329f46f6e56a1c387d788ff94
   subpackages:
   - oid
 - name: github.com/matttproud/golang_protobuf_extensions
@@ -49,17 +49,19 @@ imports:
   subpackages:
   - prometheus
 - name: github.com/prometheus/client_model
-  version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
+  version: 6f3806018612930941127f2a7c6c453ba2c527d2
   subpackages:
   - go
 - name: github.com/prometheus/common
-  version: 195bde7883f7c39ea62b0d92ab7359b5327065cb
+  version: 49fee292b27bfff7f354ee0f64e1bc4850462edf
   subpackages:
   - expfmt
   - internal/bitbucket.org/ww/goautoneg
   - model
 - name: github.com/prometheus/procfs
-  version: fcdb11ccb4389efb1b210b7ffb623ab71c5fdd60
+  version: a1dba9ce8baed984a2495b658c82687f8157b98f
+  subpackages:
+  - xfs
 - name: github.com/stretchr/objx
   version: cbeaeb16a013161a98496fad62933b1d21786672
 - name: github.com/stretchr/testify
@@ -69,11 +71,11 @@ imports:
   - mock
   - require
 - name: golang.org/x/crypto
-  version: 9a6f0a01987842989747adff311d80750ba25530
+  version: 573951cbe80bb6352881271bb276f48749eab6f4
   subpackages:
   - sha3
 - name: golang.org/x/net
-  version: cfae461cedfdcab6e261a26eb77db53695623303
+  version: 0e2717dc3cc05907dc23096ef3a9086ea93f567f
   subpackages:
   - context
   - http2
@@ -83,11 +85,11 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 96382aa079b72d8c014eb0c50f6c223d1e6a2de0
+  version: 1e695b1c8febf17aad3bfa7bf0a819ef94b98ad5
   subpackages:
   - internal
 - name: google.golang.org/appengine
-  version: ca59ef35f409df61fa4a5f8290ff289b37eccfb8
+  version: c7b8227c83007befd67b324a64c969ebc1d7475d
   subpackages:
   - internal
   - internal/base
@@ -111,13 +113,13 @@ imports:
   - transport
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 0203db228191af09ef6f5644c623f25280d22ba3
+  version: 3496c6f94e1b945f3fc9580f6982675c0a74cd6c
   subpackages:
   - js
 - name: github.com/jtolds/gls
   version: bb0351aa7eb6f322f32667d51375f26a2bca6628
 - name: github.com/smartystreets/assertions
-  version: 26acb9229f421449ac63d014995b282d59261a8b
+  version: c9ee7d9e9a2aeec0bee7c4a516f3e0ad7cb7e558
   subpackages:
   - internal/go-render/render
   - internal/oglematchers

@@ -12,7 +12,7 @@ LDFLAGS = -X 'main.version=$(VERSION)'
 all: get install
 
 version:
-	@echo ${VERSION} >> VERSION.txt
+	@echo ${VERSION} > VERSION.txt
 
 gen:
 	@go generate .

@@ -28,7 +28,9 @@ $ go install ./cmd/mnemosyned
 $ mnemosyned -log.format=humane -postgres.address='postgres://localhost/example?sslmode=disable'
 ```
 
-Simpliest implementation could looks like that:
+### Examples
+
+#### Go
 
 ```go
 package main
@@ -61,6 +63,25 @@ func main() {
 
 	fmt.Println(ses.AccessToken)
 }
+```
+
+#### Python
+
+Library is available through [pypi](https://pypi.python.org/pypi/mnemosyne-client) and can be installed by typing `pip install mnemosyne-client`.
+
+```python
+from  mnemosynerpc import session_pb2, session_pb2_grpc
+import grpc
+
+
+channel = grpc.insecure_channel('localhost:8080')
+stub = session_pb2_grpc.SessionManagerStub(channel)
+
+for i in range(0, 10):
+	res = stub.Start(session_pb2.StartRequest(session=session_pb2.Session(subject_id=str(i))))
+
+	res = stub.Get(session_pb2.GetRequest(access_token=res.session.access_token))
+	print "%s - %s" % (res.session.access_token, res.session.expire_at.ToJsonString())
 ```
 ### Storage Engine
 Goal is to support multiple storage's, like [PostgreSQL](http://www.postgresql.org/), [Redis](http://redis.io) or [MongoDB](https://www.mongodb.org). Nevertheless currently supported is only [PostgreSQL](http://www.postgresql.org/).
@@ -125,7 +146,7 @@ Mnemosyne will automatically create all required tables/indexes for specified da
 
 - [ ] Client library
     - [x] Go
-    - [ ] Python
+    - [x] Python
 - [ ] Engines
 	- [x] PostgreSQL
 		- [x] Get

@@ -34,10 +34,10 @@ notifications:
     on_failure: always
     on_start: never
 before_deploy:
+- make version
 - python setup.py egg_info
 deploy:
   provider: pypi
-  skip_cleanup: true
   user: piotrkowalczuk
   password:
     secure: aQHKsFk9aZDgNl+3NqkCHOcpUhBKfNszJVe1tWr1gYkU7uZmYy+jAd/Juma1NRuAKy6keChqlSr4sQuu9fHXjYv3iwx+fwbiiDOQdL5D9WogJsyJmHqwQDOTxujz2lvqQPpP/U9eUzr7Q31sr7YRiNeqccPYPCWqoPRXDpqAYFVzelASTRyabYgrLAwqjfokLBgdcRw+BbA05Fhb+sRg+uWs0O+pCm/P8eOEoIx6hmOFnmSMdtujUGAJ0jwKPfPp9ZwG8YZN9gDx/vjOsdYoeHpYZXXnhZavWlANZ/t2QIINiJ5iedmdX1tis2j4vvsUZ8k7nrVOyo4secFJNxDtQME9EXLVn1FC2NiW/AWwIZjGXalt09g9BQVhTmpxkvvhk419hv0Z3CjKrJoROR+cNypBlMoynX/q75cihqyq4AX4tWV/lLqKtqYYqNyqj60sXRolzRZkERGSZ15Yo4OkZPeU0HhaNYXpBWZmTLqg4yURoea1FxsFAkVPFVnqzDx44ZvSndIhG7FDxF5hpe1fun6QTPlfFJMOl79FkpNhlh1aS4CV/pWdHrNRLXkC+VTx3Q99h3vUDxvn+4gg9eH98U+nslWaStCYWu7JewhLQjpTNgJ9Uwrxrnz6rqj+2vTGJvyhmdItbAvyCQNwowkkFCZaN84zvLavL2kYGBOk1Pc=

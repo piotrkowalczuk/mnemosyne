@@ -22,3 +22,4 @@ _test
 .vagrant
 /temp
 *.pyc
+VERSION.txt

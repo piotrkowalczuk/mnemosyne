@@ -26,6 +26,11 @@ func main() {
 		os.Exit(1)
 	}
 
+	if len(pool) == 0 {
+		fmt.Println("empty connection pool")
+		os.Exit(1)
+	}
+
 	max := 131
 	var sessions []*mnemosynerpc.Session
 	for i, conn := range pool {

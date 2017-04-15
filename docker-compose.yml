@@ -8,50 +8,53 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
   mnemosyned-1:
-#    image: piotrkowalczuk/mnemosyne:v0.4.0
+    image: piotrkowalczuk/mnemosyne:v0.9.2
     container_name: mnemosyned-1
-    image: mnemosyne
     environment:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-1:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-2:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne1
-    links:
+    depends_on:
       - postgres
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
   mnemosyned-2:
     container_name: mnemosyned-2
-#    image: piotrkowalczuk/mnemosyne:v0.4.0
+    image: piotrkowalczuk/mnemosyne:v0.9.2
     environment:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-2:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne2
-    image: mnemosyne
-    links:
+    depends_on:
       - postgres
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
   mnemosyned-3:
     container_name: mnemosyned-3
-#    image: piotrkowalczuk/mnemosyne:v0.4.0
+    image: piotrkowalczuk/mnemosyne:v0.9.2
     environment:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-3:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-2:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne3
-    image: mnemosyne
-    links:
+    depends_on:
       - postgres
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
   mnemosynestress:
-#    image: piotrkowalczuk/mnemosyne:v0.4.0
-    image: mnemosyne
+    container_name: mnemosynestress
+    image: piotrkowalczuk/mnemosyne:v0.9.2
     volumes:
       - ./bin/mnemosynestress:/usr/local/bin/mnemosynestress
-    links:
+    depends_on:
       - mnemosyned-1
       - mnemosyned-2
-    command: mnemosynestress -verbose -cluster.static -cluster.static.members=mnemosyned-1:8080 -cluster.static.members=mnemosyned-2:8080 -cluster.static.members=mnemosyned-3:8080
+      - mnemosyned-3
+    command: |-
+      mnemosynestress -verbose
+      -cluster.static
+      -cluster.static.members=mnemosyned-1:8080
+      -cluster.static.members=mnemosyned-2:8080
+      -cluster.static.members=mnemosyned-3:8080
 volumes:
   postgres-data:
     external: false

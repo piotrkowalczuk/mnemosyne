@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
+	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/promgrpc"
 	"github.com/piotrkowalczuk/sklog"
@@ -264,9 +265,11 @@ func (d *Daemon) initStorage(l log.Logger, table, schema string) (err error) {
 	case StorageEngineInMemory:
 		return errors.New("in memory storage is not implemented yet")
 	case StorageEnginePostgres:
-		d.postgres, err = initPostgres(
+		d.postgres, err = postgres.Init(
 			d.opts.PostgresAddress,
-			d.logger,
+			postgres.Opts{
+				Logger: d.logger,
+			},
 		)
 		if err != nil {
 			return

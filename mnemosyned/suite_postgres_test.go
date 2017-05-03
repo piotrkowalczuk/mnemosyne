@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/go-kit/kit/log"
+	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/sklog"
 )
 
@@ -23,7 +24,9 @@ func (ps *postgresSuite) setup(t *testing.T) {
 
 	ps.logger = sklog.NewTestLogger(t)
 	//ps.logger = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
-	ps.db, err = initPostgres(testPostgresAddress, ps.logger)
+	ps.db, err = postgres.Init(testPostgresAddress, postgres.Opts{
+		Logger: ps.logger,
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

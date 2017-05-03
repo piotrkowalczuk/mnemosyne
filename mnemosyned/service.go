@@ -1,14 +1,6 @@
 package mnemosyned
 
 import (
-	"database/sql"
-	"errors"
-	"fmt"
-	"net/url"
-	"time"
-
-	"context"
-
 	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/sklog"
@@ -134,54 +126,6 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 			refresh: cacheRefresh,
 		},
 	}
-}
-
-func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
-	db, err := sql.Open("postgres", address)
-	if err != nil {
-		return nil, fmt.Errorf("postgres connection failure: %s", err.Error())
-	}
-
-	u, err := url.Parse(address)
-	if err != nil {
-		return nil, err
-	}
-	username := ""
-	if u.User != nil {
-		username = u.User.Username()
-	}
-
-	// Otherwise 1 second cooldown is going to be multiplied by number of tests.
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-	defer cancel()
-
-	if err := db.PingContext(ctx); err != nil {
-		cancel := time.NewTimer(10 * time.Second)
-
-	PingLoop:
-		for {
-			select {
-			case <-time.After(1 * time.Second):
-				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-				if err := db.PingContext(ctx); err != nil {
-					sklog.Debug(logger, "postgres connection ping failure", "postgres_host", u.Host, "postgres_user", username)
-
-					cancel()
-					continue PingLoop
-				}
-				sklog.Info(logger, "postgres connection has been established", "postgres_host", u.Host, "postgres_user", username)
-
-				cancel()
-				break PingLoop
-			case <-cancel.C:
-				return nil, errors.New("postgres connection timout")
-			}
-		}
-	}
-
-	sklog.Info(logger, "postgres connection has been established", "address", address)
-
-	return db, nil
 }
 
 func initStorage(isTest bool, s storage) (storage, error) {

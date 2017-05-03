@@ -19,23 +19,23 @@ set -e
 : ${MNEMOSYNED_TLS_ENABLED:=false}
 
 if [ "$1" = 'mnemosyned' ]; then
-exec mnemosyned -host=$MNEMOSYNED_HOST \
-	-port=$MNEMOSYNED_PORT \
-	-ttl=$MNEMOSYNED_TTL \
-	-ttc=$MNEMOSYNED_TTC \
-	-cluster.listen=$MNEMOSYNED_CLUSTER_LISTEN \
-	-cluster.seeds=$MNEMOSYNED_CLUSTER_SEEDS \
-	-storage=$MNEMOSYNED_STORAGE \
-	-log.adapter=$MNEMOSYNED_LOG_ADAPTER \
-	-log.format=$MNEMOSYNED_LOG_FORMAT \
-	-log.level=$MNEMOSYNED_LOG_LEVEL \
-	-monitoring=$MNEMOSYNED_MONITORING \
-	-postgres.address=$MNEMOSYNED_POSTGRES_ADDRESS \
-	-postgres.table=$MNEMOSYNED_POSTGRES_TABLE \
-	-postgres.schema=$MNEMOSYNED_POSTGRES_SCHEMA \
-	-tls=$MNEMOSYNED_TLS_ENABLED \
-	-tls.cert=$MNEMOSYNED_TLS_CERT \
-	-tls.key=$MNEMOSYNED_TLS_KEY
+exec mnemosyned -host=${MNEMOSYNED_HOST} \
+	-port=${MNEMOSYNED_PORT} \
+	-ttl=${MNEMOSYNED_TTL} \
+	-ttc=${MNEMOSYNED_TTC} \
+	-cluster.listen=${MNEMOSYNED_CLUSTER_LISTEN} \
+	-cluster.seeds=${MNEMOSYNED_CLUSTER_SEEDS} \
+	-storage=${MNEMOSYNED_STORAGE} \
+	-log.adapter=${MNEMOSYNED_LOG_ADAPTER} \
+	-log.format=${MNEMOSYNED_LOG_FORMAT} \
+	-log.level=${MNEMOSYNED_LOG_LEVEL} \
+	-monitoring=${MNEMOSYNED_MONITORING} \
+	-postgres.address=${MNEMOSYNED_POSTGRES_ADDRESS} \
+	-postgres.table=${MNEMOSYNED_POSTGRES_TABLE} \
+	-postgres.schema=${MNEMOSYNED_POSTGRES_SCHEMA} \
+	-tls=${MNEMOSYNED_TLS_ENABLED} \
+	-tls.cert=${MNEMOSYNED_TLS_CERT} \
+	-tls.key=${MNEMOSYNED_TLS_KEY}
 fi
 
 exec "$@"

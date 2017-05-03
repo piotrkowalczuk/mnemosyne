@@ -28,7 +28,7 @@ func (ps *postgresSuite) setup(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if ps.store, err = initStorage(true, newPostgresStorage("session", "mnemosyne", ps.db, &monitoring{}, DefaultTTL), ps.logger); err != nil {
+	if ps.store, err = initStorage(true, newPostgresStorage("session", "mnemosyne", ps.db, &monitoring{}, DefaultTTL)); err != nil {
 		t.Fatal(err)
 	}
 }

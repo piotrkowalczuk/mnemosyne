@@ -1,5 +1,5 @@
-hash: 18c7edb426b92b594b06d4d72315074424cfa251f09dcf5dd4ca6d890dda9de7
-updated: 2017-04-04T00:21:07.624188222+02:00
+hash: 91925d13c6ae76d9341d496be05f8d9ccaab45538cbc9815c3efe723747f3c04
+updated: 2017-05-03T09:12:47.552151337+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -18,7 +18,7 @@ imports:
 - name: github.com/go-stack/stack
   version: 100eb0c0a9c5b306ca2fb4f165df21d80ada4b82
 - name: github.com/golang/protobuf
-  version: 2bc9827a78f95c6665b5fe0abd1fd66b496ae2d8
+  version: 2bba0603135d7d7f5cb73b2125beeda19c09f4ef
   subpackages:
   - proto
   - ptypes
@@ -29,7 +29,7 @@ imports:
 - name: github.com/kr/logfmt
   version: b84e30acd515aadc4b783ad4ff83aff3299bdfe0
 - name: github.com/lib/pq
-  version: 2704adc878c21e1329f46f6e56a1c387d788ff94
+  version: 4a82388ebc5138c8289fe9bc602cb0b3e32cd617
   subpackages:
   - oid
 - name: github.com/matttproud/golang_protobuf_extensions
@@ -71,11 +71,11 @@ imports:
   - mock
   - require
 - name: golang.org/x/crypto
-  version: 573951cbe80bb6352881271bb276f48749eab6f4
+  version: 6022e334c1a8cce46fb30629dc30e835faa3844d
   subpackages:
   - sha3
 - name: golang.org/x/net
-  version: 0e2717dc3cc05907dc23096ef3a9086ea93f567f
+  version: d1e1b351919c6738fdeb9893d5c998b161464f0c
   subpackages:
   - context
   - http2
@@ -85,11 +85,18 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 1e695b1c8febf17aad3bfa7bf0a819ef94b98ad5
+  version: 7fdf09982454086d5570c7db3e11f360194830ca
   subpackages:
   - internal
+- name: golang.org/x/text
+  version: f4b4367115ec2de254587813edaa901bc1c723a8
+  subpackages:
+  - secure/bidirule
+  - transform
+  - unicode/bidi
+  - unicode/norm
 - name: google.golang.org/appengine
-  version: c7b8227c83007befd67b324a64c969ebc1d7475d
+  version: 56d253d1dd14aa01937e12c73a0971bcfd797ff2
   subpackages:
   - internal
   - internal/base
@@ -113,7 +120,7 @@ imports:
   - transport
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 3496c6f94e1b945f3fc9580f6982675c0a74cd6c
+  version: 9659c814f1d54d63f9c623449a7111d3864c1361
   subpackages:
   - js
 - name: github.com/jtolds/gls

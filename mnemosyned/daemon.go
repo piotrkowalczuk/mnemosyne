@@ -274,7 +274,6 @@ func (d *Daemon) initStorage(l log.Logger, table, schema string) (err error) {
 		if d.storage, err = initStorage(
 			d.opts.IsTest,
 			newPostgresStorage(table, schema, d.postgres, d.monitor, d.opts.SessionTTL),
-			d.logger,
 		); err != nil {
 			return
 		}

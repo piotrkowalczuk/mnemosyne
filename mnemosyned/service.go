@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"time"
 
+	"context"
+
 	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/sklog"
@@ -150,18 +152,26 @@ func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
 	}
 
 	// Otherwise 1 second cooldown is going to be multiplied by number of tests.
-	if err := db.Ping(); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
 		cancel := time.NewTimer(10 * time.Second)
 
 	PingLoop:
 		for {
 			select {
 			case <-time.After(1 * time.Second):
-				if err := db.Ping(); err != nil {
+				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+				if err := db.PingContext(ctx); err != nil {
 					sklog.Debug(logger, "postgres connection ping failure", "postgres_host", u.Host, "postgres_user", username)
+
+					cancel()
 					continue PingLoop
 				}
 				sklog.Info(logger, "postgres connection has been established", "postgres_host", u.Host, "postgres_user", username)
+
+				cancel()
 				break PingLoop
 			case <-cancel.C:
 				return nil, errors.New("postgres connection timout")
@@ -174,7 +184,7 @@ func initPostgres(address string, logger log.Logger) (*sql.DB, error) {
 	return db, nil
 }
 
-func initStorage(isTest bool, s storage, l log.Logger) (storage, error) {
+func initStorage(isTest bool, s storage) (storage, error) {
 	if isTest {
 		if err := s.TearDown(); err != nil {
 			return nil, err
@@ -193,6 +203,6 @@ func initCluster(l log.Logger, addr string, seeds ...string) (*cluster.Cluster, 
 		return nil, err
 	}
 
-	sklog.Debug(l, "cluster initialized", "seeds", len(seeds), "listen", addr)
+	sklog.Debug(l, "cluster initialized", "seeds", seeds, "listen", addr)
 	return csr, nil
 }

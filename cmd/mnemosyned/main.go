@@ -20,7 +20,6 @@ func main() {
 	rpcListener := initListener(logger, config.host, config.port)
 	debugListener := initListener(logger, config.host, config.port+1)
 
-	logger.Log("WTF", config.postgres.address)
 	daemon, err := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
 		SessionTTL:        config.session.ttl,
 		SessionTTC:        config.session.ttc,

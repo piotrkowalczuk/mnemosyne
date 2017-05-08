@@ -3,7 +3,9 @@ package cluster
 import (
 	"sort"
 
+	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
+	"github.com/piotrkowalczuk/sklog"
 	"google.golang.org/grpc"
 )
 
@@ -12,18 +14,28 @@ type Cluster struct {
 	listen  string
 	buckets int
 	nodes   []*Node
+
+	logger log.Logger
+}
+
+// Opts ...
+type Opts struct {
+	Listen string
+	Seeds  []string
+	Logger log.Logger
 }
 
 // New ...
-func New(listen string, seeds ...string) (csr *Cluster, err error) {
+func New(opts Opts) (csr *Cluster, err error) {
 	var nodes []string
-	nodes = append(nodes, listen)
-	nodes = append(nodes, seeds...)
+	nodes = append(nodes, opts.Listen)
+	nodes = append(nodes, opts.Seeds...)
 	sort.Strings(nodes)
 
 	csr = &Cluster{
 		nodes:  make([]*Node, 0),
-		listen: listen,
+		listen: opts.Listen,
+		logger: opts.Logger,
 	}
 
 	for _, addr := range nodes {
@@ -48,6 +60,10 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 		conn, err := grpc.Dial(n.Addr, opts...)
 		if err != nil {
 			return err
+		}
+
+		if c.logger != nil {
+			sklog.Debug(c.logger, "cluster node connection success", "address", n.Addr)
 		}
 
 		n.Client = mnemosynerpc.NewSessionManagerClient(conn)

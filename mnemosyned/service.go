@@ -142,7 +142,11 @@ func initStorage(isTest bool, s storage) (storage, error) {
 }
 
 func initCluster(l log.Logger, addr string, seeds ...string) (*cluster.Cluster, error) {
-	csr, err := cluster.New(addr, seeds...)
+	csr, err := cluster.New(cluster.Opts{
+		Listen: addr,
+		Seeds:  seeds,
+		Logger: l,
+	})
 	if err != nil {
 		return nil, err
 	}

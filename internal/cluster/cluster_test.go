@@ -9,7 +9,9 @@ import (
 
 func TestNew(t *testing.T) {
 	create := func(t *testing.T, args ...string) *cluster.Cluster {
-		c, err := cluster.New(args[0], args[1:]...)
+		c, err := cluster.New(cluster.Opts{
+			Listen: args[0], Seeds: args[1:],
+		})
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err.Error())
 		}
@@ -41,7 +43,10 @@ func TestNew(t *testing.T) {
 func TestCluster_Get(t *testing.T) {
 	listen := "172.17.0.1"
 	seeds := []string{"172.17.0.2", "172.17.0.3", "10.10.0.1"}
-	c, err := cluster.New(listen, seeds...)
+	c, err := cluster.New(cluster.Opts{
+		Listen: listen,
+		Seeds:  seeds,
+	})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}

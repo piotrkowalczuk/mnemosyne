@@ -74,7 +74,9 @@ func (is *integrationSuite) teardown(t *testing.T) {
 }
 
 func (is *integrationSuite) initCluster(t *testing.T) *cluster.Cluster {
-	csr, err := cluster.New(is.listener.Addr().String())
+	csr, err := cluster.New(cluster.Opts{
+		Listen: is.listener.Addr().String(),
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

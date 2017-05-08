@@ -21,8 +21,8 @@ gen:
 	@ls -al ./${SERVICE}rpc | grep "pb.go"
 
 build:
-	@CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -o bin/${SERVICE}d ${PACKAGE_CMD_DAEMON}
-	@CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -a -o bin/${SERVICE}stress ${PACKAGE_CMD_STRESS}
+	@CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -installsuffix cgo -a -o bin/${SERVICE}d ${PACKAGE_CMD_DAEMON}
+	@CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -installsuffix cgo -a -o bin/${SERVICE}stress ${PACKAGE_CMD_STRESS}
 
 install:
 	@go install -ldflags "${LDFLAGS}" ${PACKAGE_CMD_DAEMON}

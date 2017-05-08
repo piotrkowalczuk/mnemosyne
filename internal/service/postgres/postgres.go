@@ -29,11 +29,6 @@ func Init(address string, opts Opts) (*sql.DB, error) {
 		retry = 1 * time.Second
 	}
 
-	db, err := sql.Open("postgres", address)
-	if err != nil {
-		return nil, fmt.Errorf("postgres connection failure: %s", err.Error())
-	}
-
 	u, err := url.Parse(address)
 	if err != nil {
 		return nil, err
@@ -41,6 +36,13 @@ func Init(address string, opts Opts) (*sql.DB, error) {
 	username := ""
 	if u.User != nil {
 		username = u.User.Username()
+	}
+
+	sklog.Debug(opts.Logger, "postgres connection attempt", "postgres_host", u.Host, "postgres_user", username)
+
+	db, err := sql.Open("postgres", address)
+	if err != nil {
+		return nil, fmt.Errorf("postgres connection failure: %s", err.Error())
 	}
 
 	// Otherwise 1 second cooldown is going to be multiplied by number of tests.

@@ -52,9 +52,13 @@ func New(opts Opts) (csr *Cluster, err error) {
 
 // Connect ...
 func (c *Cluster) Connect(opts ...grpc.DialOption) error {
-	for _, n := range c.nodes {
+	for i, n := range c.nodes {
 		if n.Addr == c.listen {
 			continue
+		}
+
+		if c.logger != nil {
+			sklog.Debug(c.logger, "cluster node attempt to connect", "address", n.Addr, "index", i)
 		}
 
 		conn, err := grpc.Dial(n.Addr, opts...)
@@ -63,7 +67,7 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 		}
 
 		if c.logger != nil {
-			sklog.Debug(c.logger, "cluster node connection success", "address", n.Addr)
+			sklog.Debug(c.logger, "cluster node connection success", "address", n.Addr, "index", i)
 		}
 
 		n.Client = mnemosynerpc.NewSessionManagerClient(conn)

@@ -1,10 +1,9 @@
 package mnemosyned
 
 import (
-	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
-	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 )
 
 func initPrometheus(namespace string, enabled bool, constLabels prometheus.Labels) *monitoring {
@@ -141,7 +140,7 @@ func initStorage(isTest bool, s storage) (storage, error) {
 	return s, nil
 }
 
-func initCluster(l log.Logger, addr string, seeds ...string) (*cluster.Cluster, error) {
+func initCluster(l *zap.Logger, addr string, seeds ...string) (*cluster.Cluster, error) {
 	csr, err := cluster.New(cluster.Opts{
 		Listen: addr,
 		Seeds:  seeds,
@@ -151,6 +150,6 @@ func initCluster(l log.Logger, addr string, seeds ...string) (*cluster.Cluster, 
 		return nil, err
 	}
 
-	sklog.Debug(l, "cluster initialized", "seeds", seeds, "listen", addr)
+	l.Debug("cluster initialized", zap.Strings("seeds", seeds), zap.String("listen", addr))
 	return csr, nil
 }

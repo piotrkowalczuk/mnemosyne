@@ -5,11 +5,12 @@ import (
 	"os"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
-	"github.com/piotrkowalczuk/sklog"
 )
 
 var (
@@ -32,7 +33,7 @@ func getStringEnvOr(env, or string) string {
 
 func TestInit_retry(t *testing.T) {
 	_, err := postgres.Init(testPostgresAddress, postgres.Opts{
-		Logger:  sklog.NewTestLogger(t),
+		Logger:  zap.L(),
 		Timeout: 10 * time.Second,
 		Retry:   1 * time.Microsecond,
 	})
@@ -43,7 +44,7 @@ func TestInit_retry(t *testing.T) {
 
 func TestInit_timeout(t *testing.T) {
 	_, err := postgres.Init(testPostgresAddress, postgres.Opts{
-		Logger:  sklog.NewTestLogger(t),
+		Logger:  zap.L(),
 		Timeout: 1 * time.Microsecond,
 		Retry:   1 * time.Microsecond,
 	})
@@ -56,7 +57,7 @@ func TestInit_timeout(t *testing.T) {
 }
 func TestInit_empty(t *testing.T) {
 	_, err := postgres.Init(testPostgresAddress, postgres.Opts{
-		Logger: sklog.NewTestLogger(t),
+		Logger: zap.L(),
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())

@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"github.com/piotrkowalczuk/sklog"
 	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 )
@@ -30,8 +31,6 @@ func (is *integrationSuite) setup(t *testing.T) {
 
 	var err error
 
-	logger := sklog.NewTestLogger(t)
-	//logger := sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	monitor := initPrometheus("mnemosyne_test", false, stdprometheus.Labels{"server": "test"})
 
 	is.store = &mockStorage{}
@@ -39,7 +38,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 	is.server = grpc.NewServer()
 	is.serviceServer, err = newSessionManager(sessionManagerOpts{
 		addr:       is.listener.Addr().String(),
-		logger:     logger,
+		logger:     zap.L(),
 		storage:    is.store,
 		monitoring: monitor,
 		cluster:    is.initCluster(t),

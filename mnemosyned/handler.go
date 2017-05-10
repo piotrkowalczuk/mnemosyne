@@ -3,7 +3,8 @@ package mnemosyned
 import (
 	"time"
 
-	"github.com/go-kit/kit/log"
+	"go.uber.org/zap"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"golang.org/x/net/context"
@@ -11,18 +12,18 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-type handlerFunc func(logger log.Logger, storage storage, monitor monitoringRPC) *handler
+type handlerFunc func(logger *zap.Logger, storage storage, monitor monitoringRPC) *handler
 
 type handler struct {
-	logger  log.Logger
+	logger  *zap.Logger
 	storage storage
 	monitor monitoringRPC
 }
 
 func newHandlerFunc(endpoint string) handlerFunc {
-	return func(logger log.Logger, storage storage, monitor monitoringRPC) *handler {
+	return func(logger *zap.Logger, storage storage, monitor monitoringRPC) *handler {
 		h := &handler{
-			logger:  log.NewContext(logger).With("endpoint", endpoint),
+			logger:  logger.With(zap.String("endpoint", endpoint)),
 			storage: storage,
 		}
 		return h
@@ -34,7 +35,7 @@ func (h *handler) get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemo
 		return nil, errMissingAccessToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
+	h.logger = h.logger.With(zap.String("access_token", req.AccessToken))
 
 	ses, err := h.storage.Get(ctx, req.AccessToken)
 	if err != nil {
@@ -50,14 +51,14 @@ func (h *handler) list(ctx context.Context, req *mnemosynerpc.ListRequest) ([]*m
 	var (
 		expireAtFrom, expireAtTo *time.Time
 	)
-	h.logger = log.NewContext(h.logger).With("offset", req.Offset, "limit", req.Limit)
+	h.logger = h.logger.With(zap.Int64("offset", req.Offset), zap.Int64("limit", req.Limit))
 	if req.ExpireAtFrom != nil {
 		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
 		if err != nil {
 			return nil, err
 		}
 		expireAtFrom = &eaf
-		h.logger = log.NewContext(h.logger).With("expire_at_from", eaf)
+		h.logger = h.logger.With(zap.Time("expire_at_from", eaf))
 	}
 	if req.ExpireAtTo != nil {
 		eat, err := ptypes.Timestamp(req.ExpireAtTo)
@@ -65,7 +66,7 @@ func (h *handler) list(ctx context.Context, req *mnemosynerpc.ListRequest) ([]*m
 			return nil, err
 		}
 		expireAtTo = &eat
-		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
+		h.logger = h.logger.With(zap.Time("expire_at_to", eat))
 	}
 	if req.Limit == 0 {
 		req.Limit = 10
@@ -79,7 +80,7 @@ func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*m
 		return nil, errMissingSubjectID
 	}
 
-	h.logger = log.NewContext(h.logger).With("subject_id", req.Session.SubjectId)
+	h.logger = h.logger.With(zap.String("subject_id", req.Session.SubjectId))
 	ses, err := h.storage.Start(ctx,
 		req.Session.AccessToken,
 		req.Session.RefreshToken,
@@ -95,7 +96,7 @@ func (h *handler) start(ctx context.Context, req *mnemosynerpc.StartRequest) (*m
 	if err != nil {
 		return nil, err
 	}
-	h.logger = log.NewContext(h.logger).With("access_token", ses.AccessToken, "expire_at", expireAt)
+	h.logger = h.logger.With(zap.String("access_token", ses.AccessToken), zap.Time("expire_at", expireAt))
 
 	return ses, nil
 }
@@ -105,14 +106,14 @@ func (h *handler) exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (
 		return false, errMissingAccessToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
+	h.logger = h.logger.With(zap.String("access_token", req.AccessToken))
 
 	exists, err := h.storage.Exists(ctx, req.AccessToken)
 	if err != nil {
 		return false, err
 	}
 
-	h.logger = log.NewContext(h.logger).With("exists", exists)
+	h.logger = h.logger.With(zap.Bool("exists", exists))
 
 	return exists, nil
 }
@@ -122,7 +123,7 @@ func (h *handler) abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest)
 		return false, errMissingAccessToken
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken)
+	h.logger = h.logger.With(zap.String("access_token", req.AccessToken))
 
 	abandoned, err := h.storage.Abandon(ctx, req.AccessToken)
 	if err != nil {
@@ -140,7 +141,7 @@ func (h *handler) setValue(ctx context.Context, req *mnemosynerpc.SetValueReques
 		return nil, grpc.Errorf(codes.InvalidArgument, "missing bag key")
 	}
 
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken, "key", req.Key, "value", req.Value)
+	h.logger = h.logger.With(zap.String("access_token", req.AccessToken), zap.String("key", req.Key), zap.String("value", req.Value))
 
 	bag, err := h.storage.SetValue(ctx, req.AccessToken, req.Key, req.Value)
 	if err != nil {
@@ -158,7 +159,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 	if req.AccessToken == "" && req.RefreshToken == "" && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
 		return 0, grpc.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}
-	h.logger = log.NewContext(h.logger).With("access_token", req.AccessToken, "refresh_token", req.RefreshToken)
+	h.logger = h.logger.With(zap.String("access_token", req.AccessToken), zap.String("refresh_token", req.RefreshToken))
 
 	if req.ExpireAtFrom != nil {
 		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
@@ -166,7 +167,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 			return 0, err
 		}
 		expireAtFrom = &eaf
-		h.logger = log.NewContext(h.logger).With("expire_at_from", eaf)
+		h.logger = h.logger.With(zap.Time("expire_at_from", eaf))
 	}
 	if req.ExpireAtTo != nil {
 		eat, err := ptypes.Timestamp(req.ExpireAtTo)
@@ -174,7 +175,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 			return 0, err
 		}
 		expireAtTo = &eat
-		h.logger = log.NewContext(h.logger).With("expire_at_to", eat)
+		h.logger = h.logger.With(zap.Time("expire_at_to", eat))
 	}
 
 	affected, err := h.storage.Delete(ctx, req.SubjectId, req.AccessToken, req.RefreshToken, expireAtFrom, expireAtTo)
@@ -182,7 +183,7 @@ func (h *handler) delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (
 		return 0, err
 	}
 
-	h.logger = log.NewContext(h.logger).With("affected", affected)
+	h.logger = h.logger.With(zap.Int64("affected", affected))
 
 	return affected, nil
 }

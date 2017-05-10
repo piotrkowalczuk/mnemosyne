@@ -8,14 +8,13 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/piotrkowalczuk/sklog"
+	"go.uber.org/zap"
 )
 
 var Timeout = errors.New("postgres connection timout")
 
 type Opts struct {
-	Logger         log.Logger
+	Logger         *zap.Logger
 	Retry, Timeout time.Duration
 }
 
@@ -38,7 +37,7 @@ func Init(address string, opts Opts) (*sql.DB, error) {
 		username = u.User.Username()
 	}
 
-	sklog.Debug(opts.Logger, "postgres connection attempt", "postgres_host", u.Host, "postgres_user", username)
+	opts.Logger.Debug("postgres connection attempt", zap.String("postgres_host", u.Host), zap.String("postgres_user", username))
 
 	db, err := sql.Open("postgres", address)
 	if err != nil {
@@ -58,12 +57,12 @@ func Init(address string, opts Opts) (*sql.DB, error) {
 			case <-time.After(retry):
 				ctx, cancel := context.WithTimeout(context.Background(), retry)
 				if err := db.PingContext(ctx); err != nil {
-					sklog.Debug(opts.Logger, "postgres connection ping failure", "postgres_host", u.Host, "postgres_user", username)
+					opts.Logger.Debug("postgres connection ping failure", zap.String("postgres_host", u.Host), zap.String("postgres_user", username))
 
 					cancel()
 					continue PingLoop
 				}
-				sklog.Info(opts.Logger, "postgres connection has been established", "postgres_host", u.Host, "postgres_user", username)
+				opts.Logger.Info("postgres connection has been established", zap.String("postgres_host", u.Host), zap.String("postgres_user", username))
 
 				cancel()
 				break PingLoop
@@ -73,7 +72,7 @@ func Init(address string, opts Opts) (*sql.DB, error) {
 		}
 	}
 
-	sklog.Info(opts.Logger, "postgres connection has been established", "address", address)
+	opts.Logger.Info("postgres connection has been established", zap.String("address", address))
 
 	return db, nil
 }

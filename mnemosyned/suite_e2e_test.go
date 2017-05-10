@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"github.com/piotrkowalczuk/sklog"
 	. "github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
 )
@@ -58,9 +59,6 @@ type e2eSuite struct {
 func (es *e2eSuite) setup(t *testing.T, i int) {
 	var err error
 
-	//logger := sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
-	logger := sklog.NewTestLogger(t)
-
 	if es.listener == nil {
 		es.listener = listenTCP(t)
 	}
@@ -69,7 +67,7 @@ func (es *e2eSuite) setup(t *testing.T, i int) {
 		RPCOptions:        []grpc.ServerOption{},
 		RPCListener:       es.listener,
 		Storage:           StorageEnginePostgres,
-		Logger:            logger,
+		Logger:            zap.L(),
 		PostgresAddress:   testPostgresAddress,
 		PostgresSchema:    fmt.Sprintf("mnemosyne_test_%d", i),
 		Monitoring:        true,

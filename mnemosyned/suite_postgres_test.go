@@ -4,14 +4,14 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/go-kit/kit/log"
+	"go.uber.org/zap"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
-	"github.com/piotrkowalczuk/sklog"
 )
 
 type postgresSuite struct {
 	db     *sql.DB
-	logger log.Logger
+	logger *zap.Logger
 	store  storage
 }
 
@@ -22,7 +22,7 @@ func (ps *postgresSuite) setup(t *testing.T) {
 
 	var err error
 
-	ps.logger = sklog.NewTestLogger(t)
+	ps.logger = zap.L()
 	//ps.logger = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	ps.db, err = postgres.Init(testPostgresAddress, postgres.Opts{
 		Logger: ps.logger,

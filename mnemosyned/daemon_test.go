@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"go.uber.org/zap"
+
 	"github.com/piotrkowalczuk/mnemosyne"
-	"github.com/piotrkowalczuk/sklog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -38,7 +39,7 @@ func TestDaemon_Run(t *testing.T) {
 		DebugListener: dl,
 		// Use this logger to debug issues
 		//Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
-		Logger:          sklog.NewTestLogger(t),
+		Logger:          zap.L(),
 		PostgresAddress: testPostgresAddress,
 	})
 	if err != nil {

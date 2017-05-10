@@ -12,13 +12,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/promgrpc"
-	"github.com/piotrkowalczuk/sklog"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -39,7 +38,7 @@ type DaemonOpts struct {
 	PostgresAddress   string
 	PostgresTable     string
 	PostgresSchema    string
-	Logger            log.Logger
+	Logger            *zap.Logger
 	RPCOptions        []grpc.ServerOption
 	RPCListener       net.Listener
 	DebugListener     net.Listener
@@ -61,7 +60,7 @@ type Daemon struct {
 	clientOptions []grpc.DialOption
 	postgres      *sql.DB
 	storage       storage
-	logger        log.Logger
+	logger        *zap.Logger
 	rpcListener   net.Listener
 	debugListener net.Listener
 }
@@ -106,12 +105,11 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 		t.Fatalf("mnemosyne daemon tcp listener setup error: %s", err.Error())
 	}
 
-	logger := sklog.NewTestLogger(t)
 	d, err := NewDaemon(&DaemonOpts{
 		IsTest:            true,
 		Monitoring:        false,
 		ClusterListenAddr: l.Addr().String(),
-		Logger:            logger,
+		Logger:            zap.L(),
 		PostgresAddress:   opts.StoragePostgresAddress,
 		PostgresTable:     "session",
 		PostgresSchema:    "mnemosyne",
@@ -168,15 +166,9 @@ func (d *Daemon) Run() (err error) {
 						return nil, err
 					}
 
-					code := grpc.Code(err)
-					switch code {
-					case codes.Unknown:
-						sklog.Debug(d.logger, "request handled successfully", "handler", info.FullMethod)
-						return nil, grpc.Errorf(codes.Internal, "mnemosyned: %s", grpc.ErrorDesc(err))
-					default:
-						sklog.Error(d.logger, err, "handler", info.FullMethod)
-						return nil, grpc.Errorf(code, "mnemosyned: %s", grpc.ErrorDesc(err))
-					}
+					d.logger.Error("request failure", zap.Error(err), zap.String("handler", info.FullMethod))
+
+					return nil, grpc.Errorf(grpc.Code(err), "mnemosyned: %s", grpc.ErrorDesc(err))
 				}
 				return res, err
 			},
@@ -203,21 +195,21 @@ func (d *Daemon) Run() (err error) {
 	}
 
 	go func() {
-		sklog.Info(d.logger, "rpc server is running", "address", d.rpcListener.Addr().String())
+		d.logger.Info("rpc server is running", zap.String("address", d.rpcListener.Addr().String()))
 
 		if err := gRPCServer.Serve(d.rpcListener); err != nil {
 			if err == grpc.ErrServerStopped {
-				sklog.Info(d.logger, "grpc server has been stoped")
+				d.logger.Info("grpc server has been stoped")
 				return
 			}
 
-			sklog.Error(d.logger, err)
+			d.logger.Error("rpc server failure", zap.Error(err))
 		}
 	}()
 
 	if d.debugListener != nil {
 		go func() {
-			sklog.Info(d.logger, "debug server is running", "address", d.debugListener.Addr().String())
+			d.logger.Info("debug server is running", zap.String("address", d.debugListener.Addr().String()))
 			// TODO: implement keep alive
 
 			mux := http.NewServeMux()
@@ -233,7 +225,9 @@ func (d *Daemon) Run() (err error) {
 				logger:   d.logger,
 				postgres: d.postgres,
 			})
-			sklog.Error(d.logger, http.Serve(d.debugListener, mux))
+			if err := http.Serve(d.debugListener, mux); err != nil {
+				d.logger.Error("debug server failure", zap.Error(err))
+			}
 		}()
 	}
 
@@ -260,7 +254,7 @@ func (d *Daemon) Addr() net.Addr {
 	return d.rpcListener.Addr()
 }
 
-func (d *Daemon) initStorage(l log.Logger, table, schema string) (err error) {
+func (d *Daemon) initStorage(l *zap.Logger, table, schema string) (err error) {
 	switch d.opts.Storage {
 	case StorageEngineInMemory:
 		return errors.New("in memory storage is not implemented yet")
@@ -281,7 +275,7 @@ func (d *Daemon) initStorage(l log.Logger, table, schema string) (err error) {
 			return
 		}
 
-		sklog.Info(l, "postgres storage initialized", "schema", schema, "table", table)
+		l.Info("postgres storage initialized", zap.String("schema", schema), zap.String("table", table))
 		return
 	case StorageEngineRedis:
 		return errors.New("redis storage is not implemented yet")

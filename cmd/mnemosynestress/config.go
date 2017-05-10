@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 )
 
 const version = "0.0.0"
@@ -62,6 +63,6 @@ func (i *arrayFlags) String() string {
 }
 
 func (i *arrayFlags) Set(value string) error {
-	*i = append(*i, value)
+	*i = append(*i, strings.Split(value, ",")...)
 	return nil
 }

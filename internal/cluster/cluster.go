@@ -27,8 +27,18 @@ type Opts struct {
 
 // New ...
 func New(opts Opts) (csr *Cluster, err error) {
-	var nodes []string
-	nodes = append(nodes, opts.Listen)
+	var (
+		nodes  []string
+		exists bool
+	)
+	for _, seed := range opts.Seeds {
+		if seed == opts.Listen {
+			exists = true
+		}
+	}
+	if !exists {
+		nodes = append(nodes, opts.Listen)
+	}
 	nodes = append(nodes, opts.Seeds...)
 	sort.Strings(nodes)
 

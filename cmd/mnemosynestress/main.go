@@ -31,43 +31,59 @@ func main() {
 		os.Exit(1)
 	}
 
-	var sessions []*mnemosynerpc.Session
-	for j := int64(0); j < config.max; j++ {
-		for i, conn := range pool {
-			res, err := conn.Start(context.Background(), &mnemosynerpc.StartRequest{
-				Session: &mnemosynerpc.Session{
-					SubjectId: strconv.FormatInt(j, 10),
-				},
-			})
-			if err != nil {
-				fmt.Printf("session creation error: %s\n", err.Error())
-				os.Exit(1)
-			}
-			sessions = append(sessions, res.Session)
+	done := make(chan struct{})
+	for w := int64(0); w < config.workers; w++ {
+		go func(d chan struct{}) {
+			for j := int64(0); j < int64(config.max/config.workers); j++ {
+				for i, conn := range pool {
+					res, err := conn.Start(context.Background(), &mnemosynerpc.StartRequest{
+						Session: &mnemosynerpc.Session{
+							SubjectId: strconv.FormatInt(j, 10),
+						},
+					})
 
-			if config.verbose {
-				fmt.Printf("conn %d: session successfully created: %s\n", i+1, res.Session.AccessToken)
+					if err != nil {
+						fmt.Printf("session creation error: %s\n", err.Error())
+						os.Exit(1)
+					}
+
+					if config.verbose {
+						fmt.Printf("conn %d: session successfully created: %s\n", i+1, res.Session.AccessToken)
+					}
+
+					for g, conn := range pool {
+						ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+						got, err := conn.Get(ctx, &mnemosynerpc.GetRequest{
+							AccessToken: res.Session.AccessToken,
+						})
+						if err != nil {
+							cancel()
+							fmt.Printf("session retrieval error: %s\n", err.Error())
+							os.Exit(1)
+						}
+						cancel()
+
+						if got.Session.AccessToken != res.Session.AccessToken {
+							fmt.Printf("access token do not match, expected %s but got %s\n", res.Session.AccessToken, got.Session.AccessToken)
+							os.Exit(1)
+						}
+
+						if config.verbose {
+							fmt.Printf("conn %d: session %d/%d/%d successfully retrieved: %s\n", j+1, config.max, i+1, g+1, res.Session.AccessToken)
+						}
+					}
+				}
 			}
-		}
+			d <- struct{}{}
+		}(done)
 	}
-	for i, ses := range sessions {
-		for j, conn := range pool {
-			ctx, _ := context.WithTimeout(context.Background(), 3*time.Second)
-			got, err := conn.Get(ctx, &mnemosynerpc.GetRequest{
-				AccessToken: ses.AccessToken,
-			})
-			if err != nil {
-				fmt.Printf("session retrieval error: %s\n", err.Error())
-				os.Exit(1)
-			}
-			if got.Session.AccessToken != ses.AccessToken {
-				fmt.Printf("access token do not match, expected %s but got %s\n", ses.AccessToken, got.Session.AccessToken)
-				os.Exit(1)
-			}
 
-			if config.verbose {
-				fmt.Printf("conn %d: session %d/%d successfully retrieved: %s\n", j+1, len(sessions), i+1, ses.AccessToken)
-			}
+	var finished int64
+	for range done {
+		finished++
+		if finished == config.workers {
+			close(done)
+			break
 		}
 	}
 }

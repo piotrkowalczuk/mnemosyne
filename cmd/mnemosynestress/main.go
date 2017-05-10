@@ -31,13 +31,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	max := 131
 	var sessions []*mnemosynerpc.Session
-	for i, conn := range pool {
-		for j := 0; j < max; j++ {
+	for j := int64(0); j < config.max; j++ {
+		for i, conn := range pool {
 			res, err := conn.Start(context.Background(), &mnemosynerpc.StartRequest{
 				Session: &mnemosynerpc.Session{
-					SubjectId: strconv.Itoa(j),
+					SubjectId: strconv.FormatInt(j, 10),
 				},
 			})
 			if err != nil {

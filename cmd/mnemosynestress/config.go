@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"math"
 )
 
 const version = "0.0.0"
 
 type configuration struct {
 	verbose bool
+	max     int64
 	cluster struct {
 		static struct {
 			enabled bool
@@ -35,6 +37,7 @@ func (c *configuration) init() {
 	}
 
 	flag.BoolVar(&c.verbose, "verbose", false, "")
+	flag.Int64Var(&c.max, "max", math.MaxInt64, "")
 	flag.BoolVar(&c.cluster.static.enabled, "cluster.static", true, "")
 	flag.Var(&c.cluster.static.members, "cluster.static.members", "")
 	flag.BoolVar(&c.cluster.discovery.enabled, "cluster.discovery", false, "")

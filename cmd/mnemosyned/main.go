@@ -1,12 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"net"
+	"os"
 	"strconv"
 
-	"github.com/go-kit/kit/log"
+	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
-	"github.com/piotrkowalczuk/sklog"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc/grpclog"
 )
 
@@ -16,9 +20,17 @@ func main() {
 	config.init()
 	config.parse()
 
-	logger := initLogger(config.logger.adapter, config.logger.format, config.logger.level)
-	rpcListener := initListener(logger, config.host, config.port)
-	debugListener := initListener(logger, config.host, config.port+1)
+	l, err := logger.Init(logger.Opts{
+		Environment: config.logger.environment,
+		Level:       zapcore.Level(config.logger.level),
+	})
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	rpcListener := initListener(l, config.host, config.port)
+	debugListener := initListener(l, config.host, config.port+1)
 
 	daemon, err := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
 		SessionTTL:        config.session.ttl,
@@ -34,16 +46,15 @@ func main() {
 		ClusterListenAddr: config.cluster.listen,
 		ClusterSeeds:      config.cluster.seeds,
 		RPCListener:       rpcListener,
-		Logger:            logger,
+		Logger:            l,
 		DebugListener:     debugListener,
 	})
 	if err != nil {
-		sklog.Fatal(logger, err)
+		l.Fatal("daemon allocation failure", zap.Error(err))
 	}
-
-	grpclog.SetLogger(sklog.NewGRPCLogger(logger))
+	grpclog.SetLogger(zapgrpc.NewLogger(l))
 	if err := daemon.Run(); err != nil {
-		sklog.Fatal(logger, err)
+		l.Fatal("daemon run failure", zap.Error(err))
 	}
 	defer daemon.Close()
 
@@ -51,11 +62,11 @@ func main() {
 	<-done
 }
 
-func initListener(logger log.Logger, host string, port int) net.Listener {
+func initListener(logger *zap.Logger, host string, port int) net.Listener {
 	on := host + ":" + strconv.FormatInt(int64(port), 10)
 	listener, err := net.Listen("tcp", on)
 	if err != nil {
-		sklog.Fatal(logger, err)
+		logger.Fatal("listener initialization failure", zap.Error(err), zap.String("host", host), zap.Int("port", port))
 	}
 	return listener
 }

@@ -3,9 +3,8 @@ package cluster
 import (
 	"sort"
 
-	"github.com/go-kit/kit/log"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"github.com/piotrkowalczuk/sklog"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
@@ -14,15 +13,14 @@ type Cluster struct {
 	listen  string
 	buckets int
 	nodes   []*Node
-
-	logger log.Logger
+	logger  *zap.Logger
 }
 
 // Opts ...
 type Opts struct {
 	Listen string
 	Seeds  []string
-	Logger log.Logger
+	Logger *zap.Logger
 }
 
 // New ...
@@ -68,7 +66,7 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 		}
 
 		if c.logger != nil {
-			sklog.Debug(c.logger, "cluster node attempt to connect", "address", n.Addr, "index", i)
+			c.logger.Debug("cluster node attempt to connect", zap.String("address", n.Addr), zap.Int("index", i))
 		}
 
 		conn, err := grpc.Dial(n.Addr, opts...)
@@ -77,7 +75,7 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 		}
 
 		if c.logger != nil {
-			sklog.Debug(c.logger, "cluster node connection success", "address", n.Addr, "index", i)
+			c.logger.Debug("cluster node connection success", zap.String("address", n.Addr), zap.Int("index", i))
 		}
 
 		n.Client = mnemosynerpc.NewSessionManagerClient(conn)

@@ -1,17 +1,16 @@
 package mnemosyned
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
-	"github.com/go-kit/kit/log"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"github.com/piotrkowalczuk/sklog"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -39,7 +38,7 @@ type sessionManagerOpts struct {
 	addr       string
 	cluster    *cluster.Cluster
 	ttc        time.Duration
-	logger     log.Logger
+	logger     *zap.Logger
 	storage    storage
 	monitoring *monitoring
 }
@@ -53,7 +52,7 @@ type cacheEntry struct {
 type sessionManager struct {
 	addr    string
 	ttc     time.Duration
-	logger  log.Logger
+	logger  *zap.Logger
 	monitor *monitoring
 	storage storage
 	cluster *cluster.Cluster
@@ -131,7 +130,7 @@ func (sm *sessionManager) Context(ctx context.Context, req *empty.Empty) (*mnemo
 func (sm *sessionManager) Get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemosynerpc.GetResponse, error) {
 	hs := jump.Sum64(req.AccessToken)
 	if node, ok := sm.getNode(hs); ok {
-		sklog.Debug(sm.logger, "get request forwarded", "from", sm.addr, "to", node.Addr, "access_token", req.AccessToken)
+		sm.logger.Debug("get request forwarded", zap.String("from", sm.addr), zap.String("to", node.Addr), zap.String("access_token", req.AccessToken))
 		return node.Client.Get(ctx, req)
 	}
 	h := sm.alloc.get(sm.loggerBackground(ctx), sm.storage, sm.monitor.rpc)
@@ -163,7 +162,7 @@ func (sm *sessionManager) Get(ctx context.Context, req *mnemosynerpc.GetRequest)
 		ses = &entry.ses
 	}
 
-	sklog.Debug(h.logger, "session has been retrieved")
+	h.logger.Debug("session has been retrieved")
 
 	return &mnemosynerpc.GetResponse{
 		Session: ses,
@@ -179,7 +178,7 @@ func (sm *sessionManager) List(ctx context.Context, req *mnemosynerpc.ListReques
 		return nil, err
 	}
 
-	sklog.Debug(h.logger, "session list has been retrieved")
+	h.logger.Debug("session list has been retrieved")
 
 	return &mnemosynerpc.ListResponse{
 		Sessions: sessions,
@@ -200,7 +199,7 @@ func (sm *sessionManager) Start(ctx context.Context, req *mnemosynerpc.StartRequ
 	}
 	hs := jump.Sum64(req.Session.AccessToken)
 	if node, ok := sm.getNode(hs); ok {
-		sklog.Debug(sm.logger, "start request forwarded", "from", sm.addr, "to", node.Addr, "access_token", req.Session.AccessToken)
+		sm.logger.Debug("start request forwarded", zap.String("from", sm.addr), zap.String("to", node.Addr), zap.String("access_token", req.Session.AccessToken))
 		return node.Client.Start(ctx, req)
 	}
 	h := sm.alloc.start(sm.loggerBackground(ctx), sm.storage, sm.monitor.rpc)
@@ -210,7 +209,7 @@ func (sm *sessionManager) Start(ctx context.Context, req *mnemosynerpc.StartRequ
 		return nil, err
 	}
 
-	sklog.Debug(h.logger, "session has been started")
+	h.logger.Debug("session has been started")
 
 	return &mnemosynerpc.StartResponse{
 		Session: ses,
@@ -226,7 +225,7 @@ func (sm *sessionManager) Exists(ctx context.Context, req *mnemosynerpc.ExistsRe
 		return nil, err
 	}
 
-	sklog.Debug(h.logger, "session presence has been checked")
+	h.logger.Debug("session presence has been checked")
 
 	return &mnemosynerpc.ExistsResponse{
 		Exists: exists,
@@ -242,7 +241,7 @@ func (sm *sessionManager) Abandon(ctx context.Context, req *mnemosynerpc.Abandon
 		return nil, err
 	}
 
-	sklog.Debug(h.logger, "session has been abandoned")
+	h.logger.Debug("session has been abandoned")
 
 	return &mnemosynerpc.AbandonResponse{
 		Abandoned: abandoned,
@@ -258,7 +257,7 @@ func (sm *sessionManager) SetValue(ctx context.Context, req *mnemosynerpc.SetVal
 		return nil, err
 	}
 
-	sklog.Debug(h.logger, "session bag value has been set")
+	h.logger.Debug("session bag value has been set")
 
 	return &mnemosynerpc.SetValueResponse{
 		Bag: bag,
@@ -274,7 +273,7 @@ func (sm *sessionManager) Delete(ctx context.Context, req *mnemosynerpc.DeleteRe
 		return nil, err
 	}
 
-	sklog.Debug(h.logger, "session value has been deleted")
+	h.logger.Debug("session value has been deleted")
 
 	return &mnemosynerpc.DeleteResponse{
 		Count: affected,
@@ -282,41 +281,41 @@ func (sm *sessionManager) Delete(ctx context.Context, req *mnemosynerpc.DeleteRe
 }
 
 func (sm *sessionManager) cleanup(done chan struct{}) {
-	logger := log.NewContext(sm.logger).WithPrefix("module", "cleanup")
-	sklog.Info(sm.logger, "cleanup routing started")
+	logger := sm.logger.Named("cleanup")
+	sm.logger.Info("cleanup routing started")
 InfLoop:
 	for {
 		select {
 		case <-time.After(sm.ttc):
 			t := time.Now()
-			sklog.Debug(logger, "session cleanup start", "start_at", t.Format(time.RFC3339))
+			logger.Debug("session cleanup start", zap.Time("start_at", t))
 			affected, err := sm.storage.Delete(context.Background(), "", "", "", nil, &t)
 			if err != nil {
 				if sm.monitor.enabled {
 					sm.monitor.cleanup.errors.Inc()
 				}
-				sklog.Error(logger, fmt.Errorf("session cleanup failure: %s", err.Error()), "expire_at_to", t)
+				logger.Error("session cleanup failure", zap.Error(err), zap.Time("expire_at_to", t))
 				return
 			}
 
-			sklog.Debug(logger, "session cleanup success", "count", affected, "elapsed", time.Now().Sub(t))
+			logger.Debug("session cleanup success", zap.Int64("count", affected), zap.Duration("elapsed", time.Now().Sub(t)))
 		case <-done:
-			sklog.Info(logger, "cleanup routing terminated")
+			logger.Info("cleanup routing terminated")
 			break InfLoop
 		}
 	}
 }
 
-func (sm *sessionManager) loggerBackground(ctx context.Context, keyval ...interface{}) log.Logger {
-	l := log.NewContext(sm.logger).With(keyval...)
+func (sm *sessionManager) loggerBackground(ctx context.Context, fields ...zapcore.Field) *zap.Logger {
+	l := sm.logger.With(fields...)
 	if md, ok := metadata.FromContext(ctx); ok {
 		if rid, ok := md["request_id"]; ok && len(rid) >= 1 {
-			l = l.With("request_id", rid[0])
+			l = l.With(zap.String("request_id", rid[0]))
 		}
 	}
 
 	if p, ok := peer.FromContext(ctx); ok {
-		l = l.With("peer_address", p.Addr.String())
+		l = l.With(zap.String("peer_address", p.Addr.String()))
 	}
 
 	return l

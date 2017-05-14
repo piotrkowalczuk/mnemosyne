@@ -1,9 +1,5 @@
 package: github.com/piotrkowalczuk/mnemosyne
 import:
-- package: github.com/go-kit/kit
-  version: ~0.2.0
-  subpackages:
-  - log
 - package: github.com/golang/protobuf
   subpackages:
   - proto
@@ -11,7 +7,6 @@ import:
   - ptypes/empty
   - ptypes/timestamp
 - package: github.com/lib/pq
-- package: github.com/piotrkowalczuk/sklog
 - package: github.com/prometheus/client_golang
   version: ~0.8.0
   subpackages:
@@ -37,6 +32,8 @@ import:
   - peer
 - package: github.com/piotrkowalczuk/promgrpc
   version: ~0.3.0
+- package: go.uber.org/zap
+  version: ^1.3.0
 testImport:
 - package: github.com/smartystreets/goconvey
   version: ~1.6.0

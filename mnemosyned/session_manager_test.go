@@ -232,7 +232,7 @@ func TestSessionManager_Get_postgresStore(t *testing.T) {
 					})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session does not exists")
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session not found")
 				})
 			})
 		}))
@@ -290,7 +290,7 @@ func TestSessionManager_Get_postgresStore(t *testing.T) {
 							})
 
 							So(resp, ShouldBeNil)
-							So(err, ShouldBeGRPCError(ShouldEndWith), codes.NotFound, "session does not exists")
+							So(err, ShouldBeGRPCError(ShouldEndWith), codes.NotFound, "session not found")
 						})
 					})
 				}
@@ -369,7 +369,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 				resp, err := s.client.Context(ctx, &empty.Empty{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session does not exists")
+				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session not found")
 			})
 		})
 	}))
@@ -579,7 +579,7 @@ func TestSessionManager_List_postgresStore(t *testing.T) {
 		subjectID string
 	)
 	nb := 20
-	Convey("List", t, WithE2ESuite(t, func(s *e2eSuite) {
+	Convey("sessionManagerList", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("Having multiple sessions active", func() {
 			for i := 0; i < nb; i++ {
 				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{

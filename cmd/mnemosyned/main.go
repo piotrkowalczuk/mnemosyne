@@ -46,7 +46,7 @@ func main() {
 		ClusterListenAddr: config.cluster.listen,
 		ClusterSeeds:      config.cluster.seeds,
 		RPCListener:       rpcListener,
-		Logger:            l,
+		Logger:            l.Named("daemon"),
 		DebugListener:     debugListener,
 	})
 	if err != nil {

@@ -3,10 +3,17 @@ package cluster
 import (
 	"sort"
 
+	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
+
+// Node ...
+type Node struct {
+	Addr   string
+	Client mnemosynerpc.SessionManagerClient
+}
 
 // Cluster ...
 type Cluster struct {
@@ -83,7 +90,7 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 	return nil
 }
 
-// Get if possible returns node that corresponds to given access token.
+// Get if possible returns node for a hiven bucket id.
 func (c *Cluster) Get(k int32) (*Node, bool) {
 	if len(c.nodes) == 0 {
 		return nil, false
@@ -94,7 +101,7 @@ func (c *Cluster) Get(k int32) (*Node, bool) {
 	return c.nodes[k], true
 }
 
-// Nodes ...
+// Nodes returns all available nodes.
 func (c *Cluster) Nodes() []*Node {
 	return c.nodes
 }
@@ -102,4 +109,29 @@ func (c *Cluster) Nodes() []*Node {
 // Len returns number of nodes.
 func (c *Cluster) Len() int {
 	return c.buckets
+}
+
+// Listen returns address of current node.
+func (c *Cluster) Listen() string {
+	return c.listen
+}
+
+// GetOther returns node for given access token.
+// Returns false if cluster is nil, has only one element or if node that was found has same listen address as current one.
+func (c *Cluster) GetOther(accessToken string) (*Node, bool) {
+	if c == nil {
+		return nil, false
+	}
+	if c.Len() == 1 {
+		return nil, false
+	}
+
+	if node, ok := c.Get(jump.HashString(accessToken, c.Len())); ok {
+		if node.Addr != c.listen {
+			if node.Client != nil {
+				return node, true
+			}
+		}
+	}
+	return nil, false
 }

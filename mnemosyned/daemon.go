@@ -18,9 +18,7 @@ import (
 	"github.com/piotrkowalczuk/promgrpc"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 )
 
@@ -128,9 +126,9 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 // Run starts daemon and all services within.
 func (d *Daemon) Run() (err error) {
 	var (
-		cluster *cluster.Cluster
+		cl *cluster.Cluster
 	)
-	if cluster, err = initCluster(d.logger, d.opts.ClusterListenAddr, d.opts.ClusterSeeds...); err != nil {
+	if cl, err = initCluster(d.logger, d.opts.ClusterListenAddr, d.opts.ClusterSeeds...); err != nil {
 		return
 	}
 	if err = d.initMonitoring(); err != nil {
@@ -157,28 +155,14 @@ func (d *Daemon) Run() (err error) {
 		d.serverOptions,
 		// No stream endpoint available at the moment.
 		grpc.UnaryInterceptor(unaryServerInterceptors(
-			func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-				res, err := handler(ctx, req)
-
-				if err != nil && grpc.Code(err) != codes.OK {
-					switch err {
-					case errMissingSession, errMissingAccessToken, errMissingSubjectID, errSessionNotFound:
-						return nil, err
-					}
-
-					d.logger.Error("request failure", zap.Error(err), zap.String("handler", info.FullMethod))
-
-					return nil, grpc.Errorf(grpc.Code(err), "mnemosyned: %s", grpc.ErrorDesc(err))
-				}
-				return res, err
-			},
+			errorInterceptor(d.logger),
 			interceptor.UnaryServer(),
 		)),
 	)...)
 
 	mnemosyneServer, err := newSessionManager(sessionManagerOpts{
 		addr:       d.opts.ClusterListenAddr,
-		cluster:    cluster,
+		cluster:    cl,
 		logger:     d.logger,
 		storage:    d.storage,
 		monitoring: d.monitor,
@@ -190,7 +174,7 @@ func (d *Daemon) Run() (err error) {
 	mnemosynerpc.RegisterSessionManagerServer(gRPCServer, mnemosyneServer)
 	promgrpc.RegisterInterceptor(gRPCServer, interceptor)
 
-	if err = cluster.Connect(d.clientOptions...); err != nil {
+	if err = cl.Connect(d.clientOptions...); err != nil {
 		return err
 	}
 

@@ -68,6 +68,31 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestCluster_Get_empty(t *testing.T) {
+	c, err := cluster.New(cluster.Opts{})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	_, ok := c.Get(0)
+	if ok {
+		t.Error("expected nothing")
+	}
+}
+
+func TestCluster_Get_beyond(t *testing.T) {
+	c, err := cluster.New(cluster.Opts{
+		Listen: "172.17.0.1",
+		Seeds:  []string{"172.17.0.2", "172.17.0.3", "10.10.0.1"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	_, ok := c.Get(5)
+	if ok {
+		t.Error("expected nothing")
+	}
+}
+
 func TestCluster_Get(t *testing.T) {
 	listen := "172.17.0.1"
 	seeds := []string{"172.17.0.2", "172.17.0.3", "10.10.0.1"}
@@ -95,6 +120,27 @@ func TestCluster_Get(t *testing.T) {
 		} else {
 			t.Logf("node under key %d and address %s passed", k, addr)
 		}
+	}
+}
+
+func TestCluster_GetOther_nil(t *testing.T) {
+	var c *cluster.Cluster
+	_, ok := c.GetOther("smth")
+	if ok {
+		t.Error("expected false")
+	}
+}
+
+func TestCluster_GetOther_one(t *testing.T) {
+	c, err := cluster.New(cluster.Opts{
+		Listen: "127.0.0.1",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	_, ok := c.GetOther("smth")
+	if ok {
+		t.Error("expected false")
 	}
 }
 

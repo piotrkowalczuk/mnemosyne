@@ -37,7 +37,7 @@ func TestInit_retry(t *testing.T) {
 		Timeout: 2 * time.Second,
 		Retry:   600 * time.Nanosecond,
 	})
-	if err != nil {
+	if err != nil && err != postgres.Timeout {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 }

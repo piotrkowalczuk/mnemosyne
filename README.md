@@ -4,7 +4,7 @@
 [![Docker Pulls](https://img.shields.io/docker/pulls/piotrkowalczuk/mnemosyne.svg?maxAge=604800)](https://hub.docker.com/r/piotrkowalczuk/mnemosyne/)
 [![codecov.io](https://codecov.io/github/piotrkowalczuk/mnemosyne/coverage.svg?branch=master)](https://codecov.io/github/piotrkowalczuk/mnemosyne?branch=master)
 [![Code Climate](https://codeclimate.com/github/piotrkowalczuk/mnemosyne/badges/gpa.svg)](https://codeclimate.com/github/piotrkowalczuk/mnemosyne)
-[![Gitter](https://badges.gitter.im/piotrkowalczuk/mnemosyne.svg)](https://gitter.im/piotrkowalczuk/mnemosyne?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
+[![pypi](https://img.shields.io/pypi/v/mnemosyne-client.svg)](https://pypi.python.org/pypi/mnemosyne-client)
 
 ## Introduction
 
@@ -144,7 +144,7 @@ Mnemosyne will automatically create all required tables/indexes for specified da
 
 ### TODO
 
-- [ ] Client library
+- [x] Client library
     - [x] Go
     - [x] Python
 - [ ] Engines

@@ -16,9 +16,10 @@ func Init(opts Opts) (*zap.Logger, error) {
 	switch opts.Environment {
 	case "production":
 		cfg = zap.NewProductionConfig()
-
 	case "development":
 		cfg = zap.NewDevelopmentConfig()
+	default:
+		cfg = zap.NewProductionConfig()
 	}
 	if opts.Level >= zapcore.DebugLevel && opts.Level <= zapcore.FatalLevel {
 		cfg.Level.SetLevel(opts.Level)

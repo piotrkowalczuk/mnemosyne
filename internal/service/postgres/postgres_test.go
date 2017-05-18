@@ -34,8 +34,8 @@ func getStringEnvOr(env, or string) string {
 func TestInit_retry(t *testing.T) {
 	_, err := postgres.Init(testPostgresAddress, postgres.Opts{
 		Logger:  zap.L(),
-		Timeout: 10 * time.Second,
-		Retry:   250 * time.Nanosecond,
+		Timeout: 2 * time.Second,
+		Retry:   600 * time.Nanosecond,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())

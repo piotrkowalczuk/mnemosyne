@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 
+	_ "github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 	"go.uber.org/zap"
@@ -46,7 +47,7 @@ func main() {
 		ClusterListenAddr: config.cluster.listen,
 		ClusterSeeds:      config.cluster.seeds,
 		RPCListener:       rpcListener,
-		Logger:            l,
+		Logger:            l.Named("daemon"),
 		DebugListener:     debugListener,
 	})
 	if err != nil {

@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 )
 
-var Timeout = errors.New("postgres connection timout")
+var Timeout = errors.New("postgres connection timeout")
 
 type Opts struct {
 	Logger         *zap.Logger

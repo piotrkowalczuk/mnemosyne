@@ -1,11 +1,39 @@
 package cluster_test
 
 import (
+	"flag"
+	"fmt"
+	"os"
+	"sort"
 	"testing"
 
+	"go.uber.org/zap"
+
+	"strings"
+
+	_ "github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
-	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
+	"google.golang.org/grpc"
 )
+
+var (
+	testPostgresAddress string
+)
+
+func TestMain(m *testing.M) {
+	flag.StringVar(&testPostgresAddress, "postgres.address", getStringEnvOr("MNEMOSYNED_POSTGRES_ADDRESS", "postgres://localhost/test?sslmode=disable"), "")
+	flag.Parse()
+
+	os.Exit(m.Run())
+}
+
+func getStringEnvOr(env, or string) string {
+	if v := os.Getenv(env); v != "" {
+		return v
+	}
+	return or
+}
 
 func TestNew(t *testing.T) {
 	create := func(t *testing.T, args ...string) *cluster.Cluster {
@@ -40,6 +68,31 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestCluster_Get_empty(t *testing.T) {
+	c, err := cluster.New(cluster.Opts{})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	_, ok := c.Get(0)
+	if ok {
+		t.Error("expected nothing")
+	}
+}
+
+func TestCluster_Get_beyond(t *testing.T) {
+	c, err := cluster.New(cluster.Opts{
+		Listen: "172.17.0.1",
+		Seeds:  []string{"172.17.0.2", "172.17.0.3", "10.10.0.1"},
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	_, ok := c.Get(5)
+	if ok {
+		t.Error("expected nothing")
+	}
+}
+
 func TestCluster_Get(t *testing.T) {
 	listen := "172.17.0.1"
 	seeds := []string{"172.17.0.2", "172.17.0.3", "10.10.0.1"}
@@ -51,16 +104,100 @@ func TestCluster_Get(t *testing.T) {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 
-	for _, n := range c.Nodes() {
-		hs := jump.HashString(n.Addr, len(seeds)+1)
-		_, ok := c.Get(hs)
+	nodes := append(seeds, listen)
+	sort.Strings(nodes)
+	for k, addr := range nodes {
+		got, ok := c.Get(int32(k))
 		if !ok {
-			t.Errorf("node not found: %s", n.Addr)
+			t.Errorf("node not found: %s", addr)
 			continue
 		}
-		//if got.Addr != n.Addr {
-		//	t.Errorf("address mismatch, expected %s but got %s", n.Addr, got.Addr)
-		//}
-		//t.Logf("node under key %d and address %s passed", k, n.Addr)
+		if strings.HasPrefix(addr, "10") {
+			continue
+		}
+		if got.Addr != addr {
+			t.Errorf("address mismatch, expected %s but got %s", addr, got.Addr)
+		} else {
+			t.Logf("node under key %d and address %s passed", k, addr)
+		}
+	}
+}
+
+func TestCluster_GetOther_nil(t *testing.T) {
+	var c *cluster.Cluster
+	_, ok := c.GetOther("smth")
+	if ok {
+		t.Error("expected false")
+	}
+}
+
+func TestCluster_GetOther_one(t *testing.T) {
+	c, err := cluster.New(cluster.Opts{
+		Listen: "127.0.0.1",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	_, ok := c.GetOther("smth")
+	if ok {
+		t.Error("expected false")
+	}
+}
+
+func TestCluster_GetOther(t *testing.T) {
+	c, cancel := testCluster(t)
+	defer cancel()
+
+	if err := c.Connect(grpc.WithInsecure(), grpc.WithBlock()); err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+
+	for k := range c.Nodes() {
+		got, ok := c.GetOther(fmt.Sprintf("access-token-%d", k))
+		if ok {
+			if got.Client == nil {
+				t.Error("should not return node without established connection")
+			}
+			if got.Addr == c.Listen() {
+				t.Error("should current node")
+			}
+		}
+	}
+}
+
+func TestCluster_Connect(t *testing.T) {
+	c, cancel := testCluster(t)
+	defer cancel()
+	if err := c.Connect(grpc.WithInsecure(), grpc.WithBlock()); err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+}
+
+func testCluster(t *testing.T) (*cluster.Cluster, func()) {
+	m1, m1c := mnemosyned.TestDaemon(t, mnemosyned.TestDaemonOpts{
+		StoragePostgresAddress: testPostgresAddress,
+	})
+	m2, m2c := mnemosyned.TestDaemon(t, mnemosyned.TestDaemonOpts{
+		StoragePostgresAddress: testPostgresAddress,
+	})
+	m3, m3c := mnemosyned.TestDaemon(t, mnemosyned.TestDaemonOpts{
+		StoragePostgresAddress: testPostgresAddress,
+	})
+
+	c, err := cluster.New(cluster.Opts{
+		Listen: m1.String(),
+		Seeds:  []string{m1.String(), m2.String(), m3.String()},
+		Logger: zap.L(),
+	})
+	if err != nil {
+		m1c.Close()
+		m2c.Close()
+		m3c.Close()
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	return c, func() {
+		m3c.Close()
+		m2c.Close()
+		m1c.Close()
 	}
 }

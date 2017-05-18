@@ -67,6 +67,11 @@ func testStorage_List(t *testing.T, s storage) {
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
+
+	_, err = s.List(context.Background(), 2, 0, nil, nil)
+	if err == nil {
+		t.Fatal("expected error")
+	}
 	if len(sessions) != nb-2 {
 		t.Fatalf("wrong number of sessions returned: expected %d but got %d", nb-2, len(sessions))
 	}
@@ -244,12 +249,16 @@ func testStorage_Delete(t *testing.T, s storage) {
 		}
 	}
 
+	expiredAtFrom := time.Now().Add(-35 * time.Minute)
 	expiredAtTo := time.Now().Add(35 * time.Minute)
 
-	affected, err := s.Delete(context.Background(), "", "", "", nil, &expiredAtTo)
+	affected, err := s.Delete(context.Background(), "", "", "", &expiredAtFrom, &expiredAtTo)
 	if assert.NoError(t, err) {
 		assert.Equal(t, nb, affected)
 	}
+
+	_, err = s.Delete(context.Background(), "", "", "", nil, nil)
+	assert.Error(t, err)
 
 	data := []struct {
 		subjectID     bool

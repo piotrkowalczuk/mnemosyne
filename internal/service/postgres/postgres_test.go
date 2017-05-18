@@ -34,10 +34,10 @@ func getStringEnvOr(env, or string) string {
 func TestInit_retry(t *testing.T) {
 	_, err := postgres.Init(testPostgresAddress, postgres.Opts{
 		Logger:  zap.L(),
-		Timeout: 10 * time.Second,
-		Retry:   1 * time.Microsecond,
+		Timeout: 2 * time.Second,
+		Retry:   600 * time.Nanosecond,
 	})
-	if err != nil {
+	if err != nil && err != postgres.Timeout {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 }
@@ -45,8 +45,8 @@ func TestInit_retry(t *testing.T) {
 func TestInit_timeout(t *testing.T) {
 	_, err := postgres.Init(testPostgresAddress, postgres.Opts{
 		Logger:  zap.L(),
-		Timeout: 1 * time.Microsecond,
-		Retry:   1 * time.Microsecond,
+		Timeout: 1 * time.Nanosecond,
+		Retry:   1 * time.Nanosecond,
 	})
 	if err != nil && err != postgres.Timeout {
 		t.Fatalf("unexpected error: %s", err.Error())

@@ -115,7 +115,7 @@ func (ps *postgresStorage) Get(ctx context.Context, accessToken string) (*mnemos
 	}, nil
 }
 
-// List implements storage interface.
+// sessionManagerList implements storage interface.
 func (ps *postgresStorage) List(ctx context.Context, offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
 	if limit == 0 {
 		return nil, errors.New("cannot retrieve list of sessions, limit needs to be higher than 0")

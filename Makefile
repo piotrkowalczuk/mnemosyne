@@ -32,7 +32,7 @@ test:
 	@scripts/test.sh
 	@go tool cover -func=coverage.txt | tail -n 1
 
-cover: test
+cover:
 	@go tool cover -html=coverage.txt
 
 get:

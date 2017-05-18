@@ -134,7 +134,7 @@ func (_m *mockStorage) Get(_a0 context.Context, _a1 string) (*mnemosynerpc.Sessi
 	return r0, r1
 }
 
-// List provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4
+// sessionManagerList provides a mock function with given fields: _a0, _a1, _a2, _a3, _a4
 func (_m *mockStorage) List(_a0 context.Context, _a1 int64, _a2 int64, _a3 *time.Time, _a4 *time.Time) ([]*mnemosynerpc.Session, error) {
 	ret := _m.Called(_a0, _a1, _a2, _a3, _a4)
 

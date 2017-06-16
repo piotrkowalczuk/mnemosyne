@@ -72,7 +72,5 @@ func Init(address string, opts Opts) (*sql.DB, error) {
 		}
 	}
 
-	opts.Logger.Info("postgres connection has been established", zap.String("address", address))
-
 	return db, nil
 }

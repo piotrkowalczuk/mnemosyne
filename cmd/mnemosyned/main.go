@@ -10,7 +10,6 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc/grpclog"
 )
@@ -23,7 +22,7 @@ func main() {
 
 	l, err := logger.Init(logger.Opts{
 		Environment: config.logger.environment,
-		Level:       zapcore.Level(config.logger.level),
+		Level:       config.logger.level,
 		Version:     version,
 	})
 	if err != nil {

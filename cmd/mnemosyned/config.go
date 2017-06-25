@@ -29,7 +29,7 @@ type configuration struct {
 	storage string
 	logger  struct {
 		environment string
-		level       int
+		level       string
 	}
 	session struct {
 		ttl time.Duration
@@ -64,7 +64,7 @@ func (c *configuration) init() {
 	flag.DurationVar(&c.session.ttl, "ttl", mnemosyned.DefaultTTL, "session time to live, after which session is deleted")
 	flag.DurationVar(&c.session.ttc, "ttc", mnemosyned.DefaultTTC, "session time to cleanup, how offten cleanup will be performed")
 	flag.StringVar(&c.logger.environment, "log.environment", "production", "logger environment config")
-	flag.IntVar(&c.logger.level, "log.level", 6, "logger level")
+	flag.StringVar(&c.logger.level, "log.level", "info", "logger level")
 	flag.BoolVar(&c.monitoring.enabled, "monitoring", false, "toggle application monitoring")
 	flag.StringVar(&c.storage, "storage", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://localhost?sslmode=disable", "storage postgres connection string")

@@ -25,7 +25,7 @@ func init() {
 type Opts struct {
 	Environment string
 	Version     string
-	Level       zapcore.Level
+	Level       string
 }
 
 // Init allocates new logger based on given options.
@@ -33,6 +33,7 @@ func Init(opts Opts) (logger *zap.Logger, err error) {
 	var (
 		cfg     zap.Config
 		options []zap.Option
+		lvl     zapcore.Level
 	)
 	switch opts.Environment {
 	case "production":
@@ -48,9 +49,11 @@ func Init(opts Opts) (logger *zap.Logger, err error) {
 	default:
 		cfg = zap.NewProductionConfig()
 	}
-	if opts.Level >= zapcore.DebugLevel && opts.Level <= zapcore.FatalLevel {
-		cfg.Level.SetLevel(opts.Level)
+
+	if err = lvl.Set(opts.Level); err != nil {
+		return nil, err
 	}
+	cfg.Level.SetLevel(lvl)
 
 	logger, err = cfg.Build(options...)
 	if err != nil {

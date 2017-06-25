@@ -24,6 +24,7 @@ func main() {
 	l, err := logger.Init(logger.Opts{
 		Environment: config.logger.environment,
 		Level:       zapcore.Level(config.logger.level),
+		Version:     version,
 	})
 	if err != nil {
 		fmt.Println(err.Error())

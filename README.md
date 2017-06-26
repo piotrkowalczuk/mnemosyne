@@ -119,15 +119,19 @@ $ make
 | --- | --- | --- | --- |
 | host | `-host` | 127.0.0.1 | string |
 | port | `-port` | 8080 | int |
+| cluster listen address | `-cluster.listen` | | string |
+| cluster seeds | `-cluster.seeds` | | string |
 | time to live | `-ttl` | 24m | duration |
 | time to clear | `-ttc` | 1m | duration |
-| logger format | `-log.format` | json | enum(json, humane, logfmt) |
-| logger adapter | `-log.adapter` | stdout | enum(stdout) |
+| logger environment | `-log.environment` | production | enum(development, production, stackdriver) |
+| logger level | `-log.level` | info | enum(debug, info, warn, error, dpanic, panic, fatal) |
 | monitoring | `-monitoring ` | false | boolean |
 | storage | `-storage` | postgres | enum(postgres) |
 | postgres address | `-postgres.address` | postgres://postgres:postgres@postgres/postgres?sslmode=disable | string |
+| postgres table | `-postgres.table` | session | string |
+| postgres schema | `-postgres.schema` | mnemosyne | string |
 | tls | `-tls` | false | boolean |
-| tls certificate file | `-tls.cert` | | string |
+| tls certificate file | `-tls.crt` | | string |
 | tls key file |`-tls.key` | | string |
 
 ### Running

@@ -32,7 +32,7 @@ exec mnemosyned -host=${MNEMOSYNED_HOST} \
 	-postgres.table=${MNEMOSYNED_POSTGRES_TABLE} \
 	-postgres.schema=${MNEMOSYNED_POSTGRES_SCHEMA} \
 	-tls=${MNEMOSYNED_TLS_ENABLED} \
-	-tls.cert=${MNEMOSYNED_TLS_CERT} \
+	-tls.crt=${MNEMOSYNED_TLS_CRT} \
 	-tls.key=${MNEMOSYNED_TLS_KEY}
 fi
 

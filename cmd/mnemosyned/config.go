@@ -71,7 +71,7 @@ func (c *configuration) init() {
 	flag.StringVar(&c.postgres.table, "postgres.table", "session", "postgres table name")
 	flag.StringVar(&c.postgres.schema, "postgres.schema", "mnemosyne", "postgres schema name")
 	flag.BoolVar(&c.tls.enabled, "tls", false, "tls enable flag")
-	flag.StringVar(&c.tls.certFile, "tls.cert", "", "path to tls cert file")
+	flag.StringVar(&c.tls.certFile, "tls.crt", "", "path to tls cert file")
 	flag.StringVar(&c.tls.keyFile, "tls.key", "", "path to tls key file")
 }
 

@@ -37,7 +37,7 @@ func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.
 				}
 				loggerBackground(ctx, log).Error("request failure",
 					zap.String("error", grpc.ErrorDesc(err)),
-					logger.Ctx(ctx, info, codes.OK),
+					logger.Ctx(ctx, info, code),
 				)
 
 				switch err {

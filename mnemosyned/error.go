@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/lib/pq"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -16,6 +17,13 @@ import (
 func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error) {
 	{
 		return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+			if md, ok := metadata.FromIncomingContext(ctx); ok {
+				ctx = metadata.NewOutgoingContext(ctx, metadata.MD{
+					mnemosyne.AccessTokenMetadataKey: md[mnemosyne.AccessTokenMetadataKey],
+					"request_id":                     md["request_id"],
+				})
+			}
+
 			res, err := handler(ctx, req)
 
 			code := grpc.Code(err)
@@ -56,7 +64,7 @@ func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.
 
 func loggerBackground(ctx context.Context, log *zap.Logger, fields ...zapcore.Field) *zap.Logger {
 	l := log.With(fields...)
-	if md, ok := metadata.FromContext(ctx); ok {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
 		if rid, ok := md["request_id"]; ok && len(rid) >= 1 {
 			l = l.With(zap.String("request_id", rid[0]))
 		}

@@ -138,6 +138,24 @@ func (d *Daemon) Run() (err error) {
 		return
 	}
 
+	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{})
+
+	d.clientOptions = []grpc.DialOption{
+		grpc.WithTimeout(10 * time.Second),
+		grpc.WithUserAgent("mnemosyned"),
+		grpc.WithDialer(interceptor.Dialer(func(addr string, timeout time.Duration) (net.Conn, error) {
+			return net.DialTimeout("tcp", addr, timeout)
+		})),
+		grpc.WithUnaryInterceptor(interceptor.UnaryClient()),
+		grpc.WithStreamInterceptor(interceptor.StreamClient()),
+	}
+	d.serverOptions = []grpc.ServerOption{
+		grpc.UnaryInterceptor(unaryServerInterceptors(
+			errorInterceptor(d.logger),
+			interceptor.UnaryServer(),
+		)),
+	}
+
 	if d.opts.TLS {
 		creds, err := credentials.NewServerTLSFromFile(d.opts.TLSCertFile, d.opts.TLSKeyFile)
 		if err != nil {
@@ -149,16 +167,7 @@ func (d *Daemon) Run() (err error) {
 		d.clientOptions = append(d.clientOptions, grpc.WithInsecure())
 	}
 
-	interceptor := promgrpc.NewInterceptor()
-
-	gRPCServer := grpc.NewServer(append(
-		d.serverOptions,
-		// No stream endpoint available at the moment.
-		grpc.UnaryInterceptor(unaryServerInterceptors(
-			errorInterceptor(d.logger),
-			interceptor.UnaryServer(),
-		)),
-	)...)
+	gRPCServer := grpc.NewServer(d.serverOptions...)
 
 	mnemosyneServer, err := newSessionManager(sessionManagerOpts{
 		addr:       d.opts.ClusterListenAddr,

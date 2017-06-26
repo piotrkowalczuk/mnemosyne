@@ -1,5 +1,5 @@
-hash: ce7014e4994a8a14222b5e49e85be0446eb38af1c1511a0ec958188257a634f2
-updated: 2017-06-25T20:52:26.709965319+02:00
+hash: 0200cd256b8d2b2d48d391b8fa5e0b5c4ee8cf31d538fc9e2a0a2ebbda3693c2
+updated: 2017-06-26T21:40:04.784084321+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -10,7 +10,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/golang/protobuf
-  version: 7a211bcf3bce0e3f1d74f9894916e6f116ae83b4
+  version: 6a1fa9404c0aebf36c879bc50152edcc953910d2
   subpackages:
   - proto
   - ptypes
@@ -27,7 +27,7 @@ imports:
   subpackages:
   - pbutil
 - name: github.com/piotrkowalczuk/promgrpc
-  version: 437fcdf88ffa78175786066ee4e359f43bcfb53a
+  version: 109e886b8cbbf144d9d5a0b676e37b3430353ec5
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
@@ -75,7 +75,7 @@ imports:
   subpackages:
   - sha3
 - name: golang.org/x/net
-  version: 1a26cf06691746ee35aa7113c9b37289afc7ea28
+  version: 5f8847ae0d0e90b6a9dc8148e7ad616874625171
   subpackages:
   - context
   - http2
@@ -85,11 +85,11 @@ imports:
   - lex/httplex
   - trace
 - name: golang.org/x/oauth2
-  version: 96382aa079b72d8c014eb0c50f6c223d1e6a2de0
+  version: f047394b6d14284165300fd82dad67edb3a4d7f6
   subpackages:
   - internal
 - name: golang.org/x/text
-  version: a263ba8db058568bb9beba166777d9c9dbe75d68
+  version: 4e9ab9ee170f2a39bd66c92b3e0a47ff47a4bc77
   subpackages:
   - secure/bidirule
   - transform
@@ -105,17 +105,24 @@ imports:
   - internal/remote_api
   - internal/urlfetch
   - urlfetch
+- name: google.golang.org/genproto
+  version: aa2eb687b4d3e17154372564ad8d6bf11c3cf21f
+  subpackages:
+  - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 708a7f9f3283aa2d4f6132d287d78683babe55c8
+  version: b15215fb911b24a5d61d57feec4233d610530464
   subpackages:
   - codes
   - credentials
+  - grpclb/grpc_lb_v1
   - grpclog
   - internal
+  - keepalive
   - metadata
   - naming
   - peer
   - stats
+  - status
   - tap
   - transport
 testImports:

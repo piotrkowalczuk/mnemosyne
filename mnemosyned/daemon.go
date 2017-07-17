@@ -138,7 +138,14 @@ func (d *Daemon) Run() (err error) {
 		return
 	}
 
-	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{})
+	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{
+		Registerer: func() prometheus.Registerer {
+			if d.opts.IsTest {
+				return prometheus.NewRegistry()
+			}
+			return prometheus.DefaultRegisterer
+		}(),
+	})
 
 	d.clientOptions = []grpc.DialOption{
 		grpc.WithTimeout(10 * time.Second),
@@ -155,7 +162,6 @@ func (d *Daemon) Run() (err error) {
 			interceptor.UnaryServer(),
 		)),
 	}
-
 	if d.opts.TLS {
 		servCreds, err := credentials.NewServerTLSFromFile(d.opts.TLSCertFile, d.opts.TLSKeyFile)
 		if err != nil {

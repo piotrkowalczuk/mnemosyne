@@ -139,6 +139,7 @@ func (d *Daemon) Run() (err error) {
 	}
 
 	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{
+		SkipPreallocate: d.opts.IsTest,
 		Registerer: func() prometheus.Registerer {
 			if d.opts.IsTest {
 				return prometheus.NewRegistry()

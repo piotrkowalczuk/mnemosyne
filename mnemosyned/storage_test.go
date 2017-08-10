@@ -13,6 +13,8 @@ import (
 )
 
 func testStorage_Start(t *testing.T, s storage) {
+	t.Helper()
+
 	subjectID := "subjectID"
 	subjectClient := "subjectClient"
 	bag := map[string]string{
@@ -28,6 +30,8 @@ func testStorage_Start(t *testing.T, s storage) {
 }
 
 func testStorage_Get(t *testing.T, s storage) {
+	t.Helper()
+
 	ses, err := s.Start(context.Background(), randomToken(t), randomToken(t), "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})

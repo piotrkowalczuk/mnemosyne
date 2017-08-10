@@ -3,6 +3,8 @@ package mnemosyned
 import "testing"
 
 func TestSystemRandomBytesGenerator_generateRandomBytes(t *testing.T) {
+	t.Helper()
+
 	g := systemRandomBytesGenerator{}
 	for i := 1; i < 11; i++ {
 		got, err := g.generateRandomBytes(i)

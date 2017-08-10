@@ -1,7 +1,6 @@
 package mnemosyned
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"testing"
@@ -29,13 +28,11 @@ func TestDaemon_Run(t *testing.T) {
 	dl := listener(t)
 
 	d, err := NewDaemon(&DaemonOpts{
-		IsTest:        true,
-		SessionTTL:    ttl,
-		SessionTTC:    ttc,
-		RPCListener:   rl,
-		DebugListener: dl,
-		// Use this logger to debug issues
-		//Logger: sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter),
+		IsTest:          true,
+		SessionTTL:      ttl,
+		SessionTTC:      ttc,
+		RPCListener:     rl,
+		DebugListener:   dl,
 		Logger:          zap.L(),
 		PostgresAddress: testPostgresAddress,
 	})
@@ -217,15 +214,10 @@ func TestDaemon_Cluster(t *testing.T) {
 		r3.Session.AccessToken: m3,
 	}
 
-	var i, j int
 	for at, c := range clients {
-		i++
-
-		t.Run(fmt.Sprintf("client_%d", i), func(t *testing.T) {
-			for range clients {
-				j++
-
-				t.Run(fmt.Sprintf("server_%d/get", j), func(t *testing.T) {
+		t.Run(at, func(t *testing.T) {
+			for at2 := range clients {
+				t.Run(at2, func(t *testing.T) {
 					ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 					defer cancel()
 					res, err := c.Get(ctx, &mnemosynerpc.GetRequest{
@@ -238,7 +230,7 @@ func TestDaemon_Cluster(t *testing.T) {
 						t.Fatal("wrong access token")
 					}
 				})
-				t.Run(fmt.Sprintf("server_%d/exists", j), func(t *testing.T) {
+				t.Run(at2, func(t *testing.T) {
 					ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 					defer cancel()
 
@@ -255,6 +247,56 @@ func TestDaemon_Cluster(t *testing.T) {
 			}
 		})
 	}
+
+	for at, c := range clients {
+		t.Run(at, func(t *testing.T) {
+			for at2 := range clients {
+				t.Run(at2, func(t *testing.T) {
+					ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+					defer cancel()
+					_, err := c.SetValue(ctx, &mnemosynerpc.SetValueRequest{
+						AccessToken: at,
+						Key:         at,
+						Value:       at,
+					})
+					if err != nil {
+						t.Fatal(err)
+					}
+				})
+			}
+		})
+	}
+
+	t.Run(l1.Addr().String(), func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_, err := m1.Delete(ctx, &mnemosynerpc.DeleteRequest{
+			AccessToken: r2.Session.AccessToken,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run(l2.Addr().String(), func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_, err := m2.Delete(ctx, &mnemosynerpc.DeleteRequest{
+			AccessToken: r3.Session.AccessToken,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run(l3.Addr().String(), func(t *testing.T) {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		defer cancel()
+		_, err := m3.Delete(ctx, &mnemosynerpc.DeleteRequest{
+			AccessToken: r1.Session.AccessToken,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
 }
 
 func listener(t testing.TB) net.Listener {

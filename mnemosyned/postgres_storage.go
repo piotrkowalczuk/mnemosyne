@@ -364,11 +364,19 @@ func (ps *postgresStorage) where(subjectID, accessToken, refreshToken string, ex
 		count++
 		fmt.Fprintf(buf, " refresh_token = $%d", count)
 		args = append(args, refreshToken)
-	case expiredAtFrom != nil:
+	}
+	if expiredAtFrom != nil {
+		if buf.Len() > 0 {
+			fmt.Fprint(buf, " AND")
+		}
 		count++
 		fmt.Fprintf(buf, " expire_at > $%d", count)
 		args = append(args, expiredAtFrom)
-	case expiredAtTo != nil:
+	}
+	if expiredAtTo != nil {
+		if buf.Len() > 0 {
+			fmt.Fprint(buf, " AND")
+		}
 		count++
 		fmt.Fprintf(buf, " expire_at < $%d", count)
 		args = append(args, expiredAtTo)

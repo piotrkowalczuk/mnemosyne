@@ -9,6 +9,7 @@ import (
 	"net/http/pprof"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -61,6 +62,7 @@ type Daemon struct {
 	logger        *zap.Logger
 	rpcListener   net.Listener
 	debugListener net.Listener
+	server        *grpc.Server
 }
 
 // NewDaemon allocates new daemon instance using given options.
@@ -171,7 +173,7 @@ func (d *Daemon) Run() (err error) {
 		d.clientOptions = append(d.clientOptions, grpc.WithInsecure())
 	}
 
-	gRPCServer := grpc.NewServer(d.serverOptions...)
+	d.server = grpc.NewServer(d.serverOptions...)
 
 	mnemosyneServer, err := newSessionManager(sessionManagerOpts{
 		addr:       d.opts.ClusterListenAddr,
@@ -184,10 +186,10 @@ func (d *Daemon) Run() (err error) {
 	if err != nil {
 		return err
 	}
-	mnemosynerpc.RegisterSessionManagerServer(gRPCServer, mnemosyneServer)
+	mnemosynerpc.RegisterSessionManagerServer(d.server, mnemosyneServer)
 	if !d.opts.IsTest {
 		prometheus.DefaultRegisterer.Register(interceptor)
-		promgrpc.RegisterInterceptor(gRPCServer, interceptor)
+		promgrpc.RegisterInterceptor(d.server, interceptor)
 	}
 
 	if err = cl.Connect(d.clientOptions...); err != nil {
@@ -197,13 +199,15 @@ func (d *Daemon) Run() (err error) {
 	go func() {
 		d.logger.Info("rpc server is running", zap.String("address", d.rpcListener.Addr().String()))
 
-		if err := gRPCServer.Serve(d.rpcListener); err != nil {
+		if err := d.server.Serve(d.rpcListener); err != nil {
 			if err == grpc.ErrServerStopped {
-				d.logger.Info("grpc server has been stoped")
+				d.logger.Info("grpc server has been stopped")
 				return
 			}
 
-			d.logger.Error("rpc server failure", zap.Error(err))
+			if !strings.Contains(err.Error(), "use of closed network connection") {
+				d.logger.Error("rpc server failure", zap.Error(err))
+			}
 		}
 	}()
 
@@ -239,9 +243,7 @@ func (d *Daemon) Run() (err error) {
 // Close implements io.Closer interface.
 func (d *Daemon) Close() (err error) {
 	d.done <- struct{}{}
-	if err = d.rpcListener.Close(); err != nil {
-		return
-	}
+	d.server.GracefulStop()
 	if d.debugListener != nil {
 		err = d.debugListener.Close()
 	}

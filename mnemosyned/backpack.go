@@ -15,7 +15,7 @@ func (b *bag) Scan(src interface{}) (err error) {
 	case []byte:
 		err = gob.NewDecoder(bytes.NewReader(t)).Decode(b)
 	default:
-		return errors.New("unsuported data source type")
+		return errors.New("unsupported data source type")
 	}
 
 	return

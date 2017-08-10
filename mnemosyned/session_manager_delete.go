@@ -41,12 +41,12 @@ func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.D
 		expireAtTo = &eat
 	}
 
-	affected, err := smd.storage.Delete(ctx, req.SubjectId, req.AccessToken, req.RefreshToken, expireAtFrom, expireAtTo)
+	aff, err := smd.storage.Delete(ctx, req.SubjectId, req.AccessToken, req.RefreshToken, expireAtFrom, expireAtTo)
 	if err != nil {
 		return nil, err
 	}
 
 	return &mnemosynerpc.DeleteResponse{
-		Count: affected,
+		Count: aff,
 	}, nil
 }

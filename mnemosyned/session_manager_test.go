@@ -505,6 +505,40 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, "mnemosyned: none of expected arguments was provided")
 				})
 			})
+			Convey("With date ranges far in the future", func() {
+				Convey("Should return that no records was affected", func() {
+					from, err := ptypes.TimestampProto(time.Now().AddDate(100, 0, 0))
+					So(err, ShouldBeNil)
+					to, err := ptypes.TimestampProto(time.Now().AddDate(101, 0, 0))
+					So(err, ShouldBeNil)
+
+					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
+						AccessToken:  accessToken,
+						ExpireAtFrom: from,
+						ExpireAtTo:   to,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp.Count, ShouldEqual, 0)
+				})
+			})
+			Convey("With date ranges that match existing session", func() {
+				Convey("Should return that one record was affected", func() {
+					from, err := ptypes.TimestampProto(time.Now().AddDate(-100, 0, 0))
+					So(err, ShouldBeNil)
+					to, err := ptypes.TimestampProto(time.Now().AddDate(100, 0, 0))
+					So(err, ShouldBeNil)
+
+					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
+						AccessToken:  accessToken,
+						ExpireAtFrom: from,
+						ExpireAtTo:   to,
+					})
+
+					So(err, ShouldBeNil)
+					So(resp.Count, ShouldEqual, 1)
+				})
+			})
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return that even single record was affected", func() {

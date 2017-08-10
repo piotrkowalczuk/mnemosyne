@@ -138,15 +138,7 @@ func (d *Daemon) Run() (err error) {
 		return
 	}
 
-	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{
-		SkipPreallocate: d.opts.IsTest,
-		Registerer: func() prometheus.Registerer {
-			if d.opts.IsTest {
-				return prometheus.NewRegistry()
-			}
-			return prometheus.DefaultRegisterer
-		}(),
-	})
+	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{})
 
 	d.clientOptions = []grpc.DialOption{
 		grpc.WithTimeout(10 * time.Second),
@@ -193,7 +185,10 @@ func (d *Daemon) Run() (err error) {
 		return err
 	}
 	mnemosynerpc.RegisterSessionManagerServer(gRPCServer, mnemosyneServer)
-	promgrpc.RegisterInterceptor(gRPCServer, interceptor)
+	if !d.opts.IsTest {
+		prometheus.DefaultRegisterer.Register(interceptor)
+		promgrpc.RegisterInterceptor(gRPCServer, interceptor)
+	}
 
 	if err = cl.Connect(d.clientOptions...); err != nil {
 		return err

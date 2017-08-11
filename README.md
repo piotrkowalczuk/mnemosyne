@@ -23,9 +23,8 @@ To install and run service:
 ```bash
 $ go get -d github.com/piotrkowalczuk/mnemosyne/...
 $ cd $GOPATH/src/github.com/piotrkowalczuk/mnemosyne
-$ glide install
-$ go install ./cmd/mnemosyned
-$ mnemosyned -log.format=humane -postgres.address='postgres://localhost/example?sslmode=disable'
+$ make
+$ mnemosyned -log.environment=development -postgres.address='postgres://localhost/example?sslmode=disable'
 ```
 
 ### Examples

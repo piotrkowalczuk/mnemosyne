@@ -24,7 +24,6 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   serialized_pb=_b('\n\rsession.proto\x12\x0cmnemosynerpc\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xea\x01\n\x07Session\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\x12\x12\n\nsubject_id\x18\x02 \x01(\t\x12\x16\n\x0esubject_client\x18\x03 \x01(\t\x12+\n\x03\x62\x61g\x18\x04 \x03(\x0b\x32\x1e.mnemosynerpc.Session.BagEntry\x12-\n\texpire_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x15\n\rrefresh_token\x18\x06 \x01(\t\x1a*\n\x08\x42\x61gEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\nGetRequest\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\"5\n\x0bGetResponse\x12&\n\x07session\x18\x01 \x01(\x0b\x32\x15.mnemosynerpc.Session\"9\n\x0f\x43ontextResponse\x12&\n\x07session\x18\x01 \x01(\x0b\x32\x15.mnemosynerpc.Session\"\xa9\x01\n\x0bListRequest\x12\x0e\n\x06offset\x18\x01 \x01(\x03\x12\r\n\x05limit\x18\x02 \x01(\x03\x12\x32\n\x0e\x65xpire_at_from\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x30\n\x0c\x65xpire_at_to\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x15\n\rrefresh_token\x18\x05 \x01(\t\"7\n\x0cListResponse\x12\'\n\x08sessions\x18\x01 \x03(\x0b\x32\x15.mnemosynerpc.Session\"%\n\rExistsRequest\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\" \n\x0e\x45xistsResponse\x12\x0e\n\x06\x65xists\x18\x01 \x01(\x08\"6\n\x0cStartRequest\x12&\n\x07session\x18\x01 \x01(\x0b\x32\x15.mnemosynerpc.Session\"7\n\rStartResponse\x12&\n\x07session\x18\x01 \x01(\x0b\x32\x15.mnemosynerpc.Session\"&\n\x0e\x41\x62\x61ndonRequest\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\"$\n\x0f\x41\x62\x61ndonResponse\x12\x11\n\tabandoned\x18\x01 \x01(\x08\"C\n\x0fSetValueRequest\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\x12\x0b\n\x03key\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\t\"t\n\x10SetValueResponse\x12\x34\n\x03\x62\x61g\x18\x01 \x03(\x0b\x32\'.mnemosynerpc.SetValueResponse.BagEntry\x1a*\n\x08\x42\x61gEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xb6\x01\n\rDeleteRequest\x12\x14\n\x0c\x61\x63\x63\x65ss_token\x18\x01 \x01(\t\x12\x32\n\x0e\x65xpire_at_from\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x30\n\x0c\x65xpire_at_to\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x15\n\rrefresh_token\x18\x04 \x01(\t\x12\x12\n\nsubject_id\x18\x05 \x01(\t\"\x1f\n\x0e\x44\x65leteResponse\x12\r\n\x05\x63ount\x18\x01 \x01(\x03\x32\xbc\x04\n\x0eSessionManager\x12\x42\n\x07\x43ontext\x12\x16.google.protobuf.Empty\x1a\x1d.mnemosynerpc.ContextResponse\"\x00\x12<\n\x03Get\x12\x18.mnemosynerpc.GetRequest\x1a\x19.mnemosynerpc.GetResponse\"\x00\x12?\n\x04List\x12\x19.mnemosynerpc.ListRequest\x1a\x1a.mnemosynerpc.ListResponse\"\x00\x12\x45\n\x06\x45xists\x12\x1b.mnemosynerpc.ExistsRequest\x1a\x1c.mnemosynerpc.ExistsResponse\"\x00\x12\x42\n\x05Start\x12\x1a.mnemosynerpc.StartRequest\x1a\x1b.mnemosynerpc.StartResponse\"\x00\x12H\n\x07\x41\x62\x61ndon\x12\x1c.mnemosynerpc.AbandonRequest\x1a\x1d.mnemosynerpc.AbandonResponse\"\x00\x12K\n\x08SetValue\x12\x1d.mnemosynerpc.SetValueRequest\x1a\x1e.mnemosynerpc.SetValueResponse\"\x00\x12\x45\n\x06\x44\x65lete\x12\x1b.mnemosynerpc.DeleteRequest\x1a\x1c.mnemosynerpc.DeleteResponse\"\x00\x62\x06proto3')
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_protobuf_dot_empty__pb2.DESCRIPTOR,])
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 
 
@@ -733,6 +732,7 @@ DESCRIPTOR.message_types_by_name['SetValueRequest'] = _SETVALUEREQUEST
 DESCRIPTOR.message_types_by_name['SetValueResponse'] = _SETVALUERESPONSE
 DESCRIPTOR.message_types_by_name['DeleteRequest'] = _DELETEREQUEST
 DESCRIPTOR.message_types_by_name['DeleteResponse'] = _DELETERESPONSE
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Session = _reflection.GeneratedProtocolMessageType('Session', (_message.Message,), dict(
 
@@ -871,13 +871,15 @@ try:
   # THESE ELEMENTS WILL BE DEPRECATED.
   # Please use the generated *_pb2_grpc.py files instead.
   import grpc
-  from grpc.framework.common import cardinality
-  from grpc.framework.interfaces.face import utilities as face_utilities
   from grpc.beta import implementations as beta_implementations
   from grpc.beta import interfaces as beta_interfaces
+  from grpc.framework.common import cardinality
+  from grpc.framework.interfaces.face import utilities as face_utilities
 
 
   class SessionManagerStub(object):
+    # missing associated documentation comment in .proto file
+    pass
 
     def __init__(self, channel):
       """Constructor.
@@ -928,43 +930,61 @@ try:
 
 
   class SessionManagerServicer(object):
+    # missing associated documentation comment in .proto file
+    pass
 
     def Context(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
     def Get(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
     def List(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
     def Exists(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
     def Start(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
     def Abandon(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
     def SetValue(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
     def Delete(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.set_code(grpc.StatusCode.UNIMPLEMENTED)
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
@@ -1024,21 +1044,39 @@ try:
     It is recommended to use the GA API (classes and functions in this
     file not marked beta) for all further purposes. This class was generated
     only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0."""
+    # missing associated documentation comment in .proto file
+    pass
     def Context(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def Get(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def List(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def Exists(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def Start(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def Abandon(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def SetValue(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def Delete(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
 
 
@@ -1048,28 +1086,46 @@ try:
     It is recommended to use the GA API (classes and functions in this
     file not marked beta) for all further purposes. This class was generated
     only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0."""
+    # missing associated documentation comment in .proto file
+    pass
     def Context(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     Context.future = None
     def Get(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     Get.future = None
     def List(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     List.future = None
     def Exists(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     Exists.future = None
     def Start(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     Start.future = None
     def Abandon(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     Abandon.future = None
     def SetValue(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     SetValue.future = None
     def Delete(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
       raise NotImplementedError()
     Delete.future = None
 

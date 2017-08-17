@@ -244,6 +244,11 @@ func (d *Daemon) Run() (err error) {
 func (d *Daemon) Close() (err error) {
 	d.done <- struct{}{}
 	d.server.GracefulStop()
+	if d.postgres != nil {
+		if err = d.postgres.Close(); err != nil {
+			return
+		}
+	}
 	if d.debugListener != nil {
 		err = d.debugListener.Close()
 	}

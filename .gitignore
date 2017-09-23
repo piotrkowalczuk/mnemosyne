@@ -1,6 +1,7 @@
 # Project
 .idea
 vendor
+_vendor-*
 .tmp
 bin
 *.iml

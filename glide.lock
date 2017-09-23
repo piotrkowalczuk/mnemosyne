@@ -1,5 +1,5 @@
 hash: ee8102530465b76a7f0ea265cbe19fa6a3bf81f02b4c9e7695efb57105a88d31
-updated: 2017-09-23T15:40:50.558699712+02:00
+updated: 2017-09-23T18:00:18.695344144+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -27,7 +27,7 @@ imports:
   subpackages:
   - pbutil
 - name: github.com/piotrkowalczuk/promgrpc
-  version: 3c9e73dd7e9e6f12f009b72a63eba2870e37a6e4
+  version: 2924e0ad27197c909a622cf6a0d411fbd2678842
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:

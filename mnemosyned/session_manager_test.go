@@ -337,7 +337,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 			Convey("With proper access token", func() {
 				Convey("Should return corresponding session", func() {
 					meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, string(accessToken))
-					ctx := metadata.NewContext(context.Background(), meta)
+					ctx := metadata.NewOutgoingContext(context.Background(), meta)
 					resp, err := s.client.Context(ctx, &empty.Empty{})
 
 					So(err, ShouldBeNil)
@@ -354,7 +354,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 			})
 			Convey("Without access token", func() {
 				Convey("Should return invalid argument gRPC error", func() {
-					ctx := metadata.NewContext(context.Background(), metadata.New(map[string]string{"some-key": "some-value"}))
+					ctx := metadata.NewOutgoingContext(context.Background(), metadata.New(map[string]string{"some-key": "some-value"}))
 					resp, err := s.client.Context(ctx, &empty.Empty{})
 
 					So(resp, ShouldBeNil)
@@ -365,7 +365,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 		Convey("With unknown access token", func() {
 			Convey("Should return not found gRPC error", func() {
 				meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, "0000000000test")
-				ctx := metadata.NewContext(context.Background(), meta)
+				ctx := metadata.NewOutgoingContext(context.Background(), meta)
 				resp, err := s.client.Context(ctx, &empty.Empty{})
 
 				So(resp, ShouldBeNil)

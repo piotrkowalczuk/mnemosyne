@@ -42,7 +42,7 @@ func TestMnemosyne(t *testing.T) {
 	}
 
 	meta := metadata.Pairs(mnemosyne.AccessTokenMetadataKey, ses.AccessToken)
-	ctx = metadata.NewContext(context.Background(), meta)
+	ctx = metadata.NewOutgoingContext(context.Background(), meta)
 	ses, err = m.FromContext(ctx)
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())

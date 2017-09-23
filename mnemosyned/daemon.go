@@ -152,6 +152,7 @@ func (d *Daemon) Run() (err error) {
 		grpc.WithStreamInterceptor(interceptor.StreamClient()),
 	}
 	d.serverOptions = []grpc.ServerOption{
+		grpc.StatsHandler(interceptor),
 		grpc.UnaryInterceptor(unaryServerInterceptors(
 			errorInterceptor(d.logger),
 			interceptor.UnaryServer(),

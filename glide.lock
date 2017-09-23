@@ -1,5 +1,5 @@
-hash: aca80589471bc26fa1a5c269dc898aa77c321a139fa8840c6fa6f60c1a39ebaa
-updated: 2017-08-16T22:33:43.472664538+02:00
+hash: ee8102530465b76a7f0ea265cbe19fa6a3bf81f02b4c9e7695efb57105a88d31
+updated: 2017-09-23T15:40:50.558699712+02:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -27,7 +27,7 @@ imports:
   subpackages:
   - pbutil
 - name: github.com/piotrkowalczuk/promgrpc
-  version: e748861bd4ef1da47b1c411947053dca645b4998
+  version: 3c9e73dd7e9e6f12f009b72a63eba2870e37a6e4
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
@@ -63,7 +63,7 @@ imports:
 - name: go.uber.org/multierr
   version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
 - name: go.uber.org/zap
-  version: 9d9d6135afe89b6fc4a05e9a8552526caba38048
+  version: 7a9ca91fa627ed52c7ff4fcc95cd044dc2c82a51
   subpackages:
   - buffer
   - internal/bufferpool
@@ -112,12 +112,12 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: b3ddf786825de56a4178401b7e174ee332173b66
+  version: f92cdcd7dcdc69e81b2d7b338479a19a8723cfa3
   subpackages:
   - codes
   - connectivity
   - credentials
-  - grpclb/grpc_lb_v1
+  - grpclb/grpc_lb_v1/messages
   - grpclog
   - internal
   - keepalive
@@ -130,21 +130,19 @@ imports:
   - transport
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 2b1d432c8a82c9bff0b0baffaeb3ec6e92974112
+  version: b40cd48c38f9a18eb3db20d163bad78de12cf0b7
   subpackages:
   - js
 - name: github.com/jtolds/gls
   version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
 - name: github.com/smartystreets/assertions
-  version: 1540c14c9f1bd1abeba90f29762a4c6e50582303
+  version: 9c0ea8acbc1d8ad689f9e6fe0c1fa5838e0cabc2
   subpackages:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: d4c757aa9afd1e2fc1832aaab209b5794eb336e1
+  version: 9e8dc3f972df6c8fcc0375ef492c24d0bb204857
   subpackages:
   - convey
   - convey/gotest
   - convey/reporting
-- name: github.com/smartystreets/logging
-  version: ac3a674540761aa0b4382094ba4795f917e85c7f

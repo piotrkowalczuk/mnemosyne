@@ -1,15 +1,19 @@
-version: '2'
+version: '3'
 
 services:
   postgres:
     image: postgres:9.5
+    container_name: postgres-9.5-mnemosyne
     ports:
       - 5434:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
   mnemosyned-1:
-    image: piotrkowalczuk/mnemosyne:v0.9.2
     container_name: mnemosyned-1
+    image: piotrkowalczuk/mnemosyne:latest
+    ports:
+      - 10010:8080
+      - 10011:8081
     environment:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-1:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-2:8080,mnemosyned-3:8080
@@ -18,9 +22,14 @@ services:
       - postgres
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+    healthcheck:
+      interval: 10s
   mnemosyned-2:
     container_name: mnemosyned-2
-    image: piotrkowalczuk/mnemosyne:v0.9.2
+    image: piotrkowalczuk/mnemosyne:latest
+    ports:
+      - 10020:8080
+      - 10021:8081
     environment:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-2:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-3:8080
@@ -29,9 +38,14 @@ services:
       - postgres
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+    healthcheck:
+      interval: 10s
   mnemosyned-3:
     container_name: mnemosyned-3
-    image: piotrkowalczuk/mnemosyne:v0.9.2
+    image: piotrkowalczuk/mnemosyne:latest
+    ports:
+      - 10030:8080
+      - 10031:8081
     environment:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-3:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-2:8080
@@ -40,9 +54,11 @@ services:
       - postgres
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+    healthcheck:
+      interval: 10s
   mnemosynestress:
     container_name: mnemosynestress
-    image: piotrkowalczuk/mnemosyne:v0.9.2
+    image: piotrkowalczuk/mnemosyne:latest
     volumes:
       - ./bin/mnemosynestress:/usr/local/bin/mnemosynestress
     depends_on:

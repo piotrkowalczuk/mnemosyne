@@ -15,6 +15,7 @@ services:
       - 10010:8080
       - 10011:8081
     environment:
+      MNEMOSYNED_MONITORING: "true"
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-1:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-2:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne1
@@ -31,6 +32,7 @@ services:
       - 10020:8080
       - 10021:8081
     environment:
+      MNEMOSYNED_MONITORING: "true"
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-2:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne2
@@ -47,6 +49,7 @@ services:
       - 10030:8080
       - 10031:8081
     environment:
+      MNEMOSYNED_MONITORING: "true"
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-3:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-2:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne3

@@ -46,8 +46,8 @@
 [[projects]]
   name = "github.com/piotrkowalczuk/promgrpc"
   packages = ["."]
-  revision = "49b651430f0d7944eec17b21ab1612932e52218d"
-  version = "v1.0.2"
+  revision = "2cb325708a986e97d3540905a0b589fa4c17eaee"
+  version = "v2.0.0"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -166,6 +166,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "aa04e9e4a9a92acedae6a44628f9158e0805e3b549f243167e57f9eb5c22b358"
+  inputs-digest = "5d099fb4986e5a6ca0f95945c9e9e844de5292b29c0bdf4fb3e6538fec749bf6"
   solver-name = "gps-cdcl"
   solver-version = 1

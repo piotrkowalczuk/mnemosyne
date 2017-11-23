@@ -18,6 +18,7 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/promgrpc"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -145,6 +146,7 @@ func (d *Daemon) Run() (err error) {
 	d.clientOptions = []grpc.DialOption{
 		grpc.WithTimeout(10 * time.Second),
 		grpc.WithUserAgent("mnemosyned"),
+		grpc.WithStatsHandler(interceptor),
 		grpc.WithDialer(interceptor.Dialer(func(addr string, timeout time.Duration) (net.Conn, error) {
 			return net.DialTimeout("tcp", addr, timeout)
 		})),
@@ -224,7 +226,7 @@ func (d *Daemon) Run() (err error) {
 			mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 			mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 			if d.opts.Monitoring {
-				mux.Handle("/metrics", prometheus.Handler())
+				mux.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 			}
 			mux.Handle("/health", &healthHandler{
 				logger:   d.logger,

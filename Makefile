@@ -1,5 +1,10 @@
-VERSION?=$(shell git describe --tags --always --dirty)
 SERVICE=mnemosyne
+VERSION=$(shell git describe --tags --always --dirty)
+ifeq ($(version),)
+	TAG=VERSION
+else
+	TAG=$(version)
+endif
 
 PACKAGE=github.com/piotrkowalczuk/mnemosyne
 PACKAGE_CMD_DAEMON=$(PACKAGE)/cmd/$(SERVICE)d
@@ -15,10 +20,7 @@ version:
 	echo ${VERSION} > VERSION.txt
 
 gen:
-	go generate .
-	go generate ./${SERVICE}d
-	go generate ./${SERVICE}rpc
-	ls -al ./${SERVICE}rpc | grep "pb.go"
+	./scripts/generate.sh
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -installsuffix cgo -a -o bin/${SERVICE}d ${PACKAGE_CMD_DAEMON}
@@ -39,9 +41,9 @@ get:
 	go get -u github.com/golang/dep/cmd/dep
 	dep ensure
 
-publish:
+publish: build
 	docker build \
 		--build-arg VCS_REF=${VCS_REF} \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \
-		-t piotrkowalczuk/${SERVICE}:${VERSION} .
-	docker push piotrkowalczuk/${SERVICE}:${VERSION}
+		-t piotrkowalczuk/${SERVICE}:${TAG} .
+	docker push piotrkowalczuk/${SERVICE}:${TAG}

@@ -3,16 +3,18 @@ package mnemosyned
 import (
 	"time"
 
+	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 )
 
 type sessionManagerGet struct {
-	storage storage
-	cache   *cache
+	storage storage.Storage
+	cache   *cache.Cache
 	cluster *cluster.Cluster
 	logger  *zap.Logger
 }
@@ -31,21 +33,21 @@ func (smg *sessionManagerGet) Get(ctx context.Context, req *mnemosynerpc.GetRequ
 	)
 
 	hs := jump.Sum64(req.AccessToken)
-	entry, ok := smg.cache.read(hs)
-	if !ok || (!entry.refresh && time.Since(entry.exp) > smg.cache.ttl) {
+	entry, ok := smg.cache.Read(hs)
+	if !ok || (!entry.Refresh && time.Since(entry.Exp) > smg.cache.TTL) {
 		if ok {
-			smg.cache.refresh(hs)
+			smg.cache.Refresh(hs)
 		}
 		ses, err = smg.storage.Get(ctx, req.AccessToken)
 		if err != nil {
-			if err == errSessionNotFound && ok {
-				smg.cache.del(hs)
+			if err == storage.ErrSessionNotFound && ok {
+				smg.cache.Del(hs)
 			}
 			return nil, err
 		}
-		smg.cache.put(hs, *ses)
+		smg.cache.Put(hs, *ses)
 	} else {
-		ses = &entry.ses
+		ses = &entry.Ses
 	}
 
 	return &mnemosynerpc.GetResponse{

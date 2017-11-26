@@ -10,10 +10,11 @@ import (
 )
 
 const (
-	accessTokenContextKey = "mnemosyne_access_token"
 	// AccessTokenMetadataKey is used by Mnemosyne to retrieve session token from gRPC metadata object.
 	AccessTokenMetadataKey = "authorization"
 )
+
+var accessTokenContextKey = struct{}{}
 
 // NewAccessTokenContext returns a new Context that carries token value.
 func NewAccessTokenContext(ctx context.Context, at string) context.Context {

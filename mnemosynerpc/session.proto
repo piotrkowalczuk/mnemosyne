@@ -2,18 +2,24 @@ syntax = "proto3";
 
 package mnemosynerpc;
 
+option go_package = "github.com/piotrkowalczuk/mnemosyne/mnemosynerpc";
+
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
 
 service SessionManager {
-    rpc Context(google.protobuf.Empty) returns (ContextResponse) {};
+    // Get retrieves session for given access token.
     rpc Get(GetRequest) returns (GetResponse) {};
+    // Context works like Get but takes access token from metadata within context.
+    // It expects "authorization" key to be present within metadata.
+    rpc Context(google.protobuf.Empty) returns (ContextResponse) {};
     rpc List(ListRequest) returns (ListResponse) {};
-    rpc Exists(ExistsRequest) returns (ExistsResponse) {};
+    rpc Exists(ExistsRequest) returns (google.protobuf.BoolValue) {};
     rpc Start(StartRequest) returns (StartResponse) {};
-    rpc Abandon(AbandonRequest) returns (AbandonResponse) {};
+    rpc Abandon(AbandonRequest) returns (google.protobuf.BoolValue) {};
     rpc SetValue(SetValueRequest) returns (SetValueResponse) {};
-    rpc Delete(DeleteRequest) returns (DeleteResponse) {};
+    rpc Delete(DeleteRequest) returns (google.protobuf.Int64Value) {};
 }
 
 message Session {
@@ -38,22 +44,27 @@ message ContextResponse {
 }
 
 message ListRequest {
+    // Offset tells how many sessions should be skipped.
     int64 offset = 1;
+    // Limit tells how many entries shuld be returned.
+    // By default it's 10.
     int64 limit = 2;
-    google.protobuf.Timestamp expire_at_from = 3;
-    google.protobuf.Timestamp expire_at_to = 4;
-    string refresh_token = 5;
+    reserved 3 to 10;
+    Query query = 11;
 }
 
 message ListResponse {
     repeated Session sessions = 1;
 }
 
+message Query {
+    google.protobuf.Timestamp expire_at_from = 1;
+    google.protobuf.Timestamp expire_at_to = 2;
+    string refresh_token = 3;
+}
+
 message ExistsRequest {
     string access_token = 1;
-}
-message ExistsResponse {
-    bool exists = 1;
 }
 
 message StartRequest {
@@ -66,10 +77,6 @@ message StartResponse {
 
 message AbandonRequest {
     string access_token = 1;
-}
-
-message AbandonResponse {
-    bool abandoned = 1;
 }
 
 message SetValueRequest {
@@ -88,7 +95,4 @@ message DeleteRequest {
     google.protobuf.Timestamp expire_at_to = 3;
     string refresh_token = 4;
     string subject_id = 5;
-}
-message DeleteResponse {
-    int64 count = 1;
 }

@@ -1,30 +1,32 @@
 package mnemosyned
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"golang.org/x/net/context"
 )
 
 type sessionManagerList struct {
-	storage storage
+	storage storage.Storage
 }
 
 func (sml *sessionManagerList) List(ctx context.Context, req *mnemosynerpc.ListRequest) (*mnemosynerpc.ListResponse, error) {
 	var (
 		expireAtFrom, expireAtTo *time.Time
 	)
-	if req.ExpireAtFrom != nil {
-		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
+	if req.GetQuery().GetExpireAtFrom() != nil {
+		eaf, err := ptypes.Timestamp(req.GetQuery().GetExpireAtFrom())
 		if err != nil {
 			return nil, err
 		}
 		expireAtFrom = &eaf
 	}
-	if req.ExpireAtTo != nil {
-		eat, err := ptypes.Timestamp(req.ExpireAtTo)
+	if req.GetQuery().GetExpireAtTo() != nil {
+		eat, err := ptypes.Timestamp(req.GetQuery().GetExpireAtTo())
 		if err != nil {
 			return nil, err
 		}
@@ -34,6 +36,7 @@ func (sml *sessionManagerList) List(ctx context.Context, req *mnemosynerpc.ListR
 		req.Limit = 10
 	}
 
+	fmt.Println(expireAtFrom, expireAtTo)
 	sessions, err := sml.storage.List(ctx, req.Offset, req.Limit, expireAtFrom, expireAtTo)
 	if err != nil {
 		return nil, err

@@ -8,6 +8,7 @@ import (
 
 	"go.uber.org/zap"
 
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	. "github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc"
@@ -66,7 +67,7 @@ func (es *e2eSuite) setup(t *testing.T, i int) {
 		IsTest:            true,
 		RPCOptions:        []grpc.ServerOption{},
 		RPCListener:       es.listener,
-		Storage:           StorageEnginePostgres,
+		Storage:           storage.EnginePostgres,
 		Logger:            zap.L(),
 		PostgresAddress:   testPostgresAddress,
 		PostgresSchema:    fmt.Sprintf("mnemosyne_test_%d", i),

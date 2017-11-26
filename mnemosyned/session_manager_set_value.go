@@ -1,7 +1,9 @@
 package mnemosyned
 
 import (
+	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -10,8 +12,8 @@ import (
 )
 
 type sessionManagerSetValue struct {
-	storage storage
-	cache   *cache
+	storage storage.Storage
+	cache   *cache.Cache
 	cluster *cluster.Cluster
 	logger  *zap.Logger
 }

@@ -8,8 +8,9 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage/storagemock"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	stdprometheus "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
 )
 
@@ -19,7 +20,7 @@ type integrationSuite struct {
 	service       mnemosynerpc.SessionManagerClient
 	serviceConn   *grpc.ClientConn
 	serviceServer mnemosynerpc.SessionManagerServer
-	store         *mockStorage
+	store         *storagemock.Storage
 }
 
 func (is *integrationSuite) setup(t *testing.T) {
@@ -29,18 +30,15 @@ func (is *integrationSuite) setup(t *testing.T) {
 
 	var err error
 
-	monitor := initPrometheus("mnemosyne_test", stdprometheus.NewRegistry(), false, stdprometheus.Labels{"server": "test"})
-
-	is.store = &mockStorage{}
+	is.store = &storagemock.Storage{}
 	is.listener = listenTCP(t)
 	is.server = grpc.NewServer()
 	is.serviceServer, err = newSessionManager(sessionManagerOpts{
-		addr:       is.listener.Addr().String(),
-		logger:     zap.L(),
-		storage:    is.store,
-		monitoring: monitor,
-		cluster:    is.initCluster(t),
-		ttc:        DefaultTTC,
+		addr:    is.listener.Addr().String(),
+		logger:  zap.L(),
+		storage: is.store,
+		cluster: is.initCluster(t),
+		ttc:     storage.DefaultTTC,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())

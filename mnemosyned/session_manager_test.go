@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
@@ -232,7 +233,7 @@ func TestSessionManager_Get_postgresStore(t *testing.T) {
 					})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session not found")
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: "+storage.ErrSessionNotFound.Error())
 				})
 			})
 		}))
@@ -311,7 +312,7 @@ func TestSessionManager_Get_postgresStore(t *testing.T) {
 			//		resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{})
 			//
 			//		So(resp, ShouldBeNil)
-			//		So(err, ShouldBeGRPCError(ShouldEqual),codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+			//		So(err, ShouldBeGRPCError(ShouldEqual),codes.InvalidArgument, grpc.ErrorDesc(erringAccessToken))
 			//	})
 			//})
 		}))
@@ -369,7 +370,7 @@ func TestSessionManager_Context_postgresStore(t *testing.T) {
 				resp, err := s.client.Context(ctx, &empty.Empty{})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: session not found")
+				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: "+storage.ErrSessionNotFound.Error())
 			})
 		})
 	}))
@@ -393,31 +394,31 @@ func TestSessionManager_Exists_postgresStore(t *testing.T) {
 			accessToken = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return true", func() {
-					resp, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{
+					res, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{
 						AccessToken: accessToken,
 					})
 
 					So(err, ShouldBeNil)
-					So(resp.Exists, ShouldBeTrue)
+					So(res.GetValue(), ShouldBeTrue)
 				})
 			})
 			Convey("Without access token", func() {
 				Convey("Should return invalid argument gRPC error", func() {
-					resp, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{})
+					res, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{})
 
-					So(resp, ShouldBeNil)
+					So(res, ShouldBeNil)
 					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
 				})
 			})
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return false", func() {
-				resp, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{
+				res, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{
 					AccessToken: "0000000000test",
 				})
 
 				So(err, ShouldBeNil)
-				So(resp.Exists, ShouldBeFalse)
+				So(res.GetValue(), ShouldBeFalse)
 			})
 		})
 	}))
@@ -441,12 +442,12 @@ func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 			accessToken = resp.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return true", func() {
-					resp, err := s.client.Abandon(context.Background(), &mnemosynerpc.AbandonRequest{
+					res, err := s.client.Abandon(context.Background(), &mnemosynerpc.AbandonRequest{
 						AccessToken: accessToken,
 					})
 
 					So(err, ShouldBeNil)
-					So(resp.Abandoned, ShouldBeTrue)
+					So(res.GetValue(), ShouldBeTrue)
 				})
 			})
 			Convey("Without access token", func() {
@@ -465,7 +466,7 @@ func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 				})
 
 				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
+				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: "+storage.ErrSessionNotFound.Error())
 			})
 		})
 	}))
@@ -479,29 +480,29 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 	Convey("Delete", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
 			subjectID = "entity:1"
-			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
+			res, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
 				Session: &mnemosynerpc.Session{SubjectId: subjectID},
 			})
 
 			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, subjectID)
+			So(res, ShouldBeValidStartResponse, subjectID)
 
-			accessToken = resp.Session.AccessToken
+			accessToken = res.Session.AccessToken
 			Convey("With proper access token", func() {
 				Convey("Should return that one record affected", func() {
-					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
+					res, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
 						AccessToken: accessToken,
 					})
 
 					So(err, ShouldBeNil)
-					So(resp.Count, ShouldEqual, 1)
+					So(res.GetValue(), ShouldEqual, 1)
 				})
 			})
 			Convey("Without access token", func() {
 				Convey("Should return invalid argument gRPC error", func() {
-					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{})
+					res, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{})
 
-					So(resp, ShouldBeNil)
+					So(res, ShouldBeNil)
 					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, "mnemosyned: none of expected arguments was provided")
 				})
 			})
@@ -512,14 +513,14 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 					to, err := ptypes.TimestampProto(time.Now().AddDate(101, 0, 0))
 					So(err, ShouldBeNil)
 
-					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
+					res, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
 						AccessToken:  accessToken,
 						ExpireAtFrom: from,
 						ExpireAtTo:   to,
 					})
 
 					So(err, ShouldBeNil)
-					So(resp.Count, ShouldEqual, 0)
+					So(res.GetValue(), ShouldEqual, 0)
 				})
 			})
 			Convey("With date ranges that match existing session", func() {
@@ -529,25 +530,25 @@ func TestSessionManager_Delete_postgresStore(t *testing.T) {
 					to, err := ptypes.TimestampProto(time.Now().AddDate(100, 0, 0))
 					So(err, ShouldBeNil)
 
-					resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
+					res, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
 						AccessToken:  accessToken,
 						ExpireAtFrom: from,
 						ExpireAtTo:   to,
 					})
 
 					So(err, ShouldBeNil)
-					So(resp.Count, ShouldEqual, 1)
+					So(res.GetValue(), ShouldEqual, 1)
 				})
 			})
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return that even single record was affected", func() {
-				resp, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
+				res, err := s.client.Delete(context.Background(), &mnemosynerpc.DeleteRequest{
 					AccessToken: "0000000000test",
 				})
 
 				So(err, ShouldBeNil)
-				So(resp.Count, ShouldEqual, 0)
+				So(res.GetValue(), ShouldEqual, 0)
 			})
 		})
 	}))
@@ -561,24 +562,24 @@ func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 	Convey("SetValue", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("With existing session", func() {
 			subjectID = "entity:1"
-			resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
+			res, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
 				Session: &mnemosynerpc.Session{SubjectId: subjectID},
 			})
 
 			So(err, ShouldBeNil)
-			So(resp, ShouldBeValidStartResponse, subjectID)
+			So(res, ShouldBeValidStartResponse, subjectID)
 
-			accessToken = resp.Session.AccessToken
+			accessToken = res.GetSession().GetAccessToken()
 			Convey("With proper access token", func() {
 				Convey("Should return that one record affected", func() {
-					resp, err := s.client.SetValue(context.Background(), &mnemosynerpc.SetValueRequest{
+					res, err := s.client.SetValue(context.Background(), &mnemosynerpc.SetValueRequest{
 						AccessToken: accessToken,
 						Key:         "key",
 						Value:       "value",
 					})
 
 					So(err, ShouldBeNil)
-					So(resp.Bag, ShouldContainKey, "key")
+					So(res.GetBag(), ShouldContainKey, "key")
 				})
 			})
 			Convey("Without access token", func() {
@@ -595,14 +596,14 @@ func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 		})
 		Convey("With unknown access token", func() {
 			Convey("Should return not found gRPC error", func() {
-				resp, err := s.client.SetValue(context.Background(), &mnemosynerpc.SetValueRequest{
+				res, err := s.client.SetValue(context.Background(), &mnemosynerpc.SetValueRequest{
 					AccessToken: "0000000000test",
 					Key:         "key",
 					Value:       "value",
 				})
 
-				So(resp, ShouldBeNil)
-				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, grpc.ErrorDesc(errSessionNotFound))
+				So(res, ShouldBeNil)
+				So(err, ShouldBeGRPCError(ShouldEqual), codes.NotFound, "mnemosyned: "+storage.ErrSessionNotFound.Error())
 			})
 		})
 	}))
@@ -616,41 +617,41 @@ func TestSessionManager_List_postgresStore(t *testing.T) {
 	Convey("sessionManagerList", t, WithE2ESuite(t, func(s *e2eSuite) {
 		Convey("Having multiple sessions active", func() {
 			for i := 0; i < nb; i++ {
-				resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
+				res, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{
 					Session: &mnemosynerpc.Session{SubjectId: strconv.Itoa(i)},
 				})
 				So(err, ShouldBeNil)
-				So(resp, ShouldBeValidStartResponse, subjectID)
+				So(res, ShouldBeValidStartResponse, subjectID)
 			}
 			Convey("With empty request", func() {
 				Convey("Should return last 10 sessions", func() {
-					resp, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{})
+					res, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldNotBeNil)
-					So(len(resp.Sessions), ShouldEqual, 10)
+					So(res, ShouldNotBeNil)
+					So(len(res.Sessions), ShouldEqual, 10)
 				})
 			})
 			Convey("With limit set", func() {
 				Convey("Should return specified numer of sessions", func() {
-					resp, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
+					res, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
 						Limit: int64(nb),
 					})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldNotBeNil)
-					So(len(resp.Sessions), ShouldEqual, nb)
+					So(res, ShouldNotBeNil)
+					So(len(res.Sessions), ShouldEqual, nb)
 				})
 			})
 			Convey("With offset higher than overall number of sessions", func() {
 				Convey("Should return empty collection", func() {
-					resp, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
+					res, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
 						Offset: int64(nb),
 					})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldNotBeNil)
-					So(len(resp.Sessions), ShouldEqual, 0)
+					So(res, ShouldNotBeNil)
+					So(len(res.Sessions), ShouldEqual, 0)
 				})
 			})
 			Convey("With expire at to set in the past", func() {
@@ -658,13 +659,15 @@ func TestSessionManager_List_postgresStore(t *testing.T) {
 					past, err := ptypes.TimestampProto(time.Now().Add(-5 * time.Hour).UTC())
 					So(err, ShouldBeNil)
 
-					resp, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
-						ExpireAtTo: past,
+					res, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
+						Query: &mnemosynerpc.Query{
+							ExpireAtTo: past,
+						},
 					})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldNotBeNil)
-					So(len(resp.Sessions), ShouldEqual, 0)
+					So(res, ShouldNotBeNil)
+					So(len(res.Sessions), ShouldEqual, 0)
 				})
 			})
 			Convey("With expire at from set in the future", func() {
@@ -672,13 +675,15 @@ func TestSessionManager_List_postgresStore(t *testing.T) {
 					future, err := ptypes.TimestampProto(time.Now().Add(5 * time.Hour).UTC())
 					So(err, ShouldBeNil)
 
-					resp, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
-						ExpireAtFrom: future,
+					res, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
+						Query: &mnemosynerpc.Query{
+							ExpireAtFrom: future,
+						},
 					})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldNotBeNil)
-					So(len(resp.Sessions), ShouldEqual, 0)
+					So(res, ShouldNotBeNil)
+					So(len(res.GetSessions()), ShouldEqual, 0)
 				})
 			})
 			Convey("With time range set very wide and maximum offset", func() {
@@ -689,27 +694,29 @@ func TestSessionManager_List_postgresStore(t *testing.T) {
 					to, err := ptypes.TimestampProto(time.Now().Add(5 * time.Hour).UTC())
 					So(err, ShouldBeNil)
 
-					resp, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
-						Limit:        int64(nb),
-						ExpireAtFrom: from,
-						ExpireAtTo:   to,
+					res, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
+						Limit: int64(nb),
+						Query: &mnemosynerpc.Query{
+							ExpireAtFrom: from,
+							ExpireAtTo:   to,
+						},
 					})
 
 					So(err, ShouldBeNil)
-					So(resp, ShouldNotBeNil)
-					So(len(resp.Sessions), ShouldEqual, nb)
+					So(res, ShouldNotBeNil)
+					So(len(res.Sessions), ShouldEqual, nb)
 				})
 			})
 		})
 		Convey("Without single session active", func() {
 			Convey("Should return empty collection", func() {
-				resp, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
+				res, err := s.client.List(context.Background(), &mnemosynerpc.ListRequest{
 					Limit: 100,
 				})
 
 				So(err, ShouldBeNil)
-				So(resp, ShouldNotBeNil)
-				So(len(resp.Sessions), ShouldEqual, 0)
+				So(res, ShouldNotBeNil)
+				So(len(res.Sessions), ShouldEqual, 0)
 			})
 		})
 	}))

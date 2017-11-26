@@ -6,13 +6,30 @@ import (
 	"github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
+
+func unaryServerInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {
+	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		wrap := func(current grpc.UnaryServerInterceptor, next grpc.UnaryHandler) grpc.UnaryHandler {
+			return func(currentCtx context.Context, currentReq interface{}) (interface{}, error) {
+				return current(currentCtx, currentReq, info, next)
+			}
+		}
+		chain := handler
+		for _, i := range interceptors {
+			chain = wrap(i, chain)
+		}
+		return chain(ctx, req)
+	}
+}
 
 func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error) {
 	{
@@ -49,8 +66,12 @@ func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.
 				)
 
 				switch err {
-				case errMissingSession, errMissingAccessToken, errMissingSubjectID, errSessionNotFound:
+				case errMissingAccessToken, errMissingSession, errMissingSubjectID:
 					return nil, err
+				case storage.ErrSessionNotFound:
+					return nil, status.Errorf(codes.NotFound, "mnemosyned: %s", err.Error())
+				case storage.ErrMissingAccessToken, storage.ErrMissingSession, storage.ErrMissingSubjectID:
+					return nil, status.Errorf(codes.InvalidArgument, "mnemosyned: %s", err.Error())
 				default:
 					return nil, grpc.Errorf(grpc.Code(err), "mnemosyned: %s", grpc.ErrorDesc(err))
 				}

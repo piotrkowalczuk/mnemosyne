@@ -8,13 +8,15 @@ import (
 	"net/http"
 	"net/http/pprof"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
+	storagepq "github.com/piotrkowalczuk/mnemosyne/internal/storage/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/promgrpc"
 	"github.com/prometheus/client_golang/prometheus"
@@ -23,6 +25,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 )
+
+const subsystem = "mnemosyned"
 
 // DaemonOpts it is constructor argument that can be passed to
 // the NewDaemon constructor function.
@@ -53,17 +57,16 @@ type TestDaemonOpts struct {
 
 // Daemon represents single daemon instance that can be run.
 type Daemon struct {
-	done          chan struct{}
 	opts          *DaemonOpts
-	monitor       *monitoring
+	done          chan struct{}
 	serverOptions []grpc.ServerOption
 	clientOptions []grpc.DialOption
 	postgres      *sql.DB
-	storage       storage
 	logger        *zap.Logger
+	server        *grpc.Server
+	storage       storage.Storage
 	rpcListener   net.Listener
 	debugListener net.Listener
-	server        *grpc.Server
 }
 
 // NewDaemon allocates new daemon instance using given options.
@@ -81,13 +84,13 @@ func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 		return nil, err
 	}
 	if d.opts.SessionTTL == 0 {
-		d.opts.SessionTTL = DefaultTTL
+		d.opts.SessionTTL = storage.DefaultTTL
 	}
 	if d.opts.SessionTTC == 0 {
-		d.opts.SessionTTC = DefaultTTC
+		d.opts.SessionTTC = storage.DefaultTTC
 	}
 	if d.opts.Storage == "" {
-		d.opts.Storage = StorageEnginePostgres
+		d.opts.Storage = storage.EnginePostgres
 	}
 	if d.opts.PostgresTable == "" {
 		d.opts.PostgresTable = "session"
@@ -134,9 +137,6 @@ func (d *Daemon) Run() (err error) {
 	if cl, err = initCluster(d.logger, d.opts.ClusterListenAddr, d.opts.ClusterSeeds...); err != nil {
 		return
 	}
-	if err = d.initMonitoring(); err != nil {
-		return
-	}
 	if err = d.initStorage(d.logger, d.opts.PostgresTable, d.opts.PostgresSchema); err != nil {
 		return
 	}
@@ -145,7 +145,7 @@ func (d *Daemon) Run() (err error) {
 
 	d.clientOptions = []grpc.DialOption{
 		grpc.WithTimeout(10 * time.Second),
-		grpc.WithUserAgent("mnemosyned"),
+		grpc.WithUserAgent(subsystem),
 		grpc.WithStatsHandler(interceptor),
 		grpc.WithDialer(interceptor.Dialer(func(addr string, timeout time.Duration) (net.Conn, error) {
 			return net.DialTimeout("tcp", addr, timeout)
@@ -178,19 +178,23 @@ func (d *Daemon) Run() (err error) {
 
 	d.server = grpc.NewServer(d.serverOptions...)
 
+	cache := cache.New(5*time.Second, subsystem)
 	mnemosyneServer, err := newSessionManager(sessionManagerOpts{
-		addr:       d.opts.ClusterListenAddr,
-		cluster:    cl,
-		logger:     d.logger,
-		storage:    d.storage,
-		monitoring: d.monitor,
-		ttc:        d.opts.SessionTTC,
+		addr:    d.opts.ClusterListenAddr,
+		cluster: cl,
+		logger:  d.logger,
+		storage: d.storage,
+		ttc:     d.opts.SessionTTC,
+		cache:   cache,
 	})
 	if err != nil {
 		return err
 	}
 	mnemosynerpc.RegisterSessionManagerServer(d.server, mnemosyneServer)
 	if !d.opts.IsTest {
+		prometheus.DefaultRegisterer.Register(d.storage.(storage.InstrumentedStorage))
+		prometheus.DefaultRegisterer.Register(cache)
+		prometheus.DefaultRegisterer.Register(mnemosyneServer)
 		prometheus.DefaultRegisterer.Register(interceptor)
 		promgrpc.RegisterInterceptor(d.server, interceptor)
 	}
@@ -266,9 +270,9 @@ func (d *Daemon) Addr() net.Addr {
 
 func (d *Daemon) initStorage(l *zap.Logger, table, schema string) (err error) {
 	switch d.opts.Storage {
-	case StorageEngineInMemory:
+	case storage.EngineInMemory:
 		return errors.New("in memory storage is not implemented yet")
-	case StorageEnginePostgres:
+	case storage.EnginePostgres:
 		d.postgres, err = postgres.Init(
 			d.opts.PostgresAddress,
 			postgres.Opts{
@@ -278,16 +282,19 @@ func (d *Daemon) initStorage(l *zap.Logger, table, schema string) (err error) {
 		if err != nil {
 			return
 		}
-		if d.storage, err = initStorage(
-			d.opts.IsTest,
-			newPostgresStorage(table, schema, d.postgres, d.monitor, d.opts.SessionTTL),
-		); err != nil {
+		if d.storage, err = storage.Init(storagepq.NewStorage(storagepq.StorageOpts{
+			Namespace: subsystem,
+			Schema:    schema,
+			Table:     table,
+			Conn:      d.postgres,
+			TTL:       d.opts.SessionTTL,
+		}), d.opts.IsTest); err != nil {
 			return
 		}
 
 		l.Info("postgres storage initialized", zap.String("schema", schema), zap.String("table", table))
 		return
-	case StorageEngineRedis:
+	case storage.EngineRedis:
 		return errors.New("redis storage is not implemented yet")
 	default:
 		return errors.New("unknown storage engine")
@@ -304,18 +311,4 @@ func (d *Daemon) setPostgresConnectionParameters() error {
 	u.RawQuery = v.Encode()
 	d.opts.PostgresAddress = u.String()
 	return nil
-}
-
-func (d *Daemon) initMonitoring() (err error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		return errors.New("getting hostname failed")
-	}
-
-	reg := prometheus.DefaultRegisterer
-	if d.opts.IsTest {
-		reg = prometheus.NewRegistry()
-	}
-	d.monitor = initPrometheus("mnemosyne", reg, d.opts.Monitoring, prometheus.Labels{"server": hostname})
-	return
 }

@@ -4,7 +4,10 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
@@ -13,13 +16,13 @@ import (
 )
 
 type sessionManagerDelete struct {
-	storage storage
-	cache   *cache
+	storage storage.Storage
+	cache   *cache.Cache
 	cluster *cluster.Cluster
 	logger  *zap.Logger
 }
 
-func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (*mnemosynerpc.DeleteResponse, error) {
+func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (*wrappers.Int64Value, error) {
 	if req.AccessToken == "" && req.RefreshToken == "" && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
 		return nil, grpc.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}
@@ -46,7 +49,5 @@ func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.D
 		return nil, err
 	}
 
-	return &mnemosynerpc.DeleteResponse{
-		Count: aff,
-	}, nil
+	return &wrappers.Int64Value{Value: aff}, nil
 }

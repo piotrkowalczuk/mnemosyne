@@ -1,14 +1,33 @@
-package mnemosyned
+package postgres_test
 
 import (
 	"database/sql"
+	"flag"
+	"os"
 	"testing"
 
+	_ "github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	storagepq "github.com/piotrkowalczuk/mnemosyne/internal/storage/postgres"
 	"go.uber.org/zap"
 )
+
+var testPostgresAddress string
+
+func TestMain(m *testing.M) {
+	flag.StringVar(&testPostgresAddress, "postgres.address", getStringEnvOr("MNEMOSYNED_POSTGRES_ADDRESS", "postgres://localhost/test?sslmode=disable"), "")
+	flag.Parse()
+
+	os.Exit(m.Run())
+}
+
+func getStringEnvOr(env, or string) string {
+	if v := os.Getenv(env); v != "" {
+		return v
+	}
+	return or
+}
 
 type postgresSuite struct {
 	db     *sql.DB
@@ -24,7 +43,6 @@ func (ps *postgresSuite) setup(t *testing.T) {
 	var err error
 
 	ps.logger = zap.L()
-	//ps.logger = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	ps.db, err = postgres.Init(testPostgresAddress, postgres.Opts{
 		Logger: ps.logger,
 	})
@@ -33,7 +51,10 @@ func (ps *postgresSuite) setup(t *testing.T) {
 	}
 
 	if ps.store, err = storage.Init(storagepq.NewStorage(storagepq.StorageOpts{
-		Table: "session", Schema: "mnemosyne", Conn: ps.db, TTL: storage.DefaultTTL,
+		Table:  "session",
+		Schema: "mnemosyne",
+		Conn:   ps.db,
+		TTL:    storage.DefaultTTL,
 	}), true); err != nil {
 		t.Fatal(err)
 	}

@@ -1,4 +1,4 @@
-package mnemosyned
+package storage
 
 import (
 	"context"
@@ -8,11 +8,14 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-func testStorage_Start(t *testing.T, s storage) {
+func TestStorage_Start(t *testing.T, s Storage) {
 	t.Helper()
 
 	subjectID := "subjectID"
@@ -29,7 +32,7 @@ func testStorage_Start(t *testing.T, s storage) {
 	}
 }
 
-func testStorage_Get(t *testing.T, s storage) {
+func TestStorage_Get(t *testing.T, s Storage) {
 	t.Helper()
 
 	ses, err := s.Start(context.Background(), randomToken(t), randomToken(t), "subjectID", "subjectClient", map[string]string{
@@ -50,11 +53,11 @@ func testStorage_Get(t *testing.T, s storage) {
 	// Check for non existing Token
 	got2, err2 := s.Get(context.Background(), "keyhash")
 	assert.Error(t, err2)
-	assert.EqualError(t, err2, errSessionNotFound.Error())
+	assert.Equal(t, err2, ErrSessionNotFound)
 	assert.Nil(t, got2)
 }
 
-func testStorage_List(t *testing.T, s storage) {
+func TestStorage_List(t *testing.T, s Storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
@@ -90,7 +93,7 @@ func testStorage_List(t *testing.T, s storage) {
 	}
 }
 
-func testStorage_List_between(t *testing.T, s storage) {
+func TestStorage_List_between(t *testing.T, s Storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
@@ -128,7 +131,7 @@ func testStorage_List_between(t *testing.T, s storage) {
 	}
 }
 
-func testStorage_Exists(t *testing.T, s storage) {
+func TestStorage_Exists(t *testing.T, s Storage) {
 	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -146,7 +149,7 @@ func testStorage_Exists(t *testing.T, s storage) {
 	}
 }
 
-func testStorage_Abandon(t *testing.T, s storage) {
+func TestStorage_Abandon(t *testing.T, s Storage) {
 	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -160,15 +163,15 @@ func testStorage_Abandon(t *testing.T, s storage) {
 	// Check for already abandoned session
 	ok3, err3 := s.Abandon(context.Background(), ses.AccessToken)
 	assert.False(t, ok3)
-	assert.EqualError(t, err3, errSessionNotFound.Error())
+	assert.Equal(t, err3, ErrSessionNotFound)
 
 	// Check for session that never exists
 	ok4, err4 := s.Abandon(context.Background(), "keyhash")
 	assert.False(t, ok4)
-	assert.EqualError(t, err4, errSessionNotFound.Error())
+	assert.Equal(t, err4, ErrSessionNotFound)
 }
 
-func testStorage_SetValue(t *testing.T, s storage) {
+func TestStorage_SetValue(t *testing.T, s Storage) {
 	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -195,7 +198,7 @@ func testStorage_SetValue(t *testing.T, s storage) {
 
 	// Check for non existing Token
 	bag3, err3 := s.SetValue(context.Background(), "keyhash", "email", "fake@email.com")
-	require.Error(t, err3, errSessionNotFound.Error())
+	assert.Equal(t, err3, ErrSessionNotFound)
 	assert.Nil(t, bag3)
 
 	wg := sync.WaitGroup{}
@@ -240,7 +243,7 @@ func testStorage_SetValue(t *testing.T, s storage) {
 	}
 }
 
-func testStorage_Delete(t *testing.T, s storage) {
+func TestStorage_Delete(t *testing.T, s Storage) {
 	nb := int64(10)
 	key := "index"
 	sid := "subjectID"
@@ -384,4 +387,24 @@ DataLoop:
 			assert.Equal(t, int64(0), affected)
 		}
 	}
+}
+
+func randomToken(t *testing.T) string {
+	at, err := mnemosyne.RandomAccessToken()
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	return at
+}
+
+func assertCode(t *testing.T, err error, exp codes.Code) {
+	t.Helper()
+
+	if st, ok := status.FromError(err); ok {
+		if st.Code() != exp {
+			t.Fatalf("wrong code, expected %s but got %s", exp.String(), st.Code().String())
+		}
+		return
+	}
+	t.Fatalf("unknown error, cant retrieve code")
 }

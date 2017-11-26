@@ -8,7 +8,7 @@ import (
 
 	"time"
 
-	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 )
 
 var (
@@ -61,12 +61,12 @@ func (c *configuration) init() {
 	flag.Var(&c.cluster.seeds, "cluster.seeds", "")
 	flag.StringVar(&c.catalog.http, "catalog.http", "http://localhost:8500/v1/catalog/service/mnemosyned", "address of service catalog ")
 	flag.StringVar(&c.catalog.dns, "catalog.dns", "", "dns server address that can resolve SRV lookup")
-	flag.DurationVar(&c.session.ttl, "ttl", mnemosyned.DefaultTTL, "session time to live, after which session is deleted")
-	flag.DurationVar(&c.session.ttc, "ttc", mnemosyned.DefaultTTC, "session time to cleanup, how offten cleanup will be performed")
+	flag.DurationVar(&c.session.ttl, "ttl", storage.DefaultTTL, "session time to live, after which session is deleted")
+	flag.DurationVar(&c.session.ttc, "ttc", storage.DefaultTTC, "session time to cleanup, how offten cleanup will be performed")
 	flag.StringVar(&c.logger.environment, "log.environment", "production", "logger environment config")
 	flag.StringVar(&c.logger.level, "log.level", "info", "logger level")
 	flag.BoolVar(&c.monitoring.enabled, "monitoring", false, "toggle application monitoring")
-	flag.StringVar(&c.storage, "storage", mnemosyned.StorageEnginePostgres, "storage engine") // TODO: change to in memory when implemented
+	flag.StringVar(&c.storage, "storage", storage.EnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://localhost?sslmode=disable", "storage postgres connection string")
 	flag.StringVar(&c.postgres.table, "postgres.table", "session", "postgres table name")
 	flag.StringVar(&c.postgres.schema, "postgres.schema", "mnemosyne", "postgres schema name")

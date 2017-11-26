@@ -8,7 +8,6 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -44,25 +43,36 @@ func TestDaemon_Run(t *testing.T) {
 	}
 	defer d.Close()
 
-	m, err := mnemosyne.New(mnemosyne.MnemosyneOpts{
-		Addresses: []string{d.Addr().String()},
-	})
+	conn, err := grpc.DialContext(context.TODO(), d.Addr().String(), grpc.WithInsecure())
+	if err != nil {
+		t.Fatalf("unexpected error: %s", err.Error())
+	}
+	m := mnemosynerpc.NewSessionManagerClient(conn)
+
 	if err != nil {
 		t.Fatalf("unexpected mnemosyne instatiation error: %s", err.Error())
 	}
-	defer m.Close()
+	defer conn.Close()
 
 	ats := make([]string, 0, nb)
 	for i := 0; i < nb; i++ {
 
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-		ses, err := m.Start(ctx, strconv.Itoa(i), "daemon test client", nil)
+		res, err := m.Start(ctx, &mnemosynerpc.StartRequest{
+			Session: &mnemosynerpc.Session{
+				SubjectId:     strconv.Itoa(i),
+				SubjectClient: "daemon test client",
+			},
+		})
 		if err != nil {
 			t.Errorf("session could not be started: %s", err.Error())
 			return
 		}
-		t.Logf("session created, it expires at: %s", time.Unix(ses.ExpireAt.Seconds, int64(ses.ExpireAt.Nanos)).Format(time.RFC3339))
-		ats = append(ats, ses.AccessToken)
+		t.Logf("session created, it expires at: %s", time.Unix(
+			res.GetSession().GetExpireAt().GetSeconds(),
+			int64(res.GetSession().GetExpireAt().GetNanos()),
+		).Format(time.RFC3339))
+		ats = append(ats, res.GetSession().GetAccessToken())
 	}
 
 	// BUG: this assertion can fail on travis because of cpu lag.
@@ -70,7 +80,9 @@ func TestDaemon_Run(t *testing.T) {
 
 	for i, at := range ats {
 		ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
-		_, err := m.Get(ctx, string(at))
+		_, err := m.Get(ctx, &mnemosynerpc.GetRequest{
+			AccessToken: string(at),
+		})
 		if err == nil {
 			t.Errorf("%d: missing error", i)
 			return
@@ -240,7 +252,7 @@ func TestDaemon_Cluster(t *testing.T) {
 					if err != nil {
 						t.Fatal(err)
 					}
-					if !res.Exists {
+					if !res.GetValue() {
 						t.Fatal("should exists")
 					}
 				})

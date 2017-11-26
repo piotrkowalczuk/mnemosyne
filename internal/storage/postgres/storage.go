@@ -1,56 +1,86 @@
-package mnemosyned
+package postgres
 
 import (
+	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
 	"time"
 
-	"context"
-
-	"bytes"
-
 	"github.com/golang/protobuf/ptypes"
+	"github.com/piotrkowalczuk/mnemosyne/internal/model"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type postgresStorage struct {
+var monitoringPostgresLabels = []string{
+	"query",
+}
+
+type Storage struct {
 	db                                             *sql.DB
 	schema                                         string
 	table                                          string
 	ttl                                            time.Duration
-	monitor                                        *monitoring
 	querySave, queryGet, queryExists, queryAbandon string
+	// monitoring
+	queries *prometheus.CounterVec
+	errors  *prometheus.CounterVec
 }
 
-func newPostgresStorage(tb, schema string, db *sql.DB, m *monitoring, ttl time.Duration) storage {
-	return &postgresStorage{
-		db:      db,
-		table:   tb,
-		schema:  schema,
-		ttl:     ttl,
-		monitor: m,
-		querySave: `INSERT INTO ` + schema + ` .` + tb + ` (access_token, refresh_token, subject_id, subject_client, bag)
+type StorageOpts struct {
+	Conn          *sql.DB
+	Schema, Table string
+	Namespace     string
+	TTL           time.Duration
+}
+
+func NewStorage(opts StorageOpts) storage.Storage {
+	return &Storage{
+		db:     opts.Conn,
+		table:  opts.Table,
+		schema: opts.Schema,
+		ttl:    opts.TTL,
+		querySave: `INSERT INTO ` + opts.Schema + ` .` + opts.Table + ` (access_token, refresh_token, subject_id, subject_client, bag)
 			VALUES ($1, $2, $3, $4, $5)
 			RETURNING expire_at`,
-		queryGet: fmt.Sprintf(`UPDATE `+schema+` .`+tb+`
+		queryGet: fmt.Sprintf(`UPDATE `+opts.Schema+` .`+opts.Table+`
 			SET expire_at = (NOW() + '%d seconds')
 			WHERE access_token = $1
-			RETURNING refresh_token, subject_id, subject_client, bag, expire_at`, int64(ttl.Seconds())),
-		queryExists:  `SELECT EXISTS(SELECT 1 FROM ` + schema + ` .` + tb + ` WHERE access_token = $1)`,
-		queryAbandon: `DELETE FROM ` + schema + ` .` + tb + ` WHERE access_token = $1`,
+			RETURNING refresh_token, subject_id, subject_client, bag, expire_at`, int64(opts.TTL.Seconds())),
+		queryExists:  `SELECT EXISTS(SELECT 1 FROM ` + opts.Schema + ` .` + opts.Table + ` WHERE access_token = $1)`,
+		queryAbandon: `DELETE FROM ` + opts.Schema + ` .` + opts.Table + ` WHERE access_token = $1`,
+		queries: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: opts.Namespace,
+				Subsystem: "storage",
+				Name:      "postgres_queries_total",
+				Help:      "Total number of SQL queries made.",
+			},
+			monitoringPostgresLabels,
+		),
+		errors: prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Namespace: opts.Namespace,
+				Subsystem: "storage",
+				Name:      "postgres_errors_total",
+				Help:      "Total number of errors that happen during SQL queries.",
+			},
+			monitoringPostgresLabels,
+		),
 	}
 }
 
 // Start implements storage interface.
-func (ps *postgresStorage) Start(ctx context.Context, accessToken, refreshToken, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
+func (ps *Storage) Start(ctx context.Context, accessToken, refreshToken, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
 	ent := &sessionEntity{
 		AccessToken:   accessToken,
 		RefreshToken:  refreshToken,
 		SubjectID:     sid,
 		SubjectClient: sc,
-		Bag:           bag(b),
+		Bag:           model.Bag(b),
 	}
 
 	if err := ps.save(ctx, ent); err != nil {
@@ -60,7 +90,7 @@ func (ps *postgresStorage) Start(ctx context.Context, accessToken, refreshToken,
 	return ent.session()
 }
 
-func (ps *postgresStorage) save(ctx context.Context, ent *sessionEntity) (err error) {
+func (ps *Storage) save(ctx context.Context, ent *sessionEntity) (err error) {
 	labels := prometheus.Labels{"query": "save"}
 	err = ps.db.QueryRowContext(
 		ctx,
@@ -81,7 +111,7 @@ func (ps *postgresStorage) save(ctx context.Context, ent *sessionEntity) (err er
 }
 
 // Get implements storage interface.
-func (ps *postgresStorage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Session, error) {
+func (ps *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Session, error) {
 	var entity sessionEntity
 	labels := prometheus.Labels{"query": "get"}
 
@@ -96,7 +126,7 @@ func (ps *postgresStorage) Get(ctx context.Context, accessToken string) (*mnemos
 	if err != nil {
 		ps.incError(labels)
 		if err == sql.ErrNoRows {
-			return nil, errSessionNotFound
+			return nil, storage.ErrSessionNotFound
 		}
 		return nil, err
 	}
@@ -116,7 +146,7 @@ func (ps *postgresStorage) Get(ctx context.Context, accessToken string) (*mnemos
 }
 
 // sessionManagerList implements storage interface.
-func (ps *postgresStorage) List(ctx context.Context, offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
+func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
 	if limit == 0 {
 		return nil, errors.New("cannot retrieve list of sessions, limit needs to be higher than 0")
 	}
@@ -188,7 +218,7 @@ func (ps *postgresStorage) List(ctx context.Context, offset, limit int64, expire
 }
 
 // Exists implements storage interface.
-func (ps *postgresStorage) Exists(ctx context.Context, accessToken string) (exists bool, err error) {
+func (ps *Storage) Exists(ctx context.Context, accessToken string) (exists bool, err error) {
 	labels := prometheus.Labels{"query": "exists"}
 
 	err = ps.db.QueryRowContext(ctx, ps.queryExists, accessToken).Scan(
@@ -203,7 +233,7 @@ func (ps *postgresStorage) Exists(ctx context.Context, accessToken string) (exis
 }
 
 // Abandon implements storage interface.
-func (ps *postgresStorage) Abandon(ctx context.Context, accessToken string) (bool, error) {
+func (ps *Storage) Abandon(ctx context.Context, accessToken string) (bool, error) {
 	labels := prometheus.Labels{"query": "abandon"}
 
 	result, err := ps.db.ExecContext(ctx, ps.queryAbandon, accessToken)
@@ -217,19 +247,18 @@ func (ps *postgresStorage) Abandon(ctx context.Context, accessToken string) (boo
 	if err != nil {
 		return false, err
 	}
-
 	if affected == 0 {
-		return false, errSessionNotFound
+		return false, storage.ErrSessionNotFound
 	}
 
 	return true, nil
 }
 
 // SetValue implements storage interface.
-func (ps *postgresStorage) SetValue(ctx context.Context, accessToken string, key, value string) (map[string]string, error) {
+func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value string) (map[string]string, error) {
 	var err error
 	if accessToken == "" {
-		return nil, errMissingAccessToken
+		return nil, storage.ErrMissingAccessToken
 	}
 
 	entity := &sessionEntity{
@@ -262,12 +291,12 @@ func (ps *postgresStorage) SetValue(ctx context.Context, accessToken string, key
 		ps.incError(prometheus.Labels{"query": "set_value_select"})
 		tx.Rollback()
 		if err == sql.ErrNoRows {
-			return nil, errSessionNotFound
+			return nil, storage.ErrSessionNotFound
 		}
 		return nil, err
 	}
 
-	entity.Bag.set(key, value)
+	entity.Bag.Set(key, value)
 
 	_, err = tx.ExecContext(ctx, updateQuery, accessToken, entity.Bag)
 	ps.incQueries(prometheus.Labels{"query": "set_value_update"})
@@ -283,7 +312,7 @@ func (ps *postgresStorage) SetValue(ctx context.Context, accessToken string, key
 }
 
 // Delete implements storage interface.
-func (ps *postgresStorage) Delete(ctx context.Context, subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+func (ps *Storage) Delete(ctx context.Context, subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
 	where, args := ps.where(subjectID, accessToken, refreshToken, expiredAtFrom, expiredAtTo)
 	if where.Len() == 0 {
 		return 0, fmt.Errorf("session cannot be deleted, no where parameter provided: %s", where.String())
@@ -302,7 +331,7 @@ func (ps *postgresStorage) Delete(ctx context.Context, subjectID, accessToken, r
 }
 
 // Setup implements storage interface.
-func (ps *postgresStorage) Setup() error {
+func (ps *Storage) Setup() error {
 	query := fmt.Sprintf(`
 		CREATE SCHEMA IF NOT EXISTS %s;
 		CREATE TABLE IF NOT EXISTS %s.%s (
@@ -328,25 +357,21 @@ func (ps *postgresStorage) Setup() error {
 }
 
 // TearDown implements storage interface.
-func (ps *postgresStorage) TearDown() error {
+func (ps *Storage) TearDown() error {
 	_, err := ps.db.Exec(`DROP SCHEMA IF EXISTS ` + ps.schema + ` CASCADE`)
 
 	return err
 }
 
-func (ps *postgresStorage) incQueries(field prometheus.Labels) {
-	if ps.monitor.postgres.enabled {
-		ps.monitor.postgres.queries.With(field).Inc()
-	}
+func (ps *Storage) incQueries(field prometheus.Labels) {
+	ps.queries.With(field).Inc()
 }
 
-func (ps *postgresStorage) incError(field prometheus.Labels) {
-	if ps.monitor.postgres.enabled {
-		ps.monitor.postgres.errors.With(field).Inc()
-	}
+func (ps *Storage) incError(field prometheus.Labels) {
+	ps.errors.With(field).Inc()
 }
 
-func (ps *postgresStorage) where(subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (*bytes.Buffer, []interface{}) {
+func (ps *Storage) where(subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (*bytes.Buffer, []interface{}) {
 	var count int
 	buf := bytes.NewBuffer(nil)
 	args := make([]interface{}, 0, 4)
@@ -385,12 +410,24 @@ func (ps *postgresStorage) where(subjectID, accessToken, refreshToken string, ex
 	return buf, args
 }
 
+// Collect implements prometheus Collector interface.
+func (c *Storage) Collect(in chan<- prometheus.Metric) {
+	c.queries.Collect(in)
+	c.errors.Collect(in)
+}
+
+// Describe implements prometheus Collector interface.
+func (c *Storage) Describe(in chan<- *prometheus.Desc) {
+	c.queries.Describe(in)
+	c.errors.Describe(in)
+}
+
 type sessionEntity struct {
 	AccessToken   string    `json:"accessToken"`
 	RefreshToken  string    `json:"refreshToken"`
 	SubjectID     string    `json:"subjectId"`
 	SubjectClient string    `json:"subjectClient"`
-	Bag           bag       `json:"bag"`
+	Bag           model.Bag `json:"bag"`
 	ExpireAt      time.Time `json:"expireAt"`
 }
 

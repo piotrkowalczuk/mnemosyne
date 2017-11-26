@@ -1,9 +1,26 @@
-package mnemosyne
+package mnemosyne_test
 
-import "testing"
+import (
+	"context"
+	"testing"
+
+	"github.com/piotrkowalczuk/mnemosyne"
+)
+
+func TestNewAccessTokenContext(t *testing.T) {
+	exp := "123"
+	ctx := mnemosyne.NewAccessTokenContext(context.Background(), exp)
+	if got, ok := mnemosyne.AccessTokenFromContext(ctx); ok {
+		if exp != got {
+			t.Errorf("wrong access token, expected %s but got %s", exp, got)
+		}
+		return
+	}
+	t.Error("missing access token")
+}
 
 func TestRandomToken(t *testing.T) {
-	token, err := RandomAccessToken()
+	token, err := mnemosyne.RandomAccessToken()
 
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
@@ -22,7 +39,7 @@ func BenchmarkRandomAccessToken(b *testing.B) {
 
 	b.ResetTimer()
 	for n := int32(1); n < bn; n++ {
-		at, err := RandomAccessToken()
+		at, err := mnemosyne.RandomAccessToken()
 		if err != nil {
 			b.Fatalf("unexpected error: %s", err.Error())
 		}

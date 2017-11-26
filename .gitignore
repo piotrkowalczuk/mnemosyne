@@ -1,6 +1,7 @@
 # Project
 .idea
 vendor
+mnemosyne-inpkg
 _vendor-*
 .tmp
 bin

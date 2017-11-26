@@ -11,10 +11,8 @@
 [Mnemosyne](http://github.com/piotrkowalczuk/mnemosyne) is an open-source self-hosted session management service.
 It's written in Go, making it easy to build and deploy as a static binary.
 
-It provides two ways for communication:
-
-* [mnemosyne.Mnemosyne](https://godoc.org/github.com/piotrkowalczuk/mnemosyne#Mnemosyne) - Simplified way that hides complexity of [gRPC](http://www.grpc.io) library.
-* [mnemosynerpc.SessionManager](https://godoc.org/github.com/piotrkowalczuk/mnemosyne/mnemosynerpc#SessionManager) - Full feature client.
+It provides gRPC [interface](https://godoc.org/github.com/piotrkowalczuk/mnemosyne/mnemosynerpc#SessionManager). 
+Messages are encoded using protobuf.
 
 ### Quick Start
 

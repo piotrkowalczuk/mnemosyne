@@ -24,7 +24,7 @@ func (smg *sessionManagerGet) Get(ctx context.Context, req *mnemosynerpc.GetRequ
 		return nil, errMissingAccessToken
 	}
 	if node, ok := smg.cluster.GetOther(req.AccessToken); ok {
-		smg.logger.Debug("get request forwarded", zap.String("to", node.Addr), zap.String("access_token", req.AccessToken))
+		smg.logger.Debug("get request forwarded", zap.String("remote_addr", node.Addr), zap.String("access_token", req.AccessToken))
 		return node.Client.Get(ctx, req)
 	}
 	var (

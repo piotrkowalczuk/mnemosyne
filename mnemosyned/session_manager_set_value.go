@@ -27,7 +27,7 @@ func (smsv *sessionManagerSetValue) SetValue(ctx context.Context, req *mnemosyne
 	}
 
 	if node, ok := smsv.cluster.GetOther(req.AccessToken); ok {
-		smsv.logger.Debug("set value request forwarded", zap.String("to", node.Addr), zap.String("access_token", req.AccessToken))
+		smsv.logger.Debug("set value request forwarded", zap.String("remote_addr", node.Addr), zap.String("access_token", req.AccessToken))
 		return node.Client.SetValue(ctx, req)
 	}
 

@@ -1,7 +1,6 @@
 package mnemosyned
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -36,7 +35,6 @@ func (sml *sessionManagerList) List(ctx context.Context, req *mnemosynerpc.ListR
 		req.Limit = 10
 	}
 
-	fmt.Println(expireAtFrom, expireAtTo)
 	sessions, err := sml.storage.List(ctx, req.Offset, req.Limit, expireAtFrom, expireAtTo)
 	if err != nil {
 		return nil, err

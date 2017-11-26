@@ -24,7 +24,7 @@ func (sma *sessionManagerAbandon) Abandon(ctx context.Context, req *mnemosynerpc
 	}
 
 	if node, ok := sma.cluster.GetOther(req.AccessToken); ok {
-		sma.logger.Debug("abandon request forwarded", zap.String("to", node.Addr), zap.String("access_token", req.AccessToken))
+		sma.logger.Debug("abandon request forwarded", zap.String("remote_addr", node.Addr), zap.String("access_token", req.AccessToken))
 		return node.Client.Abandon(ctx, req)
 	}
 

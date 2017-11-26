@@ -22,7 +22,7 @@ func (sme *sessionManagerExists) Exists(ctx context.Context, req *mnemosynerpc.E
 		return nil, errMissingAccessToken
 	}
 	if node, ok := sme.cluster.GetOther(req.AccessToken); ok {
-		sme.logger.Debug("exists request forwarded", zap.String("to", node.Addr), zap.String("access_token", req.AccessToken))
+		sme.logger.Debug("exists request forwarded", zap.String("remote_addr", node.Addr), zap.String("access_token", req.AccessToken))
 		return node.Client.Exists(ctx, req)
 	}
 

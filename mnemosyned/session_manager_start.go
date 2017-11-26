@@ -32,7 +32,7 @@ func (sms *sessionManagerStart) Start(ctx context.Context, req *mnemosynerpc.Sta
 	}
 
 	if node, ok := sms.cluster.GetOther(req.Session.AccessToken); ok {
-		sms.logger.Debug("start request forwarded", zap.String("to", node.Addr), zap.String("access_token", req.Session.AccessToken))
+		sms.logger.Debug("start request forwarded", zap.String("remote_addr", node.Addr), zap.String("access_token", req.Session.AccessToken))
 		return node.Client.Start(ctx, req)
 	}
 

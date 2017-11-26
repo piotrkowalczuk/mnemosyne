@@ -2,6 +2,7 @@ package mnemosyned
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne"
@@ -34,6 +35,8 @@ func unaryServerInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.U
 func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error) {
 	{
 		return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+			now := time.Now()
+
 			if md, ok := metadata.FromIncomingContext(ctx); ok {
 				ctx = metadata.NewOutgoingContext(ctx, metadata.MD{
 					mnemosyne.AccessTokenMetadataKey: md[mnemosyne.AccessTokenMetadataKey],
@@ -77,7 +80,10 @@ func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.
 				}
 			}
 
-			loggerBackground(ctx, log).Debug("request handled successfully", logger.Ctx(ctx, info, codes.OK))
+			loggerBackground(ctx, log).Debug("request handled successfully",
+				logger.Ctx(ctx, info, codes.OK),
+				zap.Duration("elapsed", time.Since(now)),
+			)
 			return res, err
 		}
 	}

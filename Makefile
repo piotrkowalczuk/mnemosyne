@@ -1,7 +1,7 @@
 SERVICE=mnemosyne
 VERSION=$(shell git describe --tags --always --dirty)
 ifeq ($(version),)
-	TAG=VERSION
+	TAG=${VERSION}
 else
 	TAG=$(version)
 endif

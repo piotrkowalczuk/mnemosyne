@@ -14,7 +14,9 @@ const (
 	AccessTokenMetadataKey = "authorization"
 )
 
-var accessTokenContextKey = struct{}{}
+type key struct{}
+
+var accessTokenContextKey = key{}
 
 // NewAccessTokenContext returns a new Context that carries token value.
 func NewAccessTokenContext(ctx context.Context, at string) context.Context {

@@ -69,7 +69,7 @@ type Daemon struct {
 // NewDaemon allocates new daemon instance using given options.
 func NewDaemon(opts *DaemonOpts) (*Daemon, error) {
 	d := &Daemon{
-		done:          make(chan struct{}, 0),
+		done:          make(chan struct{}),
 		opts:          opts,
 		logger:        opts.Logger,
 		serverOptions: opts.RPCOptions,
@@ -312,6 +312,10 @@ func (d *Daemon) initMonitoring() (err error) {
 		return errors.New("getting hostname failed")
 	}
 
-	d.monitor = initPrometheus("mnemosyne", d.opts.Monitoring, prometheus.Labels{"server": hostname})
+	reg := prometheus.DefaultRegisterer
+	if d.opts.IsTest {
+		reg = prometheus.NewRegistry()
+	}
+	d.monitor = initPrometheus("mnemosyne", reg, d.opts.Monitoring, prometheus.Labels{"server": hostname})
 	return
 }

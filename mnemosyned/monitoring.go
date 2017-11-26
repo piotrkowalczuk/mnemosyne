@@ -8,10 +8,6 @@ import (
 )
 
 var (
-	monitoringRPCLabels = []string{
-		"handler",
-		"code",
-	}
 	monitoringPostgresLabels = []string{
 		"query",
 	}
@@ -20,7 +16,6 @@ var (
 type monitoring struct {
 	enabled  bool
 	cleanup  monitoringCleanup
-	rpc      monitoringRPC
 	postgres monitoringPostgres
 	cache    monitoringCache
 }
@@ -28,13 +23,6 @@ type monitoring struct {
 type monitoringCleanup struct {
 	enabled bool
 	errors  prometheus.Counter
-}
-
-type monitoringRPC struct {
-	enabled  bool
-	duration *prometheus.SummaryVec
-	requests *prometheus.CounterVec
-	errors   *prometheus.CounterVec
 }
 
 type monitoringPostgres struct {

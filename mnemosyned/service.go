@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func initPrometheus(namespace string, enabled bool, constLabels prometheus.Labels) *monitoring {
+func initPrometheus(namespace string, reg prometheus.Registerer, enabled bool, constLabels prometheus.Labels) *monitoring {
 	cleanupErrors := prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace:   namespace,
@@ -15,36 +15,6 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 			Help:        "Total number of errors that happen during cleanup.",
 			ConstLabels: constLabels,
 		},
-	)
-	rpcRequests := prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace:   namespace,
-			Subsystem:   "rpc",
-			Name:        "requests_total",
-			Help:        "Total number of RPC requests made.",
-			ConstLabels: constLabels,
-		},
-		monitoringRPCLabels,
-	)
-	rpcDuration := prometheus.NewSummaryVec(
-		prometheus.SummaryOpts{
-			Namespace:   namespace,
-			Subsystem:   "rpc",
-			Name:        "request_duration_microseconds",
-			Help:        "The RPC request latencies in microseconds.",
-			ConstLabels: constLabels,
-		},
-		[]string{"handler", "code"},
-	)
-	rpcErrors := prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace:   namespace,
-			Subsystem:   "rpc",
-			Name:        "errors_total",
-			Help:        "Total number of errors that happen during RPC calles.",
-			ConstLabels: constLabels,
-		},
-		monitoringRPCLabels,
 	)
 
 	postgresQueries := prometheus.NewCounterVec(
@@ -90,15 +60,12 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 	})
 
 	if enabled {
-		cleanupErrors = prometheus.MustRegisterOrGet(cleanupErrors).(prometheus.Counter)
-		rpcRequests = prometheus.MustRegisterOrGet(rpcRequests).(*prometheus.CounterVec)
-		rpcDuration = prometheus.MustRegisterOrGet(rpcDuration).(*prometheus.SummaryVec)
-		rpcErrors = prometheus.MustRegisterOrGet(rpcErrors).(*prometheus.CounterVec)
-		postgresQueries = prometheus.MustRegisterOrGet(postgresQueries).(*prometheus.CounterVec)
-		postgresErrors = prometheus.MustRegisterOrGet(postgresErrors).(*prometheus.CounterVec)
-		cacheHits = prometheus.MustRegisterOrGet(cacheHits).(prometheus.Counter)
-		cacheMisses = prometheus.MustRegisterOrGet(cacheMisses).(prometheus.Counter)
-		cacheRefresh = prometheus.MustRegisterOrGet(cacheRefresh).(prometheus.Counter)
+		reg.MustRegister(cleanupErrors)
+		reg.MustRegister(postgresQueries)
+		reg.MustRegister(postgresErrors)
+		reg.MustRegister(cacheHits)
+		reg.MustRegister(cacheMisses)
+		reg.MustRegister(cacheRefresh)
 	}
 
 	return &monitoring{
@@ -106,12 +73,6 @@ func initPrometheus(namespace string, enabled bool, constLabels prometheus.Label
 		cleanup: monitoringCleanup{
 			enabled: enabled,
 			errors:  cleanupErrors,
-		},
-		rpc: monitoringRPC{
-			enabled:  enabled,
-			duration: rpcDuration,
-			requests: rpcRequests,
-			errors:   rpcErrors,
 		},
 		postgres: monitoringPostgres{
 			enabled: enabled,

@@ -147,7 +147,7 @@ InfLoop:
 				return
 			}
 
-			logger.Debug("session cleanup success", zap.Int64("count", affected), zap.Duration("elapsed", time.Now().Sub(t)))
+			logger.Debug("session cleanup success", zap.Int64("count", affected), zap.Duration("elapsed", time.Since(t)))
 		case <-done:
 			logger.Info("cleanup routing terminated")
 			break InfLoop

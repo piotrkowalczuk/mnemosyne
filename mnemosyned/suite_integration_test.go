@@ -1,7 +1,6 @@
 package mnemosyned
 
 import (
-	"log"
 	"net"
 	"testing"
 	"time"
@@ -15,7 +14,6 @@ import (
 )
 
 type integrationSuite struct {
-	logger        log.Logger
 	listener      net.Listener
 	server        *grpc.Server
 	service       mnemosynerpc.SessionManagerClient
@@ -31,7 +29,7 @@ func (is *integrationSuite) setup(t *testing.T) {
 
 	var err error
 
-	monitor := initPrometheus("mnemosyne_test", false, stdprometheus.Labels{"server": "test"})
+	monitor := initPrometheus("mnemosyne_test", stdprometheus.NewRegistry(), false, stdprometheus.Labels{"server": "test"})
 
 	is.store = &mockStorage{}
 	is.listener = listenTCP(t)

@@ -88,11 +88,6 @@ func main() {
 	}
 }
 
-type service struct {
-	ServiceAddress string
-	ServicePort    int
-}
-
 func connect(c configuration) ([]mnemosynerpc.SessionManagerClient, error) {
 	var (
 		err       error

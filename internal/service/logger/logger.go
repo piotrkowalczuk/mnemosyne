@@ -12,8 +12,10 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
+const encoderName = "mnemosyne-stackdriver"
+
 func init() {
-	if err := zap.RegisterEncoder("stackdriver", func(cfg zapcore.EncoderConfig) (zapcore.Encoder, error) {
+	if err := zap.RegisterEncoder(encoderName, func(cfg zapcore.EncoderConfig) (zapcore.Encoder, error) {
 		return &Encoder{
 			Encoder: zapcore.NewJSONEncoder(cfg),
 		}, nil
@@ -169,7 +171,7 @@ func NewStackdriverConfig() zap.Config {
 			Initial:    100,
 			Thereafter: 100,
 		},
-		Encoding:         "stackdriver",
+		Encoding:         encoderName,
 		EncoderConfig:    NewStackdriverEncoderConfig(),
 		OutputPaths:      []string{"stdout"},
 		ErrorOutputPaths: []string{"stdout"},

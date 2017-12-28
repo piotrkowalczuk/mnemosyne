@@ -4,8 +4,8 @@ touch c.out
 rm c.out
 set -e
 
-cp coverage.out coverage.txt
-bash <(curl -s https://codecov.io/bash)
+#cp coverage.out coverage.txt
+#bash <(curl -s https://codecov.io/bash)
 
 gocov convert coverage.out > c.out
 ./cc-test-reporter after-build --coverage-input-type=gocov

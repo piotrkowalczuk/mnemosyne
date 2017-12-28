@@ -7,10 +7,10 @@ plugins:
   govet:
     enabled: true
 exclude_patterns:
-  - "**.pb.go"
-  - "**_pb2.py"
-  - "**_pb.py"
-  - "**_test.go"
+  - "**/*_test.go"
+  - "**/*_pb.py"
+  - "**/*_pb2.py"
+  - "**/*.pb.go"
   - "internal/storage/storagemock/"
   - "mnemosynetest/"
   - "mnemosynerpc/"

@@ -6,7 +6,7 @@ set -e
 
 bash <(curl -s https://codecov.io/bash)
 gocov convert coverage.out > c.out
-./cc-test-reporter after-build
+./cc-test-reporter after-build --coverage-input-type=gocov
 
 docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then

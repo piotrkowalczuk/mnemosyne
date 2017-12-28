@@ -8,8 +8,10 @@ engines:
 ratings:
    paths:
    - "**.go"
-exclude_paths:
+exclude_patterns:
+- "**/vendor/"
 - "**.pb.go"
 - "**_test.go"
+- "**mock/**.go"
 - "mnemosynetest/**.go"
 - vendor/**/*

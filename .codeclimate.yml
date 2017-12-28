@@ -6,6 +6,10 @@ plugins:
     enabled: true
   govet:
     enabled: true
+checks:
+  method-complexity:
+    config:
+      threshold: 15
 exclude_patterns:
   - "**/*_test.go"
   - "**/*_pb.py"

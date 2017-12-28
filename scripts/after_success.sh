@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 bash <(curl -s https://codecov.io/bash)
+./cc-test-reporter after-build
 
 docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then

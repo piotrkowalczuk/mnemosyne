@@ -15,6 +15,8 @@ checks:
     enabled: false
   method-lines:
     enabled: false
+  return-statements:
+    enabled: false
 exclude_patterns:
   - "**/*_test.go"
   - "**/*_pb.py"

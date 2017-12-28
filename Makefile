@@ -38,6 +38,7 @@ cover:
 	go tool cover -html=coverage.txt
 
 get:
+	go get -u github.com/axw/gocov/gocov
 	go get -u github.com/golang/dep/cmd/dep
 	dep ensure
 

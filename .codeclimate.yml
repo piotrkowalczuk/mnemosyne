@@ -11,6 +11,8 @@ ratings:
 exclude_patterns:
 - "**/vendor/"
 - "**.pb.go"
+- "**_pb2.py"
+- "**_pb.py"
 - "**_test.go"
 - "**mock/**.go"
 - "mnemosynetest/**.go"

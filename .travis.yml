@@ -11,7 +11,6 @@ addons:
     repo_token: 6e0f648267827e942b80676d93220b191a0cd2122e87a24be5a9eb45c680bbda
 env:
   global:
-  - CC_TEST_REPORTER_ID=787a2f89b15c637323c7340d65ec17e898ac44480706b4b4122ea040c2a88f1d
   - MNEMOSYNED_POSTGRES_ADDRESS=postgres://postgres:@localhost/travis_ci_test?sslmode=disable
   - secure: sfJwaf0qJ+ZcI//GiLx9DV9tmzMs0hCX1YRpABAv/xzSAEZacVGH5785nvT6gA5Dhmff9HGpbPyro3jiJP4CNoXlCFrvsKWpLKnBE06hgRfNNAUnduU1GoNSvRi3dzrN1EGnaWJW0UaT+QcuIkMCbn+PVh1ONPp9sMg2pyPPozb8BSjAIe3nDaUbLRpx0PRstcUuG3nOwG1waP8wcYRCflZFIlD8bDJ0EWygW6DZ6y5Nboun07LM8F7pHYEWgfnNk1ATr5GYH3EaPO0pwVjez4mW4Bh2e5ff0ou1A3NZw59aCoemIjSBrtd3Mre8IvaYVUZg/acSTT1eG6ZVWz0LUbXnEzSKGujeGYLFtam93MhEfHOFNvn8uw4i0zvWRp/ye5Ecop13W/mrf0iM9Iex1OOa8e7D1jEFDjQ/ke4hdd+LYOFYwaX5v7ZZTZotK4wka3Fn3j7SgvdbFF1pl+A4lc3L0hwe4kflZG2aZVTuNIMiVMaS+WZxlvFUc+lkJxSelOyQHLxzcGHQ7LQmM0NdGXCRslXa38r26xKD+eq1y3FS6E6rodptkpB4px0WuAMKep4YwgbK0v+g9sRp9TnT7T6KbO2PadCGAOBm9vLKZKyR+AYZXaQ9bcl0Ekm0hRX8+aWPWnQjR7cth1S1MtADf9OObiXqCMsp5NUpIPxhqvE=
   - secure: eRRoEFVNy3a3KDUOcgITjOW6ILFEh7V23qSsbIsXBONdGCvrlDron1dzIvThjHdnduc47u+7aLR0romnf+YSXgLQJv6dg/YV84+yTeytwNeY7+1tmEYe0uftzuU7XfryMh4uDi33Y9Zr8MRg4LJhlZkx/nRYJx7sDXnj6xOLVaNgtZK6VLsrfgOjxPkXosuN/gudZS/0sfTMcupQmScPEXyE+tJC/Fot8AuL2qznrzcEMuKUfAPJ5oB8PseXtvjhfOFBiycVyPJPtSRHhgrXxNjFFOY+NgY+1fykWWtvkvFI7ndLqgLOg7Q3YSScmP6C+emYptA1KjBUjgEt8r3NBiKXdGb778WoGPliw8v7wggVYb/xErjkKDmdoephKCscow3yCaYltP9XxI3Mffck75NT3JnMGQPS1BnbA3UcC6pxfYc6yfL0a2mDSzJ6n0J9oayyRueVE8GouYoCML7/P1XzqDMCJ2LD8dmnC5Wh3TXCTxEyt+1ERak5NctZbbnvD14+iybPREkETEJmBFjUlu0JxqkZrD8ErpcWK/2sq+JGmaah9XIy4ZymRUDetQGgY52HV5Svz+fPvq04mZ0cUpgMhg6HBPTAfwcV+l9YyjNk/ETowzVXvHs7rVoVCZ1qbMU6n2mzZij6lfthkK6Wh35HwQpmKCMqBJx2/YZUQcs=
@@ -20,9 +19,6 @@ install:
 before_script:
 - mkdir -p .tmp bin
 - psql -c 'create database travis_ci_test;' -U postgres
-- curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
-- chmod +x ./cc-test-reporter
-- ./cc-test-reporter before-build
 script:
 - make build
 - make test

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-touch coverage.out c.out
-rm coverage.out c.out
+touch coverage.out
+rm coverage.out
 set -e
 echo "mode: atomic" > coverage.out
 

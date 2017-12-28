@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 
-touch c.out
-rm c.out
-set -e
-
-#cp coverage.out coverage.txt
-#bash <(curl -s https://codecov.io/bash)
-
-gocov convert coverage.out > c.out
-./cc-test-reporter after-build --coverage-input-type=gocov
+cp coverage.out coverage.txt
+bash <(curl -s https://codecov.io/bash)
 
 docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 if [ ! -z "$TRAVIS_TAG" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ]; then

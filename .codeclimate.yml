@@ -7,9 +7,10 @@ plugins:
   govet:
     enabled: true
 checks:
+  complex-logic:
+    enabled: false
   method-complexity:
-    config:
-      threshold: 15
+    enabled: false
 exclude_patterns:
   - "**/*_test.go"
   - "**/*_pb.py"

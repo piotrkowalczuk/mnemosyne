@@ -1,4 +1,4 @@
-# Mnemosyne [![Build Status](https://travis-ci.org/piotrkowalczuk/mnemosyne.svg?branch=master)](https://travis-ci.org/piotrkowalczuk/mnemosyne)
+# Mnemosyne [![CircleCI](https://circleci.com/gh/piotrkowalczuk/mnemosyne.svg?style=svg)](https://circleci.com/gh/piotrkowalczuk/mnemosyne)
 
 [![GoDoc](https://godoc.org/github.com/piotrkowalczuk/mnemosyne?status.svg)](http://godoc.org/github.com/piotrkowalczuk/mnemosyne)
 [![Docker Pulls](https://img.shields.io/docker/pulls/piotrkowalczuk/mnemosyne.svg?maxAge=604800)](https://hub.docker.com/r/piotrkowalczuk/mnemosyne/)

@@ -3,6 +3,7 @@ set -e
 
 : ${MNEMOSYNED_PORT:=8080}
 : ${MNEMOSYNED_HOST:=0.0.0.0}
+: ${MNEMOSYNED_GRPC_DEBUG:=false}
 : ${MNEMOSYNED_TTL:=24m}
 : ${MNEMOSYNED_TTC:=1m}
 : ${MNEMOSYNED_CLUSTER_LISTEN:=$(hostname):$MNEMOSYNED_PORT}
@@ -20,6 +21,7 @@ set -e
 if [ "$1" = 'mnemosyned' ]; then
 exec mnemosyned -host=${MNEMOSYNED_HOST} \
 	-port=${MNEMOSYNED_PORT} \
+	-grpc.debug=${MNEMOSYNED_GRPC_DEBUG} \
 	-ttl=${MNEMOSYNED_TTL} \
 	-ttc=${MNEMOSYNED_TTC} \
 	-cluster.listen=${MNEMOSYNED_CLUSTER_LISTEN} \

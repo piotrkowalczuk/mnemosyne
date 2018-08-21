@@ -16,8 +16,11 @@ var (
 )
 
 type configuration struct {
-	host    string
-	port    int
+	host string
+	port int
+	grpc struct {
+		debug bool
+	}
 	cluster struct {
 		listen string
 		seeds  arrayFlags
@@ -57,6 +60,7 @@ func (c *configuration) init() {
 
 	flag.StringVar(&c.host, "host", "127.0.0.1", "host")
 	flag.IntVar(&c.port, "port", 8080, "port")
+	flag.BoolVar(&c.grpc.debug, "grpc.debug", false, "if true, enables very verbose grpc debug mode")
 	flag.StringVar(&c.cluster.listen, "cluster.listen", "", "")
 	flag.Var(&c.cluster.seeds, "cluster.seeds", "")
 	flag.StringVar(&c.catalog.http, "catalog.http", "http://localhost:8500/v1/catalog/service/mnemosyned", "address of service catalog ")

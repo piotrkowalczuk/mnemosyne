@@ -30,6 +30,10 @@ func main() {
 		os.Exit(1)
 	}
 
+	if config.grpc.debug {
+		grpclog.SetLogger(zapgrpc.NewLogger(l, zapgrpc.WithDebug()))
+	}
+
 	rpcListener := initListener(l, config.host, config.port)
 	debugListener := initListener(l, config.host, config.port+1)
 

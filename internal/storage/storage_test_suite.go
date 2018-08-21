@@ -11,8 +11,6 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func TestStorage_Start(t *testing.T, s Storage) {
@@ -395,16 +393,4 @@ func randomToken(t *testing.T) string {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 	return at
-}
-
-func assertCode(t *testing.T, err error, exp codes.Code) {
-	t.Helper()
-
-	if st, ok := status.FromError(err); ok {
-		if st.Code() != exp {
-			t.Fatalf("wrong code, expected %s but got %s", exp.String(), st.Code().String())
-		}
-		return
-	}
-	t.Fatalf("unknown error, cant retrieve code")
 }

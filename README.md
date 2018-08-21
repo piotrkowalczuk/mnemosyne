@@ -116,6 +116,7 @@ $ make
 | --- | --- | --- | --- |
 | host | `-host` | 127.0.0.1 | string |
 | port | `-port` | 8080 | int |
+| grpc debug mode| `-grpc.debug` | false | boolean |
 | cluster listen address | `-cluster.listen` | | string |
 | cluster seeds | `-cluster.seeds` | | string |
 | time to live | `-ttl` | 24m | duration |

@@ -26,7 +26,7 @@ func TestSession_Token(t *testing.T) {
 		},
 		{
 			given: &Session{
-				AccessToken: ("0000000001999999999999"),
+				AccessToken: "0000000001999999999999",
 				Bag: map[string]string{
 					"firstName": "John",
 					"lastName":  "Snow",

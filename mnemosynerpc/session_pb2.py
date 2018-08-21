@@ -42,14 +42,14 @@ _SESSION_BAGENTRY = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='mnemosynerpc.Session.BagEntry.value', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -79,42 +79,42 @@ _SESSION = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='subject_id', full_name='mnemosynerpc.Session.subject_id', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='subject_client', full_name='mnemosynerpc.Session.subject_client', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='bag', full_name='mnemosynerpc.Session.bag', index=3,
       number=4, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='expire_at', full_name='mnemosynerpc.Session.expire_at', index=4,
       number=5, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='refresh_token', full_name='mnemosynerpc.Session.refresh_token', index=5,
       number=6, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -145,7 +145,7 @@ _GETREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -176,7 +176,7 @@ _GETRESPONSE = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -207,7 +207,7 @@ _CONTEXTRESPONSE = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -238,21 +238,21 @@ _LISTREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='limit', full_name='mnemosynerpc.ListRequest.limit', index=1,
       number=2, type=3, cpp_type=2, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='query', full_name='mnemosynerpc.ListRequest.query', index=2,
       number=11, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -283,7 +283,7 @@ _LISTRESPONSE = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -314,21 +314,21 @@ _QUERY = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='expire_at_to', full_name='mnemosynerpc.Query.expire_at_to', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='refresh_token', full_name='mnemosynerpc.Query.refresh_token', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -359,7 +359,7 @@ _EXISTSREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -390,7 +390,7 @@ _STARTREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -421,7 +421,7 @@ _STARTRESPONSE = _descriptor.Descriptor(
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -452,7 +452,7 @@ _ABANDONREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -483,21 +483,21 @@ _SETVALUEREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='key', full_name='mnemosynerpc.SetValueRequest.key', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='mnemosynerpc.SetValueRequest.value', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -528,14 +528,14 @@ _SETVALUERESPONSE_BAGENTRY = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='value', full_name='mnemosynerpc.SetValueResponse.BagEntry.value', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -565,7 +565,7 @@ _SETVALUERESPONSE = _descriptor.Descriptor(
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -596,35 +596,35 @@ _DELETEREQUEST = _descriptor.Descriptor(
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='expire_at_from', full_name='mnemosynerpc.DeleteRequest.expire_at_from', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='expire_at_to', full_name='mnemosynerpc.DeleteRequest.expire_at_to', index=2,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='refresh_token', full_name='mnemosynerpc.DeleteRequest.refresh_token', index=3,
       number=4, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='subject_id', full_name='mnemosynerpc.DeleteRequest.subject_id', index=4,
       number=5, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      options=None),
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -793,350 +793,91 @@ _SESSION_BAGENTRY.has_options = True
 _SESSION_BAGENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
 _SETVALUERESPONSE_BAGENTRY.has_options = True
 _SETVALUERESPONSE_BAGENTRY._options = _descriptor._ParseOptions(descriptor_pb2.MessageOptions(), _b('8\001'))
-try:
-  # THESE ELEMENTS WILL BE DEPRECATED.
-  # Please use the generated *_pb2_grpc.py files instead.
-  import grpc
-  from grpc.beta import implementations as beta_implementations
-  from grpc.beta import interfaces as beta_interfaces
-  from grpc.framework.common import cardinality
-  from grpc.framework.interfaces.face import utilities as face_utilities
 
+_SESSIONMANAGER = _descriptor.ServiceDescriptor(
+  name='SessionManager',
+  full_name='mnemosynerpc.SessionManager',
+  file=DESCRIPTOR,
+  index=0,
+  options=None,
+  serialized_start=1370,
+  serialized_end=1936,
+  methods=[
+  _descriptor.MethodDescriptor(
+    name='Get',
+    full_name='mnemosynerpc.SessionManager.Get',
+    index=0,
+    containing_service=None,
+    input_type=_GETREQUEST,
+    output_type=_GETRESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Context',
+    full_name='mnemosynerpc.SessionManager.Context',
+    index=1,
+    containing_service=None,
+    input_type=google_dot_protobuf_dot_empty__pb2._EMPTY,
+    output_type=_CONTEXTRESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='List',
+    full_name='mnemosynerpc.SessionManager.List',
+    index=2,
+    containing_service=None,
+    input_type=_LISTREQUEST,
+    output_type=_LISTRESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Exists',
+    full_name='mnemosynerpc.SessionManager.Exists',
+    index=3,
+    containing_service=None,
+    input_type=_EXISTSREQUEST,
+    output_type=google_dot_protobuf_dot_wrappers__pb2._BOOLVALUE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Start',
+    full_name='mnemosynerpc.SessionManager.Start',
+    index=4,
+    containing_service=None,
+    input_type=_STARTREQUEST,
+    output_type=_STARTRESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Abandon',
+    full_name='mnemosynerpc.SessionManager.Abandon',
+    index=5,
+    containing_service=None,
+    input_type=_ABANDONREQUEST,
+    output_type=google_dot_protobuf_dot_wrappers__pb2._BOOLVALUE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='SetValue',
+    full_name='mnemosynerpc.SessionManager.SetValue',
+    index=6,
+    containing_service=None,
+    input_type=_SETVALUEREQUEST,
+    output_type=_SETVALUERESPONSE,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='Delete',
+    full_name='mnemosynerpc.SessionManager.Delete',
+    index=7,
+    containing_service=None,
+    input_type=_DELETEREQUEST,
+    output_type=google_dot_protobuf_dot_wrappers__pb2._INT64VALUE,
+    options=None,
+  ),
+])
+_sym_db.RegisterServiceDescriptor(_SESSIONMANAGER)
 
-  class SessionManagerStub(object):
-    # missing associated documentation comment in .proto file
-    pass
+DESCRIPTOR.services_by_name['SessionManager'] = _SESSIONMANAGER
 
-    def __init__(self, channel):
-      """Constructor.
-
-      Args:
-        channel: A grpc.Channel.
-      """
-      self.Get = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/Get',
-          request_serializer=GetRequest.SerializeToString,
-          response_deserializer=GetResponse.FromString,
-          )
-      self.Context = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/Context',
-          request_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-          response_deserializer=ContextResponse.FromString,
-          )
-      self.List = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/List',
-          request_serializer=ListRequest.SerializeToString,
-          response_deserializer=ListResponse.FromString,
-          )
-      self.Exists = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/Exists',
-          request_serializer=ExistsRequest.SerializeToString,
-          response_deserializer=google_dot_protobuf_dot_wrappers__pb2.BoolValue.FromString,
-          )
-      self.Start = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/Start',
-          request_serializer=StartRequest.SerializeToString,
-          response_deserializer=StartResponse.FromString,
-          )
-      self.Abandon = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/Abandon',
-          request_serializer=AbandonRequest.SerializeToString,
-          response_deserializer=google_dot_protobuf_dot_wrappers__pb2.BoolValue.FromString,
-          )
-      self.SetValue = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/SetValue',
-          request_serializer=SetValueRequest.SerializeToString,
-          response_deserializer=SetValueResponse.FromString,
-          )
-      self.Delete = channel.unary_unary(
-          '/mnemosynerpc.SessionManager/Delete',
-          request_serializer=DeleteRequest.SerializeToString,
-          response_deserializer=google_dot_protobuf_dot_wrappers__pb2.Int64Value.FromString,
-          )
-
-
-  class SessionManagerServicer(object):
-    # missing associated documentation comment in .proto file
-    pass
-
-    def Get(self, request, context):
-      """Get retrieves session for given access token.
-      """
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-    def Context(self, request, context):
-      """Context works like Get but takes access token from metadata within context.
-      It expects "authorization" key to be present within metadata.
-      """
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-    def List(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-    def Exists(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-    def Start(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-    def Abandon(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-    def SetValue(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-    def Delete(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-      context.set_details('Method not implemented!')
-      raise NotImplementedError('Method not implemented!')
-
-
-  def add_SessionManagerServicer_to_server(servicer, server):
-    rpc_method_handlers = {
-        'Get': grpc.unary_unary_rpc_method_handler(
-            servicer.Get,
-            request_deserializer=GetRequest.FromString,
-            response_serializer=GetResponse.SerializeToString,
-        ),
-        'Context': grpc.unary_unary_rpc_method_handler(
-            servicer.Context,
-            request_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            response_serializer=ContextResponse.SerializeToString,
-        ),
-        'List': grpc.unary_unary_rpc_method_handler(
-            servicer.List,
-            request_deserializer=ListRequest.FromString,
-            response_serializer=ListResponse.SerializeToString,
-        ),
-        'Exists': grpc.unary_unary_rpc_method_handler(
-            servicer.Exists,
-            request_deserializer=ExistsRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_wrappers__pb2.BoolValue.SerializeToString,
-        ),
-        'Start': grpc.unary_unary_rpc_method_handler(
-            servicer.Start,
-            request_deserializer=StartRequest.FromString,
-            response_serializer=StartResponse.SerializeToString,
-        ),
-        'Abandon': grpc.unary_unary_rpc_method_handler(
-            servicer.Abandon,
-            request_deserializer=AbandonRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_wrappers__pb2.BoolValue.SerializeToString,
-        ),
-        'SetValue': grpc.unary_unary_rpc_method_handler(
-            servicer.SetValue,
-            request_deserializer=SetValueRequest.FromString,
-            response_serializer=SetValueResponse.SerializeToString,
-        ),
-        'Delete': grpc.unary_unary_rpc_method_handler(
-            servicer.Delete,
-            request_deserializer=DeleteRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_wrappers__pb2.Int64Value.SerializeToString,
-        ),
-    }
-    generic_handler = grpc.method_handlers_generic_handler(
-        'mnemosynerpc.SessionManager', rpc_method_handlers)
-    server.add_generic_rpc_handlers((generic_handler,))
-
-
-  class BetaSessionManagerServicer(object):
-    """The Beta API is deprecated for 0.15.0 and later.
-
-    It is recommended to use the GA API (classes and functions in this
-    file not marked beta) for all further purposes. This class was generated
-    only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0."""
-    # missing associated documentation comment in .proto file
-    pass
-    def Get(self, request, context):
-      """Get retrieves session for given access token.
-      """
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-    def Context(self, request, context):
-      """Context works like Get but takes access token from metadata within context.
-      It expects "authorization" key to be present within metadata.
-      """
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-    def List(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-    def Exists(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-    def Start(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-    def Abandon(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-    def SetValue(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-    def Delete(self, request, context):
-      # missing associated documentation comment in .proto file
-      pass
-      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
-
-
-  class BetaSessionManagerStub(object):
-    """The Beta API is deprecated for 0.15.0 and later.
-
-    It is recommended to use the GA API (classes and functions in this
-    file not marked beta) for all further purposes. This class was generated
-    only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0."""
-    # missing associated documentation comment in .proto file
-    pass
-    def Get(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      """Get retrieves session for given access token.
-      """
-      raise NotImplementedError()
-    Get.future = None
-    def Context(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      """Context works like Get but takes access token from metadata within context.
-      It expects "authorization" key to be present within metadata.
-      """
-      raise NotImplementedError()
-    Context.future = None
-    def List(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      # missing associated documentation comment in .proto file
-      pass
-      raise NotImplementedError()
-    List.future = None
-    def Exists(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      # missing associated documentation comment in .proto file
-      pass
-      raise NotImplementedError()
-    Exists.future = None
-    def Start(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      # missing associated documentation comment in .proto file
-      pass
-      raise NotImplementedError()
-    Start.future = None
-    def Abandon(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      # missing associated documentation comment in .proto file
-      pass
-      raise NotImplementedError()
-    Abandon.future = None
-    def SetValue(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      # missing associated documentation comment in .proto file
-      pass
-      raise NotImplementedError()
-    SetValue.future = None
-    def Delete(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
-      # missing associated documentation comment in .proto file
-      pass
-      raise NotImplementedError()
-    Delete.future = None
-
-
-  def beta_create_SessionManager_server(servicer, pool=None, pool_size=None, default_timeout=None, maximum_timeout=None):
-    """The Beta API is deprecated for 0.15.0 and later.
-
-    It is recommended to use the GA API (classes and functions in this
-    file not marked beta) for all further purposes. This function was
-    generated only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0"""
-    request_deserializers = {
-      ('mnemosynerpc.SessionManager', 'Abandon'): AbandonRequest.FromString,
-      ('mnemosynerpc.SessionManager', 'Context'): google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-      ('mnemosynerpc.SessionManager', 'Delete'): DeleteRequest.FromString,
-      ('mnemosynerpc.SessionManager', 'Exists'): ExistsRequest.FromString,
-      ('mnemosynerpc.SessionManager', 'Get'): GetRequest.FromString,
-      ('mnemosynerpc.SessionManager', 'List'): ListRequest.FromString,
-      ('mnemosynerpc.SessionManager', 'SetValue'): SetValueRequest.FromString,
-      ('mnemosynerpc.SessionManager', 'Start'): StartRequest.FromString,
-    }
-    response_serializers = {
-      ('mnemosynerpc.SessionManager', 'Abandon'): google_dot_protobuf_dot_wrappers__pb2.BoolValue.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Context'): ContextResponse.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Delete'): google_dot_protobuf_dot_wrappers__pb2.Int64Value.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Exists'): google_dot_protobuf_dot_wrappers__pb2.BoolValue.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Get'): GetResponse.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'List'): ListResponse.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'SetValue'): SetValueResponse.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Start'): StartResponse.SerializeToString,
-    }
-    method_implementations = {
-      ('mnemosynerpc.SessionManager', 'Abandon'): face_utilities.unary_unary_inline(servicer.Abandon),
-      ('mnemosynerpc.SessionManager', 'Context'): face_utilities.unary_unary_inline(servicer.Context),
-      ('mnemosynerpc.SessionManager', 'Delete'): face_utilities.unary_unary_inline(servicer.Delete),
-      ('mnemosynerpc.SessionManager', 'Exists'): face_utilities.unary_unary_inline(servicer.Exists),
-      ('mnemosynerpc.SessionManager', 'Get'): face_utilities.unary_unary_inline(servicer.Get),
-      ('mnemosynerpc.SessionManager', 'List'): face_utilities.unary_unary_inline(servicer.List),
-      ('mnemosynerpc.SessionManager', 'SetValue'): face_utilities.unary_unary_inline(servicer.SetValue),
-      ('mnemosynerpc.SessionManager', 'Start'): face_utilities.unary_unary_inline(servicer.Start),
-    }
-    server_options = beta_implementations.server_options(request_deserializers=request_deserializers, response_serializers=response_serializers, thread_pool=pool, thread_pool_size=pool_size, default_timeout=default_timeout, maximum_timeout=maximum_timeout)
-    return beta_implementations.server(method_implementations, options=server_options)
-
-
-  def beta_create_SessionManager_stub(channel, host=None, metadata_transformer=None, pool=None, pool_size=None):
-    """The Beta API is deprecated for 0.15.0 and later.
-
-    It is recommended to use the GA API (classes and functions in this
-    file not marked beta) for all further purposes. This function was
-    generated only to ease transition from grpcio<0.15.0 to grpcio>=0.15.0"""
-    request_serializers = {
-      ('mnemosynerpc.SessionManager', 'Abandon'): AbandonRequest.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Context'): google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Delete'): DeleteRequest.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Exists'): ExistsRequest.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Get'): GetRequest.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'List'): ListRequest.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'SetValue'): SetValueRequest.SerializeToString,
-      ('mnemosynerpc.SessionManager', 'Start'): StartRequest.SerializeToString,
-    }
-    response_deserializers = {
-      ('mnemosynerpc.SessionManager', 'Abandon'): google_dot_protobuf_dot_wrappers__pb2.BoolValue.FromString,
-      ('mnemosynerpc.SessionManager', 'Context'): ContextResponse.FromString,
-      ('mnemosynerpc.SessionManager', 'Delete'): google_dot_protobuf_dot_wrappers__pb2.Int64Value.FromString,
-      ('mnemosynerpc.SessionManager', 'Exists'): google_dot_protobuf_dot_wrappers__pb2.BoolValue.FromString,
-      ('mnemosynerpc.SessionManager', 'Get'): GetResponse.FromString,
-      ('mnemosynerpc.SessionManager', 'List'): ListResponse.FromString,
-      ('mnemosynerpc.SessionManager', 'SetValue'): SetValueResponse.FromString,
-      ('mnemosynerpc.SessionManager', 'Start'): StartResponse.FromString,
-    }
-    cardinalities = {
-      'Abandon': cardinality.Cardinality.UNARY_UNARY,
-      'Context': cardinality.Cardinality.UNARY_UNARY,
-      'Delete': cardinality.Cardinality.UNARY_UNARY,
-      'Exists': cardinality.Cardinality.UNARY_UNARY,
-      'Get': cardinality.Cardinality.UNARY_UNARY,
-      'List': cardinality.Cardinality.UNARY_UNARY,
-      'SetValue': cardinality.Cardinality.UNARY_UNARY,
-      'Start': cardinality.Cardinality.UNARY_UNARY,
-    }
-    stub_options = beta_implementations.stub_options(host=host, metadata_transformer=metadata_transformer, request_serializers=request_serializers, response_deserializers=response_deserializers, thread_pool=pool, thread_pool_size=pool_size)
-    return beta_implementations.dynamic_stub(channel, 'mnemosynerpc.SessionManager', cardinalities, options=stub_options)
-except ImportError:
-  pass
 # @@protoc_insertion_point(module_scope)

@@ -3,8 +3,8 @@
 SERVICE=mnemosyne
 PROTO_INCLUDE="-I=/usr/include -I=."
 
-protoc ${PROTO_INCLUDE} --go_out=plugins=grpc:${GOPATH}/src ${SERVICE}rpc/*.proto
-python -m grpc_tools.protoc ${PROTO_INCLUDE} --python_out=. --grpc_python_out=. ${SERVICE}rpc/*.proto
+./.circleci/scripts/generate.sh golang
+./.circleci/scripts/generate.sh python
 goimports -w ./${SERVICE}rpc
 mockery -case=underscore -dir=./${SERVICE}rpc -all -output=./${SERVICE}test -outpkg=${SERVICE}test
 mockery -case=underscore -dir=./${SERVICE}d -all -inpkg

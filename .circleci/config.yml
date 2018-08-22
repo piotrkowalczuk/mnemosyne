@@ -171,7 +171,7 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - python-dependency-{{ .Branch }}-{{ .Revision }}
+        - v1-python-dependency-{{ .Branch }}-{{ .Revision }}
     - run:
         name: Init VERSION.txt file
         command: make version

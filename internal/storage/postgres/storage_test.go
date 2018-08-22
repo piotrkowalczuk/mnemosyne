@@ -10,7 +10,7 @@ func TestPostgresStorage_Start(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_Start(t, s.store)
+	storage.TestStorageStart(t, s.store)
 
 	s.teardown(t)
 }
@@ -19,7 +19,7 @@ func TestPostgresStorage_Get(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_Get(t, s.store)
+	storage.TestStorageGet(t, s.store)
 
 	s.teardown(t)
 }
@@ -28,7 +28,7 @@ func TestPostgresStorage_List(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_List(t, s.store)
+	storage.TestStorageList(t, s.store)
 
 	s.teardown(t)
 }
@@ -37,7 +37,7 @@ func TestPostgresStorage_List_between(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_List_between(t, s.store)
+	storage.TestStorageListBetween(t, s.store)
 
 	s.teardown(t)
 }
@@ -46,7 +46,7 @@ func TestPostgresStorage_Exists(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_Exists(t, s.store)
+	storage.TestStorageExists(t, s.store)
 
 	s.teardown(t)
 }
@@ -55,7 +55,7 @@ func TestPostgresStorage_Abandon(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_Abandon(t, s.store)
+	storage.TestStorageAbandon(t, s.store)
 
 	s.teardown(t)
 }
@@ -64,7 +64,7 @@ func TestPostgresStorage_SetValue(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_SetValue(t, s.store)
+	storage.TestStorageSetValue(t, s.store)
 
 	s.teardown(t)
 }
@@ -73,7 +73,7 @@ func TestPostgresStorage_Delete(t *testing.T) {
 	s := &postgresSuite{}
 	s.setup(t)
 
-	storage.TestStorage_Delete(t, s.store)
+	storage.TestStorageDelete(t, s.store)
 
 	s.teardown(t)
 }

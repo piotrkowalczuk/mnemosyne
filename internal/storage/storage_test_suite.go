@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStorage_Start(t *testing.T, s Storage) {
+func TestStorageStart(t *testing.T, s Storage) {
 	t.Helper()
 
 	subjectID := "subjectID"
@@ -30,7 +30,7 @@ func TestStorage_Start(t *testing.T, s Storage) {
 	}
 }
 
-func TestStorage_Get(t *testing.T, s Storage) {
+func TestStorageGet(t *testing.T, s Storage) {
 	t.Helper()
 
 	ses, err := s.Start(context.Background(), randomToken(t), randomToken(t), "subjectID", "subjectClient", map[string]string{
@@ -55,7 +55,7 @@ func TestStorage_Get(t *testing.T, s Storage) {
 	assert.Nil(t, got2)
 }
 
-func TestStorage_List(t *testing.T, s Storage) {
+func TestStorageList(t *testing.T, s Storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
@@ -91,7 +91,7 @@ func TestStorage_List(t *testing.T, s Storage) {
 	}
 }
 
-func TestStorage_List_between(t *testing.T, s Storage) {
+func TestStorageListBetween(t *testing.T, s Storage) {
 	nb := 10
 	key := "index"
 	sid := "subjectID"
@@ -129,7 +129,7 @@ func TestStorage_List_between(t *testing.T, s Storage) {
 	}
 }
 
-func TestStorage_Exists(t *testing.T, s Storage) {
+func TestStorageExists(t *testing.T, s Storage) {
 	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -147,7 +147,7 @@ func TestStorage_Exists(t *testing.T, s Storage) {
 	}
 }
 
-func TestStorage_Abandon(t *testing.T, s Storage) {
+func TestStorageAbandon(t *testing.T, s Storage) {
 	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -169,7 +169,7 @@ func TestStorage_Abandon(t *testing.T, s Storage) {
 	assert.Equal(t, err4, ErrSessionNotFound)
 }
 
-func TestStorage_SetValue(t *testing.T, s Storage) {
+func TestStorageSetValue(t *testing.T, s Storage) {
 	ses, err := s.Start(context.Background(), randomToken(t), "", "subjectID", "subjectClient", map[string]string{
 		"username": "test",
 	})
@@ -241,7 +241,7 @@ func TestStorage_SetValue(t *testing.T, s Storage) {
 	}
 }
 
-func TestStorage_Delete(t *testing.T, s Storage) {
+func TestStorageDelete(t *testing.T, s Storage) {
 	nb := int64(10)
 	key := "index"
 	sid := "subjectID"

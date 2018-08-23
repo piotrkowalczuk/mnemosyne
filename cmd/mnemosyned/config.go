@@ -66,13 +66,13 @@ func (c *configuration) init() {
 	flag.DurationVar(&c.session.ttc, "ttc", storage.DefaultTTC, "Session time to cleanup, how often cleanup will be performed.")
 	flag.StringVar(&c.logger.environment, "log.environment", "production", "Logger environment config (production, stackdriver or development).")
 	flag.StringVar(&c.logger.level, "log.level", "info", "Logger level (debug, info, warn, error, dpanic, panic, fatal)")
-	flag.StringVar(&c.storage, "storage", storage.EnginePostgres, "storage engine") // TODO: change to in memory when implemented
-	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://localhost?sslmode=disable", "storage postgres connection string")
-	flag.StringVar(&c.postgres.table, "postgres.table", "session", "postgres table name")
-	flag.StringVar(&c.postgres.schema, "postgres.schema", "mnemosyne", "postgres schema name")
-	flag.BoolVar(&c.tls.enabled, "tls", false, "tls enable flag")
-	flag.StringVar(&c.tls.certFile, "tls.crt", "", "path to tls cert file")
-	flag.StringVar(&c.tls.keyFile, "tls.key", "", "path to tls key file")
+	flag.StringVar(&c.storage, "storage", storage.EnginePostgres, "Storage engine (postgres).") // TODO: change to in memory when implemented
+	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://localhost?sslmode=disable", "Storage postgres connection string.")
+	flag.StringVar(&c.postgres.table, "postgres.table", "session", "Postgres table name.")
+	flag.StringVar(&c.postgres.schema, "postgres.schema", "mnemosyne", "Postgres schema name.")
+	flag.BoolVar(&c.tls.enabled, "tls", false, "If true, TLS is enabled.")
+	flag.StringVar(&c.tls.certFile, "tls.crt", "", "Path to TLS cert file.")
+	flag.StringVar(&c.tls.keyFile, "tls.key", "", "Path to TLS key file.")
 }
 
 func (c *configuration) parse() {

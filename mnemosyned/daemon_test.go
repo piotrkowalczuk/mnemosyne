@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestDaemon_Run(t *testing.T) {
@@ -87,8 +87,8 @@ func TestDaemon_Run(t *testing.T) {
 			t.Errorf("%d: missing error", i)
 			return
 		}
-		if grpc.Code(err) != codes.NotFound {
-			t.Errorf("%d: wrong error code, expected %d but got %d", i, codes.NotFound, grpc.Code(err))
+		if status.Code(err) != codes.NotFound {
+			t.Errorf("%d: wrong error code, expected %d but got %d", i, codes.NotFound, status.Code(err))
 			return
 		}
 

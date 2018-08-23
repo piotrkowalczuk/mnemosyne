@@ -16,9 +16,9 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/stretchr/testify/mock"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
 func TestSessionManager_mockedStore(t *testing.T) {
@@ -158,7 +158,7 @@ func TestSessionManager_Start_postgresStore(t *testing.T) {
 					resp, err := s.client.Start(context.Background(), &mnemosynerpc.StartRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingSession))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, status.Convert(errMissingSession).Message())
 				})
 			})
 		}))
@@ -181,7 +181,7 @@ func TestSessionManager_Start_postgresStore(t *testing.T) {
 						resp, err := s[i].client.Start(context.Background(), &mnemosynerpc.StartRequest{})
 
 						So(resp, ShouldBeNil)
-						So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingSession))
+						So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, status.Convert(errMissingSession).Message())
 					}
 				})
 			})
@@ -222,7 +222,7 @@ func TestSessionManager_Get_postgresStore(t *testing.T) {
 						resp, err := s.client.Get(context.Background(), &mnemosynerpc.GetRequest{})
 
 						So(resp, ShouldBeNil)
-						So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+						So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, status.Convert(errMissingAccessToken).Message())
 					})
 				})
 			})
@@ -407,7 +407,7 @@ func TestSessionManager_Exists_postgresStore(t *testing.T) {
 					res, err := s.client.Exists(context.Background(), &mnemosynerpc.ExistsRequest{})
 
 					So(res, ShouldBeNil)
-					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, status.Convert(errMissingAccessToken).Message())
 				})
 			})
 		})
@@ -455,7 +455,7 @@ func TestSessionManager_Abandon_postgresStore(t *testing.T) {
 					resp, err := s.client.Abandon(context.Background(), &mnemosynerpc.AbandonRequest{})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, status.Convert(errMissingAccessToken).Message())
 				})
 			})
 		})
@@ -590,7 +590,7 @@ func TestSessionManager_SetValue_postgresStore(t *testing.T) {
 					})
 
 					So(resp, ShouldBeNil)
-					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, grpc.ErrorDesc(errMissingAccessToken))
+					So(err, ShouldBeGRPCError(ShouldEqual), codes.InvalidArgument, status.Convert(errMissingAccessToken).Message())
 				})
 			})
 		})

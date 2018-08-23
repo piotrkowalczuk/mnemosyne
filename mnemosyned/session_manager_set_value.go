@@ -7,8 +7,8 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type sessionManagerSetValue struct {
@@ -23,7 +23,7 @@ func (smsv *sessionManagerSetValue) SetValue(ctx context.Context, req *mnemosyne
 	case req.AccessToken == "":
 		return nil, errMissingAccessToken
 	case req.Key == "":
-		return nil, grpc.Errorf(codes.InvalidArgument, "missing bag key")
+		return nil, status.Errorf(codes.InvalidArgument, "missing bag key")
 	}
 
 	if node, ok := smsv.cluster.GetOther(req.AccessToken); ok {

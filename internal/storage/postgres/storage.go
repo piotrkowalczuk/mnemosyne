@@ -26,8 +26,9 @@ type Storage struct {
 	ttl                                            time.Duration
 	querySave, queryGet, queryExists, queryAbandon string
 	// monitoring
-	queries *prometheus.CounterVec
-	errors  *prometheus.CounterVec
+	queriesTotal    *prometheus.CounterVec
+	queriesDuration *prometheus.HistogramVec
+	errors          *prometheus.CounterVec
 }
 
 type StorageOpts struct {
@@ -52,12 +53,21 @@ func NewStorage(opts StorageOpts) storage.Storage {
 			RETURNING refresh_token, subject_id, subject_client, bag, expire_at`, int64(opts.TTL.Seconds())),
 		queryExists:  `SELECT EXISTS(SELECT 1 FROM ` + opts.Schema + ` .` + opts.Table + ` WHERE access_token = $1)`,
 		queryAbandon: `DELETE FROM ` + opts.Schema + ` .` + opts.Table + ` WHERE access_token = $1`,
-		queries: prometheus.NewCounterVec(
+		queriesTotal: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
 				Namespace: opts.Namespace,
 				Subsystem: "storage",
 				Name:      "postgres_queries_total",
 				Help:      "Total number of SQL queries made.",
+			},
+			monitoringPostgresLabels,
+		),
+		queriesDuration: prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Namespace: opts.Namespace,
+				Subsystem: "storage",
+				Name:      "postgres_query_duration_seconds",
+				Help:      "The SQL query latencies in seconds on the client side.",
 			},
 			monitoringPostgresLabels,
 		),
@@ -91,6 +101,7 @@ func (ps *Storage) Start(ctx context.Context, accessToken, refreshToken, sid, sc
 }
 
 func (ps *Storage) save(ctx context.Context, ent *sessionEntity) (err error) {
+	start := time.Now()
 	labels := prometheus.Labels{"query": "save"}
 	err = ps.db.QueryRowContext(
 		ctx,
@@ -103,7 +114,7 @@ func (ps *Storage) save(ctx context.Context, ent *sessionEntity) (err error) {
 	).Scan(
 		&ent.ExpireAt,
 	)
-	ps.incQueries(labels)
+	ps.incQueries(labels, start)
 	if err != nil {
 		ps.incError(labels)
 	}
@@ -113,6 +124,7 @@ func (ps *Storage) save(ctx context.Context, ent *sessionEntity) (err error) {
 // Get implements storage interface.
 func (ps *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Session, error) {
 	var entity sessionEntity
+	start := time.Now()
 	labels := prometheus.Labels{"query": "get"}
 
 	err := ps.db.QueryRowContext(ctx, ps.queryGet, accessToken).Scan(
@@ -122,7 +134,7 @@ func (ps *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.S
 		&entity.Bag,
 		&entity.ExpireAt,
 	)
-	ps.incQueries(labels)
+	ps.incQueries(labels, start)
 	if err != nil {
 		ps.incError(labels)
 		if err == sql.ErrNoRows {
@@ -171,8 +183,9 @@ func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom,
 	query += " OFFSET $1 LIMIT $2"
 	labels := prometheus.Labels{"query": "list"}
 
+	start := time.Now()
 	rows, err := ps.db.QueryContext(ctx, query, args...)
-	ps.incQueries(labels)
+	ps.incQueries(labels, start)
 	if err != nil {
 		ps.incError(labels)
 		return nil, err
@@ -219,25 +232,27 @@ func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom,
 
 // Exists implements storage interface.
 func (ps *Storage) Exists(ctx context.Context, accessToken string) (exists bool, err error) {
+	start := time.Now()
 	labels := prometheus.Labels{"query": "exists"}
 
 	err = ps.db.QueryRowContext(ctx, ps.queryExists, accessToken).Scan(
 		&exists,
 	)
+	ps.incQueries(labels, start)
 	if err != nil {
 		ps.incError(labels)
 	}
-	ps.incQueries(labels)
 
 	return
 }
 
 // Abandon implements storage interface.
 func (ps *Storage) Abandon(ctx context.Context, accessToken string) (bool, error) {
+	start := time.Now()
 	labels := prometheus.Labels{"query": "abandon"}
 
 	result, err := ps.db.ExecContext(ctx, ps.queryAbandon, accessToken)
-	ps.incQueries(labels)
+	ps.incQueries(labels, start)
 	if err != nil {
 		ps.incError(labels)
 		return false, err
@@ -283,10 +298,11 @@ func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value 
 		return nil, err
 	}
 
+	startSelect := time.Now()
 	err = tx.QueryRowContext(ctx, selectQuery, accessToken).Scan(
 		&entity.Bag,
 	)
-	ps.incQueries(prometheus.Labels{"query": "set_value_select"})
+	ps.incQueries(prometheus.Labels{"query": "set_value_select"}, startSelect)
 	if err != nil {
 		ps.incError(prometheus.Labels{"query": "set_value_select"})
 		tx.Rollback()
@@ -298,8 +314,9 @@ func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value 
 
 	entity.Bag.Set(key, value)
 
+	startUpdate := time.Now()
 	_, err = tx.ExecContext(ctx, updateQuery, accessToken, entity.Bag)
-	ps.incQueries(prometheus.Labels{"query": "set_value_update"})
+	ps.incQueries(prometheus.Labels{"query": "set_value_update"}, startUpdate)
 	if err != nil {
 		ps.incError(prometheus.Labels{"query": "set_value_update"})
 		tx.Rollback()
@@ -319,9 +336,10 @@ func (ps *Storage) Delete(ctx context.Context, subjectID, accessToken, refreshTo
 	}
 	query := "DELETE FROM " + ps.schema + "." + ps.table + " WHERE " + where.String()
 	labels := prometheus.Labels{"query": "delete"}
+	start := time.Now()
 
 	result, err := ps.db.Exec(query, args...)
-	ps.incQueries(labels)
+	ps.incQueries(labels, start)
 	if err != nil {
 		ps.incError(labels)
 		return 0, err
@@ -363,8 +381,9 @@ func (ps *Storage) TearDown() error {
 	return err
 }
 
-func (ps *Storage) incQueries(field prometheus.Labels) {
-	ps.queries.With(field).Inc()
+func (ps *Storage) incQueries(field prometheus.Labels, start time.Time) {
+	ps.queriesTotal.With(field).Inc()
+	ps.queriesDuration.With(field).Observe(time.Since(start).Seconds())
 }
 
 func (ps *Storage) incError(field prometheus.Labels) {
@@ -412,13 +431,15 @@ func (ps *Storage) where(subjectID, accessToken, refreshToken string, expiredAtF
 
 // Collect implements prometheus Collector interface.
 func (c *Storage) Collect(in chan<- prometheus.Metric) {
-	c.queries.Collect(in)
+	c.queriesTotal.Collect(in)
+	c.queriesDuration.Collect(in)
 	c.errors.Collect(in)
 }
 
 // Describe implements prometheus Collector interface.
 func (c *Storage) Describe(in chan<- *prometheus.Desc) {
-	c.queries.Describe(in)
+	c.queriesTotal.Describe(in)
+	c.queriesDuration.Describe(in)
 	c.errors.Describe(in)
 }
 

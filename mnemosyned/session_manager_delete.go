@@ -11,8 +11,8 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type sessionManagerDelete struct {
@@ -24,7 +24,7 @@ type sessionManagerDelete struct {
 
 func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (*wrappers.Int64Value, error) {
 	if req.AccessToken == "" && req.RefreshToken == "" && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
-		return nil, grpc.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
+		return nil, status.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}
 
 	var expireAtFrom, expireAtTo *time.Time

@@ -8,8 +8,8 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type sessionManagerStart struct {
@@ -27,7 +27,7 @@ func (sms *sessionManagerStart) Start(ctx context.Context, req *mnemosynerpc.Sta
 		var err error
 		req.Session.AccessToken, err = mnemosyne.RandomAccessToken()
 		if err != nil {
-			return nil, grpc.Errorf(codes.Internal, "access token generation failure: %s", err.Error())
+			return nil, status.Errorf(codes.Internal, "access token generation failure: %s", err.Error())
 		}
 	}
 

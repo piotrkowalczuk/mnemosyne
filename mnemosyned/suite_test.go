@@ -10,7 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/smartystreets/goconvey/convey"
-	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -111,10 +111,10 @@ func ShouldBeGRPCError(compare func(interface{}, ...interface{}) string) func(ac
 		if !ok {
 			return "The given value must implement error interface."
 		}
-		if s = compare(grpc.ErrorDesc(e), expected[1]); s != "" {
+		if s = compare(status.Convert(e).Message(), expected[1]); s != "" {
 			return
 		}
-		if s = convey.ShouldEqual(grpc.Code(e), expected[0]); s != "" {
+		if s = convey.ShouldEqual(status.Code(e), expected[0]); s != "" {
 			return
 		}
 		return

@@ -1,18 +1,21 @@
 package cluster
 
 import (
+	"context"
 	"sort"
 
 	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 // Node ...
 type Node struct {
 	Addr   string
 	Client mnemosynerpc.SessionManagerClient
+	Health grpc_health_v1.HealthClient
 }
 
 // Cluster ...
@@ -66,7 +69,7 @@ func New(opts Opts) (csr *Cluster, err error) {
 }
 
 // Connect ...
-func (c *Cluster) Connect(opts ...grpc.DialOption) error {
+func (c *Cluster) Connect(ctx context.Context, opts ...grpc.DialOption) error {
 	for i, n := range c.nodes {
 		if n.Addr == c.listen {
 			continue
@@ -76,7 +79,7 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 			c.logger.Debug("cluster node attempt to connect", zap.String("address", n.Addr), zap.Int("index", i))
 		}
 
-		conn, err := grpc.Dial(n.Addr, opts...)
+		conn, err := grpc.DialContext(ctx, n.Addr, opts...)
 		if err != nil {
 			return err
 		}
@@ -86,7 +89,9 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 		}
 
 		n.Client = mnemosynerpc.NewSessionManagerClient(conn)
+		n.Health = grpc_health_v1.NewHealthClient(conn)
 	}
+
 	return nil
 }
 
@@ -104,6 +109,16 @@ func (c *Cluster) Get(k int32) (*Node, bool) {
 // Nodes returns all available nodes.
 func (c *Cluster) Nodes() []*Node {
 	return c.nodes
+}
+
+// ExternalNodes returns all available nodes except host.
+func (c *Cluster) ExternalNodes() (res []*Node) {
+	for _, n := range c.nodes {
+		if n.Addr != c.listen {
+			res = append(res, n)
+		}
+	}
+	return
 }
 
 // Len returns number of nodes.

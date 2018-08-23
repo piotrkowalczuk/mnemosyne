@@ -45,6 +45,9 @@ get:
 	dep ensure
 
 publish: build
+ifneq ($(skiplogin),true)
+	docker login
+endif
 	docker build \
 		--build-arg VCS_REF=${VCS_REF} \
 		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` \

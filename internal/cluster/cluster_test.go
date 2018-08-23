@@ -1,6 +1,7 @@
 package cluster_test
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -148,7 +149,7 @@ func TestCluster_GetOther(t *testing.T) {
 	c, cancel := testCluster(t)
 	defer cancel()
 
-	if err := c.Connect(grpc.WithInsecure(), grpc.WithBlock()); err != nil {
+	if err := c.Connect(context.TODO(), grpc.WithInsecure(), grpc.WithBlock()); err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 
@@ -168,7 +169,7 @@ func TestCluster_GetOther(t *testing.T) {
 func TestCluster_Connect(t *testing.T) {
 	c, cancel := testCluster(t)
 	defer cancel()
-	if err := c.Connect(grpc.WithInsecure(), grpc.WithBlock()); err != nil {
+	if err := c.Connect(context.TODO(), grpc.WithInsecure(), grpc.WithBlock()); err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 }

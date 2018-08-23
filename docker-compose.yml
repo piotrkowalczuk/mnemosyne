@@ -12,10 +12,11 @@ services:
     container_name: mnemosyned-1
     image: piotrkowalczuk/mnemosyne:latest
     ports:
-      - 10010:8080
-      - 10011:8081
+      - 20010:8080
+      - 20011:8081
     environment:
-      MNEMOSYNED_MONITORING: "true"
+      MNEMOSYNED_LOG_ENVIRONMENT: development
+      MNEMOSYNED_LOG_LEVEL: debug
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-1:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-2:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne1
@@ -29,10 +30,11 @@ services:
     container_name: mnemosyned-2
     image: piotrkowalczuk/mnemosyne:latest
     ports:
-      - 10020:8080
-      - 10021:8081
+      - 20020:8080
+      - 20021:8081
     environment:
-      MNEMOSYNED_MONITORING: "true"
+      MNEMOSYNED_LOG_ENVIRONMENT: development
+      MNEMOSYNED_LOG_LEVEL: debug
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-2:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne2
@@ -46,10 +48,11 @@ services:
     container_name: mnemosyned-3
     image: piotrkowalczuk/mnemosyne:latest
     ports:
-      - 10030:8080
-      - 10031:8081
+      - 20030:8080
+      - 20031:8081
     environment:
-      MNEMOSYNED_MONITORING: "true"
+      MNEMOSYNED_LOG_ENVIRONMENT: development
+      MNEMOSYNED_LOG_LEVEL: debug
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-3:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-2:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne3

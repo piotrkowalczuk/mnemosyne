@@ -38,9 +38,6 @@ type configuration struct {
 		ttl time.Duration
 		ttc time.Duration
 	}
-	monitoring struct {
-		enabled bool
-	}
 	postgres struct {
 		address string
 		table   string
@@ -58,18 +55,17 @@ func (c *configuration) init() {
 		*c = configuration{}
 	}
 
-	flag.StringVar(&c.host, "host", "127.0.0.1", "host")
-	flag.IntVar(&c.port, "port", 8080, "port")
-	flag.BoolVar(&c.grpc.debug, "grpc.debug", false, "if true, enables very verbose grpc debug mode")
-	flag.StringVar(&c.cluster.listen, "cluster.listen", "", "")
-	flag.Var(&c.cluster.seeds, "cluster.seeds", "")
-	flag.StringVar(&c.catalog.http, "catalog.http", "http://localhost:8500/v1/catalog/service/mnemosyned", "address of service catalog ")
-	flag.StringVar(&c.catalog.dns, "catalog.dns", "", "dns server address that can resolve SRV lookup")
-	flag.DurationVar(&c.session.ttl, "ttl", storage.DefaultTTL, "session time to live, after which session is deleted")
-	flag.DurationVar(&c.session.ttc, "ttc", storage.DefaultTTC, "session time to cleanup, how offten cleanup will be performed")
-	flag.StringVar(&c.logger.environment, "log.environment", "production", "logger environment config")
-	flag.StringVar(&c.logger.level, "log.level", "info", "logger level")
-	flag.BoolVar(&c.monitoring.enabled, "monitoring", false, "toggle application monitoring")
+	flag.StringVar(&c.host, "host", "127.0.0.1", "Host")
+	flag.IntVar(&c.port, "port", 8080, "Port")
+	flag.BoolVar(&c.grpc.debug, "grpc.debug", false, "If true, enables very verbose grpc debug mode. Useful to track connectivity issues.")
+	flag.StringVar(&c.cluster.listen, "cluster.listen", "", "Complete instance address (including port).")
+	flag.Var(&c.cluster.seeds, "cluster.seeds", "List of instances addresses that are pare of the cluster separated by the comma. Entry that overlaps with cluster.listen value will be ignored.")
+	flag.StringVar(&c.catalog.http, "catalog.http", "http://localhost:8500/v1/catalog/service/mnemosyned", "Address of service catalog (exprimental).")
+	flag.StringVar(&c.catalog.dns, "catalog.dns", "", "DNS server address that can resolve SRV lookup (experimental).")
+	flag.DurationVar(&c.session.ttl, "ttl", storage.DefaultTTL, "Session time to live, after which session is deleted.")
+	flag.DurationVar(&c.session.ttc, "ttc", storage.DefaultTTC, "Session time to cleanup, how often cleanup will be performed.")
+	flag.StringVar(&c.logger.environment, "log.environment", "production", "Logger environment config (production, stackdriver or development).")
+	flag.StringVar(&c.logger.level, "log.level", "info", "Logger level (debug, info, warn, error, dpanic, panic, fatal)")
 	flag.StringVar(&c.storage, "storage", storage.EnginePostgres, "storage engine") // TODO: change to in memory when implemented
 	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://localhost?sslmode=disable", "storage postgres connection string")
 	flag.StringVar(&c.postgres.table, "postgres.table", "session", "postgres table name")

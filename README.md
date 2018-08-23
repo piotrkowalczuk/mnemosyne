@@ -123,7 +123,6 @@ $ make
 | time to clear | `-ttc` | 1m | duration |
 | logger environment | `-log.environment` | production | enum(development, production, stackdriver) |
 | logger level | `-log.level` | info | enum(debug, info, warn, error, dpanic, panic, fatal) |
-| monitoring | `-monitoring ` | false | boolean |
 | storage | `-storage` | postgres | enum(postgres) |
 | postgres address | `-postgres.address` | postgres://postgres:postgres@postgres/postgres?sslmode=disable | string |
 | postgres table | `-postgres.table` | session | string |

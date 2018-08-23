@@ -11,7 +11,6 @@ set -e
 : ${MNEMOSYNED_LOG_ENVIRONMENT:=production}
 : ${MNEMOSYNED_LOG_LEVEL:=info}
 : ${MNEMOSYNED_STORAGE:=postgres}
-: ${MNEMOSYNED_MONITORING:=false}
 : ${MNEMOSYNED_POSTGRES_ADDRESS:=postgres://postgres:postgres@postgres/postgres?sslmode=disable}
 : ${MNEMOSYNED_POSTGRES_TABLE:=session}
 : ${MNEMOSYNED_POSTGRES_SCHEMA:=mnemosyne}
@@ -29,7 +28,6 @@ exec mnemosyned -host=${MNEMOSYNED_HOST} \
 	-storage=${MNEMOSYNED_STORAGE} \
 	-log.environment=${MNEMOSYNED_LOG_ENVIRONMENT} \
 	-log.level=${MNEMOSYNED_LOG_LEVEL} \
-	-monitoring=${MNEMOSYNED_MONITORING} \
 	-postgres.address=${MNEMOSYNED_POSTGRES_ADDRESS} \
 	-postgres.table=${MNEMOSYNED_POSTGRES_TABLE} \
 	-postgres.schema=${MNEMOSYNED_POSTGRES_SCHEMA} \

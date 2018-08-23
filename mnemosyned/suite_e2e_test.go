@@ -71,7 +71,6 @@ func (es *e2eSuite) setup(t *testing.T, i int) {
 		Logger:            zap.L(),
 		PostgresAddress:   testPostgresAddress,
 		PostgresSchema:    fmt.Sprintf("mnemosyne_test_%d", i),
-		Monitoring:        true,
 		ClusterListenAddr: es.listener.Addr().String(),
 		ClusterSeeds:      es.seeds,
 	})

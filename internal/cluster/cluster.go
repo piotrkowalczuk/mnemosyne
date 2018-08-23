@@ -90,7 +90,7 @@ func (c *Cluster) Connect(opts ...grpc.DialOption) error {
 	return nil
 }
 
-// Get if possible returns node for a hiven bucket id.
+// Get if possible returns node for a given bucket id.
 func (c *Cluster) Get(k int32) (*Node, bool) {
 	if len(c.nodes) == 0 {
 		return nil, false

@@ -41,7 +41,6 @@ func main() {
 		SessionTTL:        config.session.ttl,
 		SessionTTC:        config.session.ttc,
 		Storage:           config.storage,
-		Monitoring:        config.monitoring.enabled,
 		PostgresAddress:   config.postgres.address + "&application_name=mnemosyned_" + version,
 		PostgresTable:     config.postgres.table,
 		PostgresSchema:    config.postgres.schema,
@@ -57,7 +56,7 @@ func main() {
 	if err != nil {
 		l.Fatal("daemon allocation failure", zap.Error(err))
 	}
-	grpclog.SetLogger(zapgrpc.NewLogger(l))
+
 	if err := daemon.Run(); err != nil {
 		l.Fatal("daemon run failure", zap.Error(err))
 	}

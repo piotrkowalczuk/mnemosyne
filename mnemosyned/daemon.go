@@ -34,7 +34,6 @@ type DaemonOpts struct {
 	IsTest            bool
 	SessionTTL        time.Duration
 	SessionTTC        time.Duration
-	Monitoring        bool
 	TLS               bool
 	TLSCertFile       string
 	TLSKeyFile        string
@@ -111,7 +110,6 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 
 	d, err := NewDaemon(&DaemonOpts{
 		IsTest:            true,
-		Monitoring:        false,
 		ClusterListenAddr: l.Addr().String(),
 		Logger:            zap.L(),
 		PostgresAddress:   opts.StoragePostgresAddress,
@@ -229,9 +227,7 @@ func (d *Daemon) Run() (err error) {
 			mux.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
 			mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 			mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
-			if d.opts.Monitoring {
-				mux.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
-			}
+			mux.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 			mux.Handle("/health", &healthHandler{
 				logger:   d.logger,
 				postgres: d.postgres,

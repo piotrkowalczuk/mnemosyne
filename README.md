@@ -48,7 +48,7 @@ It is worth to mention that `latest` tag is released after each successful maste
 
 ### From source
 
-To install from source both go tools and [glide](github.com/Masterminds/glide) is required. 
+To install from source both go tools and [dep](https://github.com/golang/dep) is required. 
 
 ```
 $ go get -d github.com/piotrkowalczuk/mnemosyne/...

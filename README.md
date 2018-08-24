@@ -57,7 +57,7 @@ $ make
 ```
 
 ### Configuration
-**mnemosyned** accepts command line arguments to control its behavior. 
+`mnemosyned` accepts command line arguments to control its behavior. 
 Possible options are listed below.
 
 | Name | Flag | Default | Type |
@@ -160,21 +160,4 @@ for i in range(0, 10):
 
 ## Contribution
 
-### TODO
-
-- [x] Client library
-    - [x] Go
-    - [x] Python
-- [ ] Engines
-	- [x] PostgreSQL
-		- [x] Get
-		- [x] List
-		- [x] Exists
-		- [x] Create
-		- [x] Abandon
-		- [x] SetData
-		- [x] Delete
-		- [x] Setup
-		- [x] TearDown
-	- [ ] RAM
-	- [ ] Redis
+TODO: describe

@@ -26,6 +26,7 @@ type Storage struct {
 	ttl                                            time.Duration
 	querySave, queryGet, queryExists, queryAbandon string
 	// monitoring
+	connections     prometheus.Gauge
 	queriesTotal    *prometheus.CounterVec
 	queriesDuration *prometheus.HistogramVec
 	errors          *prometheus.CounterVec
@@ -70,6 +71,14 @@ func NewStorage(opts StorageOpts) storage.Storage {
 				Help:      "The SQL query latencies in seconds on the client side.",
 			},
 			monitoringPostgresLabels,
+		),
+		connections: prometheus.NewGauge(
+			prometheus.GaugeOpts{
+				Namespace: opts.Namespace,
+				Subsystem: "storage",
+				Name:      "postgres_connections",
+				Help:      "Number of opened connections.",
+			},
 		),
 		errors: prometheus.NewCounterVec(
 			prometheus.CounterOpts{
@@ -431,6 +440,9 @@ func (ps *Storage) where(subjectID, accessToken, refreshToken string, expiredAtF
 
 // Collect implements prometheus Collector interface.
 func (c *Storage) Collect(in chan<- prometheus.Metric) {
+	c.connections.Set(float64(c.db.Stats().OpenConnections))
+
+	c.connections.Collect(in)
 	c.queriesTotal.Collect(in)
 	c.queriesDuration.Collect(in)
 	c.errors.Collect(in)
@@ -438,6 +450,7 @@ func (c *Storage) Collect(in chan<- prometheus.Metric) {
 
 // Describe implements prometheus Collector interface.
 func (c *Storage) Describe(in chan<- *prometheus.Desc) {
+	c.connections.Describe(in)
 	c.queriesTotal.Describe(in)
 	c.queriesDuration.Describe(in)
 	c.errors.Describe(in)

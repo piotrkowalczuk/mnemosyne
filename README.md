@@ -110,7 +110,8 @@ $ make
 ```
 
 ### Configuration
-**mnemosyned** accepts command line arguments to control its behavior. Possible options are is listed below.
+**mnemosyned** accepts command line arguments to control its behavior. 
+Possible options are listed below.
 
 | Name | Flag | Default | Type |
 | --- | --- | --- | --- |

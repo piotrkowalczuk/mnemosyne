@@ -150,6 +150,7 @@ It exposes multiple metrics through `/metrics` endpoint, it includes:
 * `mnemosyned_storage_postgres_errors_total`
 * `mnemosyned_storage_postgres_queries_total`
 * `mnemosyned_storage_postgres_query_duration_seconds`
+* `mnemosyned_storage_postgres_connections`
 
 Additionally to that `mnemosyned` is using internally [promgrpc](https://github.com/piotrkowalczuk/promgrpc) package to monitor entire incoming and outgoing RPC traffic.
 

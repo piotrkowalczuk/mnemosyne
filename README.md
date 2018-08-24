@@ -25,63 +25,9 @@ $ make
 $ mnemosyned -log.environment=development -postgres.address='postgres://localhost/example?sslmode=disable'
 ```
 
-### Examples
-
-#### Go
-
-```go
-package main
-
-import (
-	"fmt"
-
-	"golang.org/x/net/context"
-	"github.com/piotrkowalczuk/mnemosyne"
-)
-
-func main() {
-	mnemo, err := mnemosyne.New(mnemosyne.MnemosyneOpts{
-		Addresses: []string{"127.0.0.1:8080"},
-		Block: true,
-	})
-	if err != nil {
-		// ...
-	}
-	defer mnemo.Close()
-
-	ses, err := mnemo.Start(context.Background(), "subject-id", "subject-client", map[string]string{
-		"username": "johnsnow@gmail.com",
-		"first_name": "John",
-		"last_name": "Snow",
-	})
-	if err != nil {
-		// ...
-	}
-
-	fmt.Println(ses.AccessToken)
-}
-```
-
-#### Python
-
-Library is available through [pypi](https://pypi.python.org/pypi/mnemosyne-client) and can be installed by typing `pip install mnemosyne-client`.
-
-```python
-from  mnemosynerpc import session_pb2, session_pb2_grpc
-import grpc
-
-
-channel = grpc.insecure_channel('localhost:8080')
-stub = session_pb2_grpc.SessionManagerStub(channel)
-
-for i in range(0, 10):
-	res = stub.Start(session_pb2.StartRequest(session=session_pb2.Session(subject_id=str(i))))
-
-	res = stub.Get(session_pb2.GetRequest(access_token=res.session.access_token))
-	print "%s - %s" % (res.session.access_token, res.session.expire_at.ToJsonString())
-```
 ### Storage Engine
-Goal is to support multiple storage's, like [PostgreSQL](http://www.postgresql.org/), [Redis](http://redis.io) or [MongoDB](https://www.mongodb.org). Nevertheless currently supported is only [PostgreSQL](http://www.postgresql.org/).
+Goal is to support multiple storage's, like [PostgreSQL](http://www.postgresql.org/), [Redis](http://redis.io) or [MongoDB](https://www.mongodb.org). 
+Nevertheless currently supported is only [PostgreSQL](http://www.postgresql.org/).
 
 ### Remote Procedure Call API
 For communication, Mnemosyne is exposing RPC API that uses [protocol buffers](https://developers.google.com/protocol-buffers/), Google’s mature open source mechanism for serializing structured data.
@@ -98,6 +44,7 @@ For communication, Mnemosyne is exposing RPC API that uses [protocol buffers](ht
 
 Mnemosyne can be installed in one way, from source.
 Or can be used as a container using docker [image](https://hub.docker.com/r/piotrkowalczuk/mnemosyne/).
+It is worth to mention that `latest` tag is released after each successful master branch build. Please use only images tagged using specific version anywhere else than a local development environment.
 
 ### From source
 
@@ -154,6 +101,62 @@ It exposes multiple metrics through `/metrics` endpoint, it includes:
 * `mnemosyned_storage_postgres_connections`
 
 Additionally to that `mnemosyned` is using internally [promgrpc](https://github.com/piotrkowalczuk/promgrpc) package to monitor entire incoming and outgoing RPC traffic.
+
+### Examples
+
+#### Go
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"golang.org/x/net/context"
+	"github.com/piotrkowalczuk/mnemosyne"
+)
+
+func main() {
+	mnemo, err := mnemosyne.New(mnemosyne.MnemosyneOpts{
+		Addresses: []string{"127.0.0.1:8080"},
+		Block: true,
+	})
+	if err != nil {
+		// ...
+	}
+	defer mnemo.Close()
+
+	ses, err := mnemo.Start(context.Background(), "subject-id", "subject-client", map[string]string{
+		"username": "johnsnow@gmail.com",
+		"first_name": "John",
+		"last_name": "Snow",
+	})
+	if err != nil {
+		// ...
+	}
+
+	fmt.Println(ses.AccessToken)
+}
+```
+
+#### Python
+
+Library is available through [pypi](https://pypi.python.org/pypi/mnemosyne-client) and can be installed by typing `pip install mnemosyne-client`.
+
+```python
+from  mnemosynerpc import session_pb2, session_pb2_grpc
+import grpc
+
+
+channel = grpc.insecure_channel('localhost:8080')
+stub = session_pb2_grpc.SessionManagerStub(channel)
+
+for i in range(0, 10):
+	res = stub.Start(session_pb2.StartRequest(session=session_pb2.Session(subject_id=str(i))))
+
+	res = stub.Get(session_pb2.GetRequest(access_token=res.session.access_token))
+	print "%s - %s" % (res.session.access_token, res.session.expire_at.ToJsonString())
+```
 
 ## Contribution
 

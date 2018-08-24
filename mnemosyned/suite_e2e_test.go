@@ -8,6 +8,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"context"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	. "github.com/smartystreets/goconvey/convey"
@@ -83,11 +85,14 @@ func (es *e2eSuite) setup(t *testing.T, i int) {
 		t.Log("test daemon started")
 	}
 
-	es.clientConn, err = grpc.Dial(
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	es.clientConn, err = grpc.DialContext(
+		ctx,
 		es.listener.Addr().String(),
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
-		grpc.WithTimeout(2*time.Second),
 	)
 	if err != nil {
 		t.Fatalf("unexpected client conn error: %s", err.Error())

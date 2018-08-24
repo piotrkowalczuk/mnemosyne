@@ -38,6 +38,7 @@ func main() {
 	debugListener := initListener(l, config.host, config.port+1)
 
 	daemon, err := mnemosyned.NewDaemon(&mnemosyned.DaemonOpts{
+		Version:           version,
 		SessionTTL:        config.session.ttl,
 		SessionTTC:        config.session.ttc,
 		Storage:           config.storage,

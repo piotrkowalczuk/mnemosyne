@@ -12,7 +12,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -108,11 +107,11 @@ func newSessionManager(opts sessionManagerOpts) (*sessionManager, error) {
 func (sm *sessionManager) Context(ctx context.Context, req *empty.Empty) (*mnemosynerpc.ContextResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, grpc.Errorf(codes.InvalidArgument, "missing metadata in context, access token cannot be retrieved")
+		return nil, status.Errorf(codes.InvalidArgument, "missing metadata in context, access token cannot be retrieved")
 	}
 
 	if len(md[mnemosyne.AccessTokenMetadataKey]) == 0 {
-		return nil, grpc.Errorf(codes.InvalidArgument, "missing access token in metadata")
+		return nil, status.Errorf(codes.InvalidArgument, "missing access token in metadata")
 	}
 
 	at := md[mnemosyne.AccessTokenMetadataKey][0]

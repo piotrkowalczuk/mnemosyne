@@ -46,7 +46,7 @@ func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.
 
 			res, err := handler(ctx, req)
 
-			code := grpc.Code(err)
+			code := status.Code(err)
 			if err != nil && code != codes.OK {
 				if code == codes.Unknown {
 					switch err {
@@ -64,7 +64,7 @@ func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.
 					}
 				}
 				loggerBackground(ctx, log).Error("request failure",
-					zap.String("error", grpc.ErrorDesc(err)),
+					zap.String("error", status.Convert(err).Message()),
 					logger.Ctx(ctx, info, code),
 				)
 
@@ -76,7 +76,7 @@ func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.
 				case storage.ErrMissingAccessToken, storage.ErrMissingSession, storage.ErrMissingSubjectID:
 					return nil, status.Errorf(codes.InvalidArgument, "mnemosyned: %s", err.Error())
 				default:
-					return nil, grpc.Errorf(grpc.Code(err), "mnemosyned: %s", grpc.ErrorDesc(err))
+					return nil, status.Errorf(status.Code(err), "mnemosyned: %s", status.Convert(err).Message())
 				}
 			}
 

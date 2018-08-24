@@ -12,6 +12,8 @@ import (
 	"testing"
 	"time"
 
+	"context"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
@@ -24,6 +26,8 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 const subsystem = "mnemosyned"
@@ -31,6 +35,7 @@ const subsystem = "mnemosyned"
 // DaemonOpts it is constructor argument that can be passed to
 // the NewDaemon constructor function.
 type DaemonOpts struct {
+	Version           string
 	IsTest            bool
 	SessionTTL        time.Duration
 	SessionTTC        time.Duration
@@ -142,7 +147,6 @@ func (d *Daemon) Run() (err error) {
 	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{})
 
 	d.clientOptions = []grpc.DialOption{
-		grpc.WithTimeout(10 * time.Second),
 		grpc.WithUserAgent(subsystem),
 		grpc.WithStatsHandler(interceptor),
 		grpc.WithDialer(interceptor.Dialer(func(addr string, timeout time.Duration) (net.Conn, error) {
@@ -188,7 +192,10 @@ func (d *Daemon) Run() (err error) {
 	if err != nil {
 		return err
 	}
+
 	mnemosynerpc.RegisterSessionManagerServer(d.server, mnemosyneServer)
+	grpc_health_v1.RegisterHealthServer(d.server, health.NewServer())
+
 	if !d.opts.IsTest {
 		prometheus.DefaultRegisterer.Register(d.storage.(storage.InstrumentedStorage))
 		prometheus.DefaultRegisterer.Register(cache)
@@ -197,7 +204,10 @@ func (d *Daemon) Run() (err error) {
 		promgrpc.RegisterInterceptor(d.server, interceptor)
 	}
 
-	if err = cl.Connect(d.clientOptions...); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err = cl.Connect(ctx, d.clientOptions...); err != nil {
 		return err
 	}
 
@@ -219,7 +229,6 @@ func (d *Daemon) Run() (err error) {
 	if d.debugListener != nil {
 		go func() {
 			d.logger.Info("debug server is running", zap.String("address", d.debugListener.Addr().String()))
-			// TODO: implement keep alive
 
 			mux := http.NewServeMux()
 			mux.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
@@ -228,9 +237,19 @@ func (d *Daemon) Run() (err error) {
 			mux.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
 			mux.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 			mux.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
-			mux.Handle("/health", &healthHandler{
+			mux.Handle("/healthz", &livenessHandler{
+				livenessResponse: livenessResponse{
+					Version: d.opts.Version,
+				},
+				logger: d.logger,
+			})
+			mux.Handle("/healthr", &readinessHandler{
+				livenessResponse: livenessResponse{
+					Version: d.opts.Version,
+				},
 				logger:   d.logger,
 				postgres: d.postgres,
+				cluster:  cl,
 			})
 			if err := http.Serve(d.debugListener, mux); err != nil {
 				d.logger.Error("debug server failure", zap.Error(err))

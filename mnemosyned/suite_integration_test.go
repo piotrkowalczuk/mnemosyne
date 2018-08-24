@@ -7,6 +7,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"context"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage/storagemock"
@@ -47,11 +49,15 @@ func (is *integrationSuite) setup(t *testing.T) {
 	mnemosynerpc.RegisterSessionManagerServer(is.server, is.serviceServer)
 
 	go is.server.Serve(is.listener)
-	is.serviceConn, err = grpc.Dial(
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	is.serviceConn, err = grpc.DialContext(
+		ctx,
 		is.listener.Addr().String(),
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
-		grpc.WithTimeout(2*time.Second),
 	)
 	if err != nil {
 		t.Fatal(err)

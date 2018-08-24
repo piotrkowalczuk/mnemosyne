@@ -240,6 +240,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:9f984428bac26e6472738ab372867bfa17b9d4ac5d3f10e9665f6d8692bead55"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  pruneopts = ""
+  revision = "3b58ed4ad3395d483fc92d5d14123ce2c3581fec"
+
+[[projects]]
+  branch = "master"
   digest = "1:e887950913f1ea214e95d4fc59bd2467ecf234466f63ab83a10ec874010c54f4"
   name = "golang.org/x/text"
   packages = [
@@ -286,35 +294,41 @@
   revision = "1e559d0a00eef8a9a43151db4665280bd8dd5886"
 
 [[projects]]
-  digest = "1:18f77768d38684d7ff8f4bdad082ce6e8b867ae538a5900e38bbc08db05372a2"
+  digest = "1:cb1330030248de97a11d9f9664f3944fce0df947e5ed94dbbd9cb6e77068bd46"
   name = "google.golang.org/grpc"
   packages = [
     ".",
     "balancer",
+    "balancer/base",
     "balancer/roundrobin",
     "codes",
     "connectivity",
     "credentials",
     "encoding",
-    "grpclb/grpc_lb_v1/messages",
+    "encoding/proto",
     "grpclog",
+    "health",
+    "health/grpc_health_v1",
     "internal",
+    "internal/backoff",
+    "internal/channelz",
+    "internal/envconfig",
+    "internal/grpcrand",
+    "internal/transport",
     "keepalive",
     "metadata",
     "naming",
     "peer",
     "resolver",
     "resolver/dns",
-    "resolver/manual",
     "resolver/passthrough",
     "stats",
     "status",
     "tap",
-    "transport",
   ]
   pruneopts = ""
-  revision = "be077907e29fdb945d351e4284eb5361e7f8924e"
-  version = "v1.8.1"
+  revision = "32fb0ac620c32ba40a4626ddf94d90d12cce3455"
+  version = "v1.14.0"
 
 [solve-meta]
   analyzer-name = "dep"
@@ -344,6 +358,8 @@
     "google.golang.org/grpc/codes",
     "google.golang.org/grpc/credentials",
     "google.golang.org/grpc/grpclog",
+    "google.golang.org/grpc/health",
+    "google.golang.org/grpc/health/grpc_health_v1",
     "google.golang.org/grpc/metadata",
     "google.golang.org/grpc/peer",
     "google.golang.org/grpc/status",

@@ -102,11 +102,11 @@ jobs:
     - run:
         name: Docker build
         command: |
-          docker build --build-arg VCS_REF=${VCS_REF} --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` -t piotrkowalczuk/mnemosyne:${CIRCLE_TAG:-test} .
+          docker build --build-arg VCS_REF=${VCS_REF} --build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` -t piotrkowalczuk/mnemosyne:${CIRCLE_TAG:-latest} .
     - run:
         name: Docker save
         command: |
-          docker save -o ./docker-image.tar piotrkowalczuk/mnemosyne:${CIRCLE_TAG:-test}
+          docker save -o ./docker-image.tar piotrkowalczuk/mnemosyne:${CIRCLE_TAG:-latest}
     - persist_to_workspace:
         root: ./
         paths:
@@ -131,7 +131,7 @@ jobs:
     - run:
         name: Docker push
         command: |
-          docker push piotrkowalczuk/mnemosyne:${CIRCLE_TAG}
+          docker push piotrkowalczuk/mnemosyne:${CIRCLE_TAG:-latest}
   generate_java:
     <<: *container_config_java
     steps:
@@ -217,7 +217,7 @@ workflows:
         - build_docker
         filters:
           branches:
-            ignore: /.*/
+            only: master
           tags:
             only: /^(v)?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$/
     - generate_python:

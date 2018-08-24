@@ -138,8 +138,20 @@ As we know, mnemosyne can be configured in many ways. For the beginning we can s
 ```bash
 $ mnemosyned postgres.address="postgres://localhost/test?sslmode=disable"
 ```
-
 Mnemosyne will automatically create all required tables/indexes for specified database.
+
+### Monitoring
+`mnemosyned` works well with [Prometheus](http://prometheus.io). 
+It exposes multiple metrics through `/metrics` endpoint, it includes:
+
+* `mnemosyned_cache_hits_total`
+* `mnemosyned_cache_misses_total`
+* `mnemosyned_cache_refresh_total`
+* `mnemosyned_storage_postgres_errors_total`
+* `mnemosyned_storage_postgres_queries_total`
+* `mnemosyned_storage_postgres_query_duration_seconds`
+
+Additionally to that `mnemosyned` is using internally [promgrpc](https://github.com/piotrkowalczuk/promgrpc) package to monitor entire incoming and outgoing RPC traffic.
 
 ## Contribution
 

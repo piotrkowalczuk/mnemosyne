@@ -14,9 +14,8 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-var config configuration
-
 func main() {
+	var config configuration
 	config.init()
 	config.parse()
 

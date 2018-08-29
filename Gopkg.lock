@@ -69,12 +69,12 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:b7afcfa5421aebbbe2d262bdbd5eda5743032af43f7f49b17b7d92d87db46e03"
+  digest = "1:759fdf747d88eef2dde7c4c3deff80f778ca82d4017914d8dd485dd7c03c7b4b"
   name = "github.com/piotrkowalczuk/promgrpc"
-  packages = ["."]
+  packages = ["v3"]
   pruneopts = ""
-  revision = "2cb325708a986e97d3540905a0b589fa4c17eaee"
-  version = "v2.0.0"
+  revision = "ef56da41a6afb90844c72cc4ad35a0f772d23da8"
+  version = "v3.2.0"
 
 [[projects]]
   digest = "1:256484dbbcd271f9ecebc6795b2df8cad4c458dd0f5fd82a8c2fa0c29f233411"
@@ -340,7 +340,7 @@
     "github.com/golang/protobuf/ptypes/timestamp",
     "github.com/golang/protobuf/ptypes/wrappers",
     "github.com/lib/pq",
-    "github.com/piotrkowalczuk/promgrpc",
+    "github.com/piotrkowalczuk/promgrpc/v3",
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
     "github.com/smartystreets/goconvey/convey",

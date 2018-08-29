@@ -3,6 +3,7 @@ package mnemosyned
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -147,7 +148,7 @@ func (d *Daemon) Run() (err error) {
 	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{})
 
 	d.clientOptions = []grpc.DialOption{
-		grpc.WithUserAgent(subsystem),
+		grpc.WithUserAgent(fmt.Sprintf("%s:%s", subsystem, d.opts.Version)),
 		grpc.WithStatsHandler(interceptor),
 		grpc.WithDialer(interceptor.Dialer(func(addr string, timeout time.Duration) (net.Conn, error) {
 			return net.DialTimeout("tcp", addr, timeout)

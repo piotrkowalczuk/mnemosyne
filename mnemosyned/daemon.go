@@ -1,6 +1,7 @@
 package mnemosyned
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -13,15 +14,13 @@ import (
 	"testing"
 	"time"
 
-	"context"
-
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	storagepq "github.com/piotrkowalczuk/mnemosyne/internal/storage/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"github.com/piotrkowalczuk/promgrpc"
+	"github.com/piotrkowalczuk/promgrpc/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"

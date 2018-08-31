@@ -50,7 +50,7 @@ jobs:
           bash ./.circleci/scripts/install_protoc.sh
     - run:
         name: Install dependencies
-        command: dep ensure
+        command: dep ensure -vendor-only
     - run:
         name: Generate protobuf
         command: bash ./.circleci/scripts/generate.sh golang

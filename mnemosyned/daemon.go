@@ -11,11 +11,15 @@ import (
 	"net/http/pprof"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	otgrpc "github.com/opentracing-contrib/go-grpc"
+	"github.com/opentracing/opentracing-go"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
+	"github.com/piotrkowalczuk/mnemosyne/internal/constant"
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	storagepq "github.com/piotrkowalczuk/mnemosyne/internal/storage/postgres"
@@ -30,28 +34,27 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
-const subsystem = "mnemosyned"
-
 // DaemonOpts it is constructor argument that can be passed to
 // the NewDaemon constructor function.
 type DaemonOpts struct {
-	Version           string
-	IsTest            bool
-	SessionTTL        time.Duration
-	SessionTTC        time.Duration
-	TLS               bool
-	TLSCertFile       string
-	TLSKeyFile        string
-	Storage           string
-	PostgresAddress   string
-	PostgresTable     string
-	PostgresSchema    string
-	Logger            *zap.Logger
-	RPCOptions        []grpc.ServerOption
-	RPCListener       net.Listener
-	DebugListener     net.Listener
-	ClusterListenAddr string
-	ClusterSeeds      []string
+	Version             string
+	IsTest              bool
+	SessionTTL          time.Duration
+	SessionTTC          time.Duration
+	TLS                 bool
+	TLSCertFile         string
+	TLSKeyFile          string
+	Storage             string
+	PostgresAddress     string
+	PostgresTable       string
+	PostgresSchema      string
+	Logger              *zap.Logger
+	RPCOptions          []grpc.ServerOption
+	RPCListener         net.Listener
+	DebugListener       net.Listener
+	ClusterListenAddr   string
+	ClusterSeeds        []string
+	TracingAgentAddress string
 }
 
 // TestDaemonOpts set of options that are used with TestDaemon instance.
@@ -71,6 +74,9 @@ type Daemon struct {
 	storage       storage.Storage
 	rpcListener   net.Listener
 	debugListener net.Listener
+	tracerCloser  io.Closer
+
+	lock sync.Mutex
 }
 
 // NewDaemon allocates new daemon instance using given options.
@@ -135,7 +141,8 @@ func TestDaemon(t *testing.T, opts TestDaemonOpts) (net.Addr, io.Closer) {
 // Run starts daemon and all services within.
 func (d *Daemon) Run() (err error) {
 	var (
-		cl *cluster.Cluster
+		cl     *cluster.Cluster
+		tracer opentracing.Tracer
 	)
 	if cl, err = initCluster(d.logger, d.opts.ClusterListenAddr, d.opts.ClusterSeeds...); err != nil {
 		return
@@ -146,18 +153,37 @@ func (d *Daemon) Run() (err error) {
 
 	interceptor := promgrpc.NewInterceptor(promgrpc.InterceptorOpts{})
 
+	if d.opts.TracingAgentAddress != "" {
+		if tracer, d.tracerCloser, err = initJaeger(
+			constant.Subsystem,
+			d.opts.ClusterListenAddr,
+			d.opts.TracingAgentAddress,
+			d.logger.Named("tracer"),
+		); err != nil {
+			return
+		}
+		d.logger.Info("tracing enabled", zap.String("agent_address", d.opts.TracingAgentAddress))
+	} else {
+		tracer = opentracing.NoopTracer{}
+	}
+
 	d.clientOptions = []grpc.DialOption{
-		grpc.WithUserAgent(fmt.Sprintf("%s:%s", subsystem, d.opts.Version)),
+		// User agent is required for example to determine if incoming request is internal.
+		grpc.WithUserAgent(fmt.Sprintf("%s:%s", constant.Subsystem, d.opts.Version)),
 		grpc.WithStatsHandler(interceptor),
 		grpc.WithDialer(interceptor.Dialer(func(addr string, timeout time.Duration) (net.Conn, error) {
 			return net.DialTimeout("tcp", addr, timeout)
 		})),
-		grpc.WithUnaryInterceptor(interceptor.UnaryClient()),
+		grpc.WithUnaryInterceptor(unaryClientInterceptors(
+			interceptor.UnaryClient(),
+			otgrpc.OpenTracingClientInterceptor(tracer)),
+		),
 		grpc.WithStreamInterceptor(interceptor.StreamClient()),
 	}
 	d.serverOptions = []grpc.ServerOption{
 		grpc.StatsHandler(interceptor),
 		grpc.UnaryInterceptor(unaryServerInterceptors(
+			otgrpc.OpenTracingServerInterceptor(tracer),
 			errorInterceptor(d.logger),
 			interceptor.UnaryServer(),
 		)),
@@ -180,7 +206,7 @@ func (d *Daemon) Run() (err error) {
 
 	d.server = grpc.NewServer(d.serverOptions...)
 
-	cache := cache.New(5*time.Second, subsystem)
+	cache := cache.New(5*time.Second, constant.Subsystem)
 	mnemosyneServer, err := newSessionManager(sessionManagerOpts{
 		addr:    d.opts.ClusterListenAddr,
 		cluster: cl,
@@ -188,6 +214,7 @@ func (d *Daemon) Run() (err error) {
 		storage: d.storage,
 		ttc:     d.opts.SessionTTC,
 		cache:   cache,
+		tracer:  tracer,
 	})
 	if err != nil {
 		return err
@@ -272,10 +299,16 @@ func (d *Daemon) Close() (err error) {
 		}
 	}
 	if d.debugListener != nil {
-		err = d.debugListener.Close()
+		if err = d.debugListener.Close(); err != nil {
+			return
+		}
 	}
-
-	return
+	if d.tracerCloser != nil {
+		if err = d.tracerCloser.Close(); err != nil {
+			return
+		}
+	}
+	return nil
 }
 
 // Addr returns net.Addr that rpc service is listening on.
@@ -298,7 +331,7 @@ func (d *Daemon) initStorage(l *zap.Logger, table, schema string) (err error) {
 			return
 		}
 		if d.storage, err = storage.Init(storagepq.NewStorage(storagepq.StorageOpts{
-			Namespace: subsystem,
+			Namespace: constant.Subsystem,
 			Schema:    schema,
 			Table:     table,
 			Conn:      d.postgres,

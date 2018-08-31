@@ -10,6 +10,14 @@
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
 
 [[projects]]
+  branch = "master"
+  digest = "1:c46fd324e7902268373e1b337436a6377c196e2dbd7b35624c6256d29d494e78"
+  name = "github.com/codahale/hdrhistogram"
+  packages = ["."]
+  pruneopts = ""
+  revision = "3a0bb77429bd3a61596f5e8a3172445844342120"
+
+[[projects]]
   digest = "1:0a39ec8bf5629610a4bc7873a92039ee509246da3cef1a0ea60f1ed7e5f9cea5"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -69,12 +77,40 @@
   version = "v1.0.0"
 
 [[projects]]
+  branch = "master"
+  digest = "1:0b1d6a6357cefacb55ffdca7873afd0e3e2207e7f7eea1d072b1b2e35a97cf3d"
+  name = "github.com/opentracing-contrib/go-grpc"
+  packages = ["."]
+  pruneopts = ""
+  revision = "6584d2943026cdcb95499c44594903e207ecc1ce"
+
+[[projects]]
+  digest = "1:bba12aa4747b212f75db3e7fee73fe1b66d303cb3ff0c1984b7f2ad20e8bd2bc"
+  name = "github.com/opentracing/opentracing-go"
+  packages = [
+    ".",
+    "ext",
+    "log",
+  ]
+  pruneopts = ""
+  revision = "1949ddbfd147afd4d964a9f00b24eb291e0e7c38"
+  version = "v1.0.2"
+
+[[projects]]
   digest = "1:759fdf747d88eef2dde7c4c3deff80f778ca82d4017914d8dd485dd7c03c7b4b"
   name = "github.com/piotrkowalczuk/promgrpc"
   packages = ["v3"]
   pruneopts = ""
   revision = "ef56da41a6afb90844c72cc4ad35a0f772d23da8"
   version = "v3.2.0"
+
+[[projects]]
+  digest = "1:7365acd48986e205ccb8652cc746f09c8b7876030d53710ea6ef7d0bd0dcd7ca"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = ""
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [[projects]]
   digest = "1:256484dbbcd271f9ecebc6795b2df8cad4c458dd0f5fd82a8c2fa0c29f233411"
@@ -169,6 +205,40 @@
   pruneopts = ""
   revision = "69483b4bd14f5845b5a1e55bca19e954e827f1d0"
   version = "v1.1.4"
+
+[[projects]]
+  digest = "1:a6cf7a16661bba2bf70b6178809ada24aef14cf7abea63153a786e12db88dccc"
+  name = "github.com/uber/jaeger-client-go"
+  packages = [
+    ".",
+    "config",
+    "internal/baggage",
+    "internal/baggage/remote",
+    "internal/spanlog",
+    "internal/throttler",
+    "internal/throttler/remote",
+    "log",
+    "log/zap",
+    "rpcmetrics",
+    "thrift",
+    "thrift-gen/agent",
+    "thrift-gen/baggage",
+    "thrift-gen/jaeger",
+    "thrift-gen/sampling",
+    "thrift-gen/zipkincore",
+    "utils",
+  ]
+  pruneopts = ""
+  revision = "b043381d944715b469fd6b37addfd30145ca1758"
+  version = "v2.14.0"
+
+[[projects]]
+  digest = "1:05d4f4ca69137ae7c85e535911eebb505a2aad3189573f8e2b469ed043160e88"
+  name = "github.com/uber/jaeger-lib"
+  packages = ["metrics"]
+  pruneopts = ""
+  revision = "ed3a127ec5fef7ae9ea95b01b542c47fbd999ce5"
+  version = "v1.5.0"
 
 [[projects]]
   digest = "1:79b3d24ef1dd0ccccd0da232a60544982cf68b3f86235ae5e5ed7d61818d30dc"
@@ -340,6 +410,8 @@
     "github.com/golang/protobuf/ptypes/timestamp",
     "github.com/golang/protobuf/ptypes/wrappers",
     "github.com/lib/pq",
+    "github.com/opentracing-contrib/go-grpc",
+    "github.com/opentracing/opentracing-go",
     "github.com/piotrkowalczuk/promgrpc/v3",
     "github.com/prometheus/client_golang/prometheus",
     "github.com/prometheus/client_golang/prometheus/promhttp",
@@ -347,6 +419,8 @@
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "github.com/stretchr/testify/require",
+    "github.com/uber/jaeger-client-go/config",
+    "github.com/uber/jaeger-client-go/log/zap",
     "go.uber.org/zap",
     "go.uber.org/zap/buffer",
     "go.uber.org/zap/zapcore",

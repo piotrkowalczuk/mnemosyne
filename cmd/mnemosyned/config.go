@@ -29,6 +29,11 @@ type configuration struct {
 		http string
 		dns  string
 	}
+	tracing struct {
+		agent struct {
+			address string
+		}
+	}
 	storage string
 	logger  struct {
 		environment string
@@ -57,19 +62,29 @@ func (c *configuration) init() {
 
 	flag.StringVar(&c.host, "host", "127.0.0.1", "Host")
 	flag.IntVar(&c.port, "port", 8080, "Port")
+	// GRPC
 	flag.BoolVar(&c.grpc.debug, "grpc.debug", false, "If true, enables very verbose gRPC to debug mode. Useful to track connectivity issues.")
+	// CLUSTER
 	flag.StringVar(&c.cluster.listen, "cluster.listen", "", "Complete instance address (including port).")
 	flag.Var(&c.cluster.seeds, "cluster.seeds", "List of comma-separated instances addresses that are part of the cluster. An entry that overlaps with cluster.listen value will be ignored.")
+	// CATALOG
 	flag.StringVar(&c.catalog.http, "catalog.http", "http://localhost:8500/v1/catalog/service/mnemosyned", "Address of a service catalog (experimental).")
 	flag.StringVar(&c.catalog.dns, "catalog.dns", "", "A DNS server address that can resolve SRV lookup (experimental).")
+	// TRACING
+	flag.StringVar(&c.tracing.agent.address, "tracing.agent.address", "", "Address of a tracing agent.")
+	// SESSION
 	flag.DurationVar(&c.session.ttl, "ttl", storage.DefaultTTL, "Session time to live, after which session is deleted.")
 	flag.DurationVar(&c.session.ttc, "ttc", storage.DefaultTTC, "Session time to cleanup, how often cleanup will be performed.")
+	// LOGGER
 	flag.StringVar(&c.logger.environment, "log.environment", "production", "Logger environment config (production, stackdriver or development).")
 	flag.StringVar(&c.logger.level, "log.level", "info", "Logger level (debug, info, warn, error, dpanic, panic, fatal)")
+	// STORAGE
 	flag.StringVar(&c.storage, "storage", storage.EnginePostgres, "Storage engine (postgres).") // TODO: change to in memory when implemented
+	// POSTGRES
 	flag.StringVar(&c.postgres.address, "postgres.address", "postgres://localhost?sslmode=disable", "Storage postgres connection string.")
 	flag.StringVar(&c.postgres.table, "postgres.table", "session", "Postgres table name.")
 	flag.StringVar(&c.postgres.schema, "postgres.schema", "mnemosyne", "Postgres schema name.")
+	// TLS
 	flag.BoolVar(&c.tls.enabled, "tls", false, "If true, TLS is enabled.")
 	flag.StringVar(&c.tls.certFile, "tls.crt", "", "Path to TLS cert file.")
 	flag.StringVar(&c.tls.keyFile, "tls.key", "", "Path to TLS key file.")

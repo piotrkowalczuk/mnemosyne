@@ -41,17 +41,18 @@ func main() {
 		SessionTTL:        config.session.ttl,
 		SessionTTC:        config.session.ttc,
 		Storage:           config.storage,
-		PostgresAddress:   config.postgres.address + "&application_name=mnemosyned_" + version,
-		PostgresTable:     config.postgres.table,
-		PostgresSchema:    config.postgres.schema,
-		TLS:               config.tls.enabled,
-		TLSCertFile:       config.tls.certFile,
-		TLSKeyFile:        config.tls.keyFile,
-		ClusterListenAddr: config.cluster.listen,
-		ClusterSeeds:      config.cluster.seeds,
-		RPCListener:       rpcListener,
-		Logger:            l.Named("daemon"),
-		DebugListener:     debugListener,
+		PostgresAddress:     config.postgres.address + "&application_name=mnemosyned_" + version,
+		PostgresTable:       config.postgres.table,
+		PostgresSchema:      config.postgres.schema,
+		TLS:                 config.tls.enabled,
+		TLSCertFile:         config.tls.certFile,
+		TLSKeyFile:          config.tls.keyFile,
+		ClusterListenAddr:   config.cluster.listen,
+		ClusterSeeds:        config.cluster.seeds,
+		RPCListener:         rpcListener,
+		Logger:              l.Named("daemon"),
+		DebugListener:       debugListener,
+		TracingAgentAddress: config.tracing.agent.address,
 	})
 	if err != nil {
 		l.Fatal("daemon allocation failure", zap.Error(err))
@@ -70,7 +71,7 @@ func initListener(logger *zap.Logger, host string, port int) net.Listener {
 	on := host + ":" + strconv.FormatInt(int64(port), 10)
 	listener, err := net.Listen("tcp", on)
 	if err != nil {
-		logger.Fatal("listener initialization failure", zap.Error(err), zap.String("host", host), zap.Int("port", port))
+		logger.Fatal("listener initialization failure", zap.Error(err), zap.String("address", host), zap.Int("port", port))
 	}
 	return listener
 }

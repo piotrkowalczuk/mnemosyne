@@ -10,10 +10,15 @@ import (
 )
 
 type sessionManagerList struct {
+	spanner
+
 	storage storage.Storage
 }
 
 func (sml *sessionManagerList) List(ctx context.Context, req *mnemosynerpc.ListRequest) (*mnemosynerpc.ListResponse, error) {
+	span, ctx := sml.span(ctx, "session-manager.list")
+	defer span.Finish()
+
 	var (
 		expireAtFrom, expireAtTo *time.Time
 	)

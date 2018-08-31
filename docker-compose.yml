@@ -20,10 +20,13 @@ services:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-1:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-2:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne1
+      MNEMOSYNED_TRACING_AGENT_ADDRESS: jaeger:6831
     depends_on:
       - postgres
+      - jaeger
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+      - ./scripts/docker-entrypoint.sh:/docker-entrypoint.sh
     healthcheck:
       interval: 10s
   mnemosyned-2:
@@ -38,10 +41,13 @@ services:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-2:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-3:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne2
+      MNEMOSYNED_TRACING_AGENT_ADDRESS: jaeger:6831
     depends_on:
       - postgres
+      - jaeger
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+      - ./scripts/docker-entrypoint.sh:/docker-entrypoint.sh
     healthcheck:
       interval: 10s
   mnemosyned-3:
@@ -56,10 +62,13 @@ services:
       MNEMOSYNED_CLUSTER_LISTEN: mnemosyned-3:8080
       MNEMOSYNED_CLUSTER_SEEDS: mnemosyned-1:8080,mnemosyned-2:8080
       MNEMOSYNED_POSTGRES_SCHEMA: mnemosyne3
+      MNEMOSYNED_TRACING_AGENT_ADDRESS: jaeger:6831
     depends_on:
       - postgres
+      - jaeger
     volumes:
       - ./bin/mnemosyned:/usr/local/bin/mnemosyned
+      - ./scripts/docker-entrypoint.sh:/docker-entrypoint.sh
     healthcheck:
       interval: 10s
   mnemosynestress:
@@ -77,6 +86,11 @@ services:
       -cluster.static.members=mnemosyned-1:8080
       -cluster.static.members=mnemosyned-2:8080
       -cluster.static.members=mnemosyned-3:8080
+  jaeger:
+    container_name: jaeger
+    image: jaegertracing/all-in-one:latest
+    ports:
+    - 16686:16686
 volumes:
   postgres-data:
     external: false

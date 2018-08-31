@@ -33,7 +33,8 @@ exec mnemosyned -host=${MNEMOSYNED_HOST} \
 	-postgres.schema=${MNEMOSYNED_POSTGRES_SCHEMA} \
 	-tls=${MNEMOSYNED_TLS_ENABLED} \
 	-tls.crt=${MNEMOSYNED_TLS_CRT} \
-	-tls.key=${MNEMOSYNED_TLS_KEY}
+	-tls.key=${MNEMOSYNED_TLS_KEY} \
+	-tracing.agent.address=${MNEMOSYNED_TRACING_AGENT_ADDRESS}
 fi
 
 exec "$@"

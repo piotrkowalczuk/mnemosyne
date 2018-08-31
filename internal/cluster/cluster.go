@@ -2,20 +2,27 @@ package cluster
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
+	"strconv"
+	"strings"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/constant"
 
 	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/metadata"
 )
 
 // Node ...
 type Node struct {
-	Addr   string
-	Client mnemosynerpc.SessionManagerClient
-	Health grpc_health_v1.HealthClient
+	ID     int
+	Addr   string                            `json:"addr"`
+	Client mnemosynerpc.SessionManagerClient `json:"-"`
+	Health grpc_health_v1.HealthClient       `json:"-"`
 }
 
 // Cluster ...
@@ -47,6 +54,7 @@ func New(opts Opts) (csr *Cluster, err error) {
 	if !exists {
 		nodes = append(nodes, opts.Listen)
 	}
+
 	nodes = append(nodes, opts.Seeds...)
 	sort.Strings(nodes)
 
@@ -56,12 +64,13 @@ func New(opts Opts) (csr *Cluster, err error) {
 		logger: opts.Logger,
 	}
 
-	for _, addr := range nodes {
+	for i, addr := range nodes {
 		if addr == "" {
 			continue
 		}
 		csr.buckets++
 		csr.nodes = append(csr.nodes, &Node{
+			ID:   i,
 			Addr: addr,
 		})
 	}
@@ -149,4 +158,25 @@ func (c *Cluster) GetOther(accessToken string) (*Node, bool) {
 		}
 	}
 	return nil, false
+}
+
+// GoString implements fmt GoStringer interface.
+func (c *Cluster) GoString() string {
+	buf, _ := json.Marshal(map[string]interface{}{
+		"listen":  c.listen,
+		"nodes":   c.nodes,
+		"buckets": strconv.FormatInt(int64(c.buckets), 10),
+	})
+	return string(buf)
+}
+
+func IsInternalRequest(ctx context.Context) bool {
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if ua, ok := md["user-agent"]; ok {
+			if len(ua) > 0 {
+				return strings.Contains(ua[0], constant.Subsystem)
+			}
+		}
+	}
+	return false
 }

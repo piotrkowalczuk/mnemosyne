@@ -16,6 +16,8 @@ import (
 )
 
 type sessionManagerDelete struct {
+	spanner
+
 	storage storage.Storage
 	cache   *cache.Cache
 	cluster *cluster.Cluster
@@ -23,6 +25,9 @@ type sessionManagerDelete struct {
 }
 
 func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (*wrappers.Int64Value, error) {
+	span, ctx := smd.span(ctx, "session-manager.delete")
+	defer span.Finish()
+
 	if req.AccessToken == "" && req.RefreshToken == "" && req.ExpireAtFrom == nil && req.ExpireAtTo == nil {
 		return nil, status.Errorf(codes.InvalidArgument, "none of expected arguments was provided")
 	}

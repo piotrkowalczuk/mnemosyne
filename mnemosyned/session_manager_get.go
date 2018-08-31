@@ -10,9 +10,13 @@ import (
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type sessionManagerGet struct {
+	spanner
+
 	storage storage.Storage
 	cache   *cache.Cache
 	cluster *cluster.Cluster
@@ -20,10 +24,20 @@ type sessionManagerGet struct {
 }
 
 func (smg *sessionManagerGet) Get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemosynerpc.GetResponse, error) {
+	span, ctx := smg.span(ctx, "session-manager.get")
+	defer span.Finish()
+
 	if req.AccessToken == "" {
 		return nil, errMissingAccessToken
 	}
 	if node, ok := smg.cluster.GetOther(req.AccessToken); ok {
+		if cluster.IsInternalRequest(ctx) {
+			return nil, status.Errorf(codes.FailedPrecondition,
+				"it should be final destination of get request (%s), but found another node for it: %s",
+				req.GetAccessToken(),
+				node.Addr,
+			)
+		}
 		smg.logger.Debug("get request forwarded", zap.String("remote_addr", node.Addr), zap.String("access_token", req.AccessToken))
 		return node.Client.Get(ctx, req)
 	}

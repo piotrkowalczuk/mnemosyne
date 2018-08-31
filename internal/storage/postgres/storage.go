@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/opentracing/opentracing-go"
+
 	"github.com/golang/protobuf/ptypes"
 	"github.com/piotrkowalczuk/mnemosyne/internal/model"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
@@ -93,7 +95,10 @@ func NewStorage(opts StorageOpts) storage.Storage {
 }
 
 // Start implements storage interface.
-func (ps *Storage) Start(ctx context.Context, accessToken, refreshToken, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
+func (s *Storage) Start(ctx context.Context, accessToken, refreshToken, sid, sc string, b map[string]string) (*mnemosynerpc.Session, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.start")
+	defer span.Finish()
+
 	ent := &sessionEntity{
 		AccessToken:   accessToken,
 		RefreshToken:  refreshToken,
@@ -102,19 +107,19 @@ func (ps *Storage) Start(ctx context.Context, accessToken, refreshToken, sid, sc
 		Bag:           model.Bag(b),
 	}
 
-	if err := ps.save(ctx, ent); err != nil {
+	if err := s.save(ctx, ent); err != nil {
 		return nil, err
 	}
 
 	return ent.session()
 }
 
-func (ps *Storage) save(ctx context.Context, ent *sessionEntity) (err error) {
+func (s *Storage) save(ctx context.Context, ent *sessionEntity) (err error) {
 	start := time.Now()
 	labels := prometheus.Labels{"query": "save"}
-	err = ps.db.QueryRowContext(
+	err = s.db.QueryRowContext(
 		ctx,
-		ps.querySave,
+		s.querySave,
 		ent.AccessToken,
 		ent.RefreshToken,
 		ent.SubjectID,
@@ -123,29 +128,32 @@ func (ps *Storage) save(ctx context.Context, ent *sessionEntity) (err error) {
 	).Scan(
 		&ent.ExpireAt,
 	)
-	ps.incQueries(labels, start)
+	s.incQueries(labels, start)
 	if err != nil {
-		ps.incError(labels)
+		s.incError(labels)
 	}
 	return
 }
 
 // Get implements storage interface.
-func (ps *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Session, error) {
+func (s *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Session, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.get")
+	defer span.Finish()
+
 	var entity sessionEntity
 	start := time.Now()
 	labels := prometheus.Labels{"query": "get"}
 
-	err := ps.db.QueryRowContext(ctx, ps.queryGet, accessToken).Scan(
+	err := s.db.QueryRowContext(ctx, s.queryGet, accessToken).Scan(
 		&entity.RefreshToken,
 		&entity.SubjectID,
 		&entity.SubjectClient,
 		&entity.Bag,
 		&entity.ExpireAt,
 	)
-	ps.incQueries(labels, start)
+	s.incQueries(labels, start)
 	if err != nil {
-		ps.incError(labels)
+		s.incError(labels)
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrSessionNotFound
 		}
@@ -167,13 +175,16 @@ func (ps *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.S
 }
 
 // sessionManagerList implements storage interface.
-func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
+func (s *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.list")
+	defer span.Finish()
+
 	if limit == 0 {
 		return nil, errors.New("cannot retrieve list of sessions, limit needs to be higher than 0")
 	}
 
 	args := []interface{}{offset, limit}
-	query := "SELECT access_token, refresh_token, subject_id, subject_client, bag, expire_at FROM " + ps.schema + "." + ps.table + " "
+	query := "SELECT access_token, refresh_token, subject_id, subject_client, bag, expire_at FROM " + s.schema + "." + s.table + " "
 	if expiredAtFrom != nil || expiredAtTo != nil {
 		query += " WHERE "
 	}
@@ -193,10 +204,10 @@ func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom,
 	labels := prometheus.Labels{"query": "list"}
 
 	start := time.Now()
-	rows, err := ps.db.QueryContext(ctx, query, args...)
-	ps.incQueries(labels, start)
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	s.incQueries(labels, start)
 	if err != nil {
-		ps.incError(labels)
+		s.incError(labels)
 		return nil, err
 	}
 	defer rows.Close()
@@ -214,7 +225,7 @@ func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom,
 			&ent.ExpireAt,
 		)
 		if err != nil {
-			ps.incError(labels)
+			s.incError(labels)
 			return nil, err
 		}
 
@@ -232,7 +243,7 @@ func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom,
 		})
 	}
 	if rows.Err() != nil {
-		ps.incError(labels)
+		s.incError(labels)
 		return nil, rows.Err()
 	}
 
@@ -240,30 +251,36 @@ func (ps *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom,
 }
 
 // Exists implements storage interface.
-func (ps *Storage) Exists(ctx context.Context, accessToken string) (exists bool, err error) {
+func (s *Storage) Exists(ctx context.Context, accessToken string) (exists bool, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.exists")
+	defer span.Finish()
+
 	start := time.Now()
 	labels := prometheus.Labels{"query": "exists"}
 
-	err = ps.db.QueryRowContext(ctx, ps.queryExists, accessToken).Scan(
+	err = s.db.QueryRowContext(ctx, s.queryExists, accessToken).Scan(
 		&exists,
 	)
-	ps.incQueries(labels, start)
+	s.incQueries(labels, start)
 	if err != nil {
-		ps.incError(labels)
+		s.incError(labels)
 	}
 
 	return
 }
 
 // Abandon implements storage interface.
-func (ps *Storage) Abandon(ctx context.Context, accessToken string) (bool, error) {
+func (s *Storage) Abandon(ctx context.Context, accessToken string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.abandon")
+	defer span.Finish()
+
 	start := time.Now()
 	labels := prometheus.Labels{"query": "abandon"}
 
-	result, err := ps.db.ExecContext(ctx, ps.queryAbandon, accessToken)
-	ps.incQueries(labels, start)
+	result, err := s.db.ExecContext(ctx, s.queryAbandon, accessToken)
+	s.incQueries(labels, start)
 	if err != nil {
-		ps.incError(labels)
+		s.incError(labels)
 		return false, err
 	}
 
@@ -279,7 +296,10 @@ func (ps *Storage) Abandon(ctx context.Context, accessToken string) (bool, error
 }
 
 // SetValue implements storage interface.
-func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value string) (map[string]string, error) {
+func (s *Storage) SetValue(ctx context.Context, accessToken string, key, value string) (map[string]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.set-value")
+	defer span.Finish()
+
 	var err error
 	if accessToken == "" {
 		return nil, storage.ErrMissingAccessToken
@@ -290,18 +310,18 @@ func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value 
 	}
 	selectQuery := `
 		SELECT bag
-		FROM ` + ps.schema + `.` + ps.table + `
+		FROM ` + s.schema + `.` + s.table + `
 		WHERE access_token = $1
 		FOR UPDATE
 	`
 	updateQuery := `
-		UPDATE ` + ps.schema + `.` + ps.table + `
+		UPDATE ` + s.schema + `.` + s.table + `
 		SET
 			bag = $2
 		WHERE access_token = $1
 	`
 
-	tx, err := ps.db.BeginTx(ctx, nil)
+	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		tx.Rollback()
 		return nil, err
@@ -311,9 +331,9 @@ func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value 
 	err = tx.QueryRowContext(ctx, selectQuery, accessToken).Scan(
 		&entity.Bag,
 	)
-	ps.incQueries(prometheus.Labels{"query": "set_value_select"}, startSelect)
+	s.incQueries(prometheus.Labels{"query": "set_value_select"}, startSelect)
 	if err != nil {
-		ps.incError(prometheus.Labels{"query": "set_value_select"})
+		s.incError(prometheus.Labels{"query": "set_value_select"})
 		tx.Rollback()
 		if err == sql.ErrNoRows {
 			return nil, storage.ErrSessionNotFound
@@ -325,9 +345,9 @@ func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value 
 
 	startUpdate := time.Now()
 	_, err = tx.ExecContext(ctx, updateQuery, accessToken, entity.Bag)
-	ps.incQueries(prometheus.Labels{"query": "set_value_update"}, startUpdate)
+	s.incQueries(prometheus.Labels{"query": "set_value_update"}, startUpdate)
 	if err != nil {
-		ps.incError(prometheus.Labels{"query": "set_value_update"})
+		s.incError(prometheus.Labels{"query": "set_value_update"})
 		tx.Rollback()
 		return nil, err
 	}
@@ -338,19 +358,22 @@ func (ps *Storage) SetValue(ctx context.Context, accessToken string, key, value 
 }
 
 // Delete implements storage interface.
-func (ps *Storage) Delete(ctx context.Context, subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
-	where, args := ps.where(subjectID, accessToken, refreshToken, expiredAtFrom, expiredAtTo)
+func (s *Storage) Delete(ctx context.Context, subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.delete")
+	defer span.Finish()
+
+	where, args := s.where(subjectID, accessToken, refreshToken, expiredAtFrom, expiredAtTo)
 	if where.Len() == 0 {
 		return 0, fmt.Errorf("session cannot be deleted, no where parameter provided: %s", where.String())
 	}
-	query := "DELETE FROM " + ps.schema + "." + ps.table + " WHERE " + where.String()
+	query := "DELETE FROM " + s.schema + "." + s.table + " WHERE " + where.String()
 	labels := prometheus.Labels{"query": "delete"}
 	start := time.Now()
 
-	result, err := ps.db.Exec(query, args...)
-	ps.incQueries(labels, start)
+	result, err := s.db.Exec(query, args...)
+	s.incQueries(labels, start)
 	if err != nil {
-		ps.incError(labels)
+		s.incError(labels)
 		return 0, err
 	}
 
@@ -358,7 +381,7 @@ func (ps *Storage) Delete(ctx context.Context, subjectID, accessToken, refreshTo
 }
 
 // Setup implements storage interface.
-func (ps *Storage) Setup() error {
+func (s *Storage) Setup() error {
 	query := fmt.Sprintf(`
 		CREATE SCHEMA IF NOT EXISTS %s;
 		CREATE TABLE IF NOT EXISTS %s.%s (
@@ -373,33 +396,33 @@ func (ps *Storage) Setup() error {
 		CREATE INDEX ON %s.%s (refresh_token);
 		CREATE INDEX ON %s.%s (subject_id);
 		CREATE INDEX ON %s.%s (expire_at DESC);
-	`, ps.schema, ps.schema, ps.table, int64(ps.ttl.Seconds()),
-		ps.schema, ps.table,
-		ps.schema, ps.table,
-		ps.schema, ps.table,
+	`, s.schema, s.schema, s.table, int64(s.ttl.Seconds()),
+		s.schema, s.table,
+		s.schema, s.table,
+		s.schema, s.table,
 	)
-	_, err := ps.db.Exec(query)
+	_, err := s.db.Exec(query)
 
 	return err
 }
 
 // TearDown implements storage interface.
-func (ps *Storage) TearDown() error {
-	_, err := ps.db.Exec(`DROP SCHEMA IF EXISTS ` + ps.schema + ` CASCADE`)
+func (s *Storage) TearDown() error {
+	_, err := s.db.Exec(`DROP SCHEMA IF EXISTS ` + s.schema + ` CASCADE`)
 
 	return err
 }
 
-func (ps *Storage) incQueries(field prometheus.Labels, start time.Time) {
-	ps.queriesTotal.With(field).Inc()
-	ps.queriesDuration.With(field).Observe(time.Since(start).Seconds())
+func (s *Storage) incQueries(field prometheus.Labels, start time.Time) {
+	s.queriesTotal.With(field).Inc()
+	s.queriesDuration.With(field).Observe(time.Since(start).Seconds())
 }
 
-func (ps *Storage) incError(field prometheus.Labels) {
-	ps.errors.With(field).Inc()
+func (s *Storage) incError(field prometheus.Labels) {
+	s.errors.With(field).Inc()
 }
 
-func (ps *Storage) where(subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (*bytes.Buffer, []interface{}) {
+func (s *Storage) where(subjectID, accessToken, refreshToken string, expiredAtFrom, expiredAtTo *time.Time) (*bytes.Buffer, []interface{}) {
 	var count int
 	buf := bytes.NewBuffer(nil)
 	args := make([]interface{}, 0, 4)
@@ -439,21 +462,21 @@ func (ps *Storage) where(subjectID, accessToken, refreshToken string, expiredAtF
 }
 
 // Collect implements prometheus Collector interface.
-func (c *Storage) Collect(in chan<- prometheus.Metric) {
-	c.connections.Set(float64(c.db.Stats().OpenConnections))
+func (s *Storage) Collect(in chan<- prometheus.Metric) {
+	s.connections.Set(float64(s.db.Stats().OpenConnections))
 
-	c.connections.Collect(in)
-	c.queriesTotal.Collect(in)
-	c.queriesDuration.Collect(in)
-	c.errors.Collect(in)
+	s.connections.Collect(in)
+	s.queriesTotal.Collect(in)
+	s.queriesDuration.Collect(in)
+	s.errors.Collect(in)
 }
 
 // Describe implements prometheus Collector interface.
-func (c *Storage) Describe(in chan<- *prometheus.Desc) {
-	c.connections.Describe(in)
-	c.queriesTotal.Describe(in)
-	c.queriesDuration.Describe(in)
-	c.errors.Describe(in)
+func (s *Storage) Describe(in chan<- *prometheus.Desc) {
+	s.connections.Describe(in)
+	s.queriesTotal.Describe(in)
+	s.queriesDuration.Describe(in)
+	s.errors.Describe(in)
 }
 
 type sessionEntity struct {

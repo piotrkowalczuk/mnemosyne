@@ -32,6 +32,22 @@ func unaryServerInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.U
 	}
 }
 
+func unaryClientInterceptors(interceptors ...grpc.UnaryClientInterceptor) grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+		buildChain := func(current grpc.UnaryClientInterceptor, next grpc.UnaryInvoker) grpc.UnaryInvoker {
+			return func(currentCtx context.Context, currentMethod string, currentReq, currentReply interface{}, currentCC *grpc.ClientConn, currentOpts ...grpc.CallOption) error {
+				return current(currentCtx, currentMethod, currentReq, currentReply, currentCC, next, currentOpts...)
+			}
+		}
+		chain := invoker
+		for _, i := range interceptors {
+			chain = buildChain(i, chain)
+		}
+		return chain(ctx, method, req, reply, cc, opts...)
+	}
+}
+
+
 func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error) {
 	{
 		return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

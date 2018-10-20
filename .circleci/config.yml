@@ -43,7 +43,6 @@ jobs:
         command: |
           go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
           go get -u google.golang.org/grpc
-          go get -u github.com/jstemmer/go-junit-report
           go get -u github.com/golang/dep/cmd/dep
           bash ./.circleci/scripts/install_protoc.sh
     - run:

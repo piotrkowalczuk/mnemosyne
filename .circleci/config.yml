@@ -72,7 +72,7 @@ jobs:
     - run:
         name: Code Climate (after build)
         command: |
-          cp coverout c.out
+          cp cover.out c.out
           test-reporter after-build --coverage-input-type=gocov
     - store_test_results:
         path: /tmp/test-results

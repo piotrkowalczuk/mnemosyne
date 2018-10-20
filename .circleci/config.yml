@@ -167,12 +167,12 @@ jobs:
     <<: *container_config_python
     steps:
     - checkout
-    - restore_cache:
-        keys:
-        - v1-python-dependency-{{ .Branch }}-{{ .Revision }}
     - run:
         name: Init VERSION.txt file
         command: make version
+    - restore_cache:
+        keys:
+        - v1-python-dependency-{{ .Branch }}-{{ .Revision }}
     - run:
         name: Create package
         command: |

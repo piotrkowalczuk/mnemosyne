@@ -6,6 +6,7 @@ _vendor-*
 .tmp
 bin
 *.iml
+*.xml
 *.out
 run.sh
 coverage.txt

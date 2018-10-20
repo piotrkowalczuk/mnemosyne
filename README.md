@@ -1,9 +1,9 @@
 # Mnemosyne [![CircleCI](https://circleci.com/gh/piotrkowalczuk/mnemosyne.svg?style=svg)](https://circleci.com/gh/piotrkowalczuk/mnemosyne)
 
 [![GoDoc](https://godoc.org/github.com/piotrkowalczuk/mnemosyne?status.svg)](http://godoc.org/github.com/piotrkowalczuk/mnemosyne)
-[![Docker Pulls](https://img.shields.io/docker/pulls/piotrkowalczuk/mnemosyne.svg?maxAge=604800)](https://hub.docker.com/r/piotrkowalczuk/mnemosyne/)
-[![codecov.io](https://codecov.io/github/piotrkowalczuk/mnemosyne/coverage.svg?branch=master)](https://codecov.io/github/piotrkowalczuk/mnemosyne?branch=master)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/af87b9ee0795a47b96ff/test_coverage)](https://codeclimate.com/github/piotrkowalczuk/mnemosyne/test_coverage)
 [![Code Climate](https://codeclimate.com/github/piotrkowalczuk/mnemosyne/badges/gpa.svg)](https://codeclimate.com/github/piotrkowalczuk/mnemosyne)
+[![Docker Pulls](https://img.shields.io/docker/pulls/piotrkowalczuk/mnemosyne.svg?maxAge=604800)](https://hub.docker.com/r/piotrkowalczuk/mnemosyne/)
 [![pypi](https://img.shields.io/pypi/v/mnemosyne-client.svg)](https://pypi.python.org/pypi/mnemosyne-client)
 
 ## Introduction

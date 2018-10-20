@@ -15,6 +15,7 @@ case $1 in
         ;;
     golang | go)
         ${PROTOC} ${PROTO_INCLUDE} --go_out=plugins=grpc:${GOPATH}/src ./mnemosynerpc/*.proto
+        goimports -w ./mnemosynerpc
         ;;
 	*)
 	    echo "code generation failure due to unknown language: ${1}"

@@ -32,15 +32,16 @@ install:
 
 test:
 	./.circleci/scripts/test.sh
-	go tool cover -func=coverage.out | tail -n 1
+	go tool cover -func=cover.out | tail -n 1
 
-cover:
-	go tool cover -html=coverage.out
+cover: test
+	go tool cover -html=cover.out
 
 get:
 	go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
 	go get -u google.golang.org/grpc
 	go get -u github.com/axw/gocov/gocov
+	go get -u gotest.tools/gotestsum
 	go get -u github.com/golang/dep/cmd/dep
 	dep ensure
 

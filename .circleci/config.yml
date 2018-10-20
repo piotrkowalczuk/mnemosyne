@@ -34,8 +34,6 @@ jobs:
         POSTGRES_USER: test
         POSTGRES_DB: test
     working_directory: /go/src/github.com/piotrkowalczuk/mnemosyne
-    environment:
-      TEST_RESULTS: /tmp/test-results/golang
     steps:
     - checkout
     - restore_cache:
@@ -45,7 +43,7 @@ jobs:
         command: |
           go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
           go get -u google.golang.org/grpc
-          go get -u github.com/jstemmer/go-junit-report
+          go get -u golang.org/x/tools/cmd/goimports
           go get -u github.com/golang/dep/cmd/dep
           bash ./.circleci/scripts/install_protoc.sh
     - run:
@@ -62,9 +60,9 @@ jobs:
         environment:
           MNEMOSYNED_POSTGRES_ADDRESS: "postgres://test@localhost/test?sslmode=disable"
         command: |
-          mkdir -p $TEST_RESULTS
-          trap "go-junit-report <${TEST_RESULTS}/go-test.out > ${TEST_RESULTS}/go-test-report.xml" EXIT
-          bash ./.circleci/scripts/test.sh | tee ${TEST_RESULTS}/go-test.out
+          mkdir -p /tmp/test-results/golang
+          make test
+          cp results.xml /tmp/test-results/golang/results.xml
     - store_test_results:
         path: /tmp/test-results
     - save_cache:

@@ -60,11 +60,11 @@ jobs:
         environment:
           MNEMOSYNED_POSTGRES_ADDRESS: "postgres://test@localhost/test?sslmode=disable"
         command: |
-          mkdir -p ~/golang
+          mkdir -p /tmp/test-results/golang
           make test
-          cp unit-tests.xml ~/golang/unit-tests.xml
+          cp results.xml /tmp/test-results/golang/results.xml
     - store_test_results:
-        path: ~/golang
+        path: /tmp/test-results
     - save_cache:
         key: v1-golang-dependency-{{ checksum "Gopkg.lock" }}
         paths:

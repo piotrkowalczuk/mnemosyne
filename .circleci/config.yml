@@ -70,10 +70,10 @@ jobs:
           test-reporter format-coverage -d -t=gocov cover.out
           test-reporter upload-coverage
     - run:
-      name: Code Climate (after build)
-      command: |
-        cp coverout c.out
-        test-reporter after-build --coverage-input-type=gocov
+        name: Code Climate (after build)
+        command: |
+          cp coverout c.out
+          test-reporter after-build --coverage-input-type=gocov
     - store_test_results:
         path: /tmp/test-results
     - store_artifacts:

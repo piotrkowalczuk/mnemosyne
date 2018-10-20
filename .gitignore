@@ -10,6 +10,7 @@ bin
 *.out
 run.sh
 coverage.txt
+coverage
 *.sublime-project
 *.sublime-workspace
 .vscode

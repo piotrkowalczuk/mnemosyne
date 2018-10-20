@@ -44,6 +44,7 @@ jobs:
           go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
           go get -u google.golang.org/grpc
           go get -u golang.org/x/tools/cmd/goimports
+          go get -u github.com/codeclimate/test-reporter
           go get -u github.com/golang/dep/cmd/dep
           bash ./.circleci/scripts/install_protoc.sh
     - run:
@@ -56,13 +57,23 @@ jobs:
         name: Check generated code for mismatch
         command: git diff --exit-code ./mnemosynerpc
     - run:
+      name: Code Climate (before build)
+      command: test-reporter before-build
+    - run:
         name: Run tests
         environment:
           MNEMOSYNED_POSTGRES_ADDRESS: "postgres://test@localhost/test?sslmode=disable"
         command: |
           mkdir -p /tmp/test-results/golang
           make test
-          cp results.xml /tmp/test-results/golang/results.xml
+          cp results.xml /tmp/test-results/golang/results.xmls
+          test-reporter format-coverage -d -t=gocov cover.out
+          test-reporter upload-coverage
+    - run:
+      name: Code Climate (after build)
+      command: |
+        cp coverout c.out
+        test-reporter after-build --coverage-input-type=gocov
     - store_test_results:
         path: /tmp/test-results
     - store_artifacts:
@@ -194,6 +205,7 @@ workflows:
           tags:
             only: /.*/
     - test_golang:
+        context: codeclimate-mnemosyne
         requires:
         - lint_protobuf
         filters:

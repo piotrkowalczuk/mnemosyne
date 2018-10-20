@@ -65,6 +65,8 @@ jobs:
           cp results.xml /tmp/test-results/golang/results.xml
     - store_test_results:
         path: /tmp/test-results
+    - store_artifacts:
+        path: /tmp/test-results
     - save_cache:
         key: v1-golang-dependency-{{ checksum "Gopkg.lock" }}
         paths:

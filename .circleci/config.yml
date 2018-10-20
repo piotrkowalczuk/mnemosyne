@@ -57,8 +57,8 @@ jobs:
         name: Check generated code for mismatch
         command: git diff --exit-code ./mnemosynerpc
     - run:
-      name: Code Climate (before build)
-      command: test-reporter before-build
+        name: Code Climate (before build)
+        command: test-reporter before-build
     - run:
         name: Run tests
         environment:

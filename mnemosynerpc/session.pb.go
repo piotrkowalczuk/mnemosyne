@@ -4,6 +4,7 @@
 package mnemosynerpc
 
 import (
+	context "context"
 	fmt "fmt"
 	math "math"
 
@@ -11,7 +12,6 @@ import (
 	empty "github.com/golang/protobuf/ptypes/empty"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
-	context "golang.org/x/net/context"
 	grpc "google.golang.org/grpc"
 )
 

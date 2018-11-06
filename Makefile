@@ -21,6 +21,7 @@ version:
 
 gen:
 	./scripts/generate.sh
+	./.circleci/scripts/generate.sh golang
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build -ldflags "${LDFLAGS}" -installsuffix cgo -a -o bin/${SERVICE}d ${PACKAGE_CMD_DAEMON}

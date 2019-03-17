@@ -119,7 +119,7 @@ func newSessionManager(opts sessionManagerOpts) (*sessionManager, error) {
 	}, nil
 }
 
-// Get implements RPCServer interface.
+// Context gets implements RPCServer interface.
 func (sm *sessionManager) Context(ctx context.Context, req *empty.Empty) (*mnemosynerpc.ContextResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

@@ -174,7 +174,7 @@ func (s *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Se
 	}, nil
 }
 
-// sessionManagerList implements storage interface.
+// List implements storage interface.
 func (s *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom, expiredAtTo *time.Time) ([]*mnemosynerpc.Session, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "postgres.storage.list")
 	defer span.Finish()

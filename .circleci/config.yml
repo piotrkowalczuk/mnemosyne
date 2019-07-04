@@ -29,8 +29,6 @@ jobs:
   test_golang:
     docker:
     - image: circleci/golang
-      environment:
-        GO111MODULE: "on"
     - image: circleci/postgres:9.6-alpine
       environment:
         POSTGRES_USER: test
@@ -49,9 +47,6 @@ jobs:
           go get -u github.com/codeclimate/test-reporter
           bash ./.circleci/scripts/install_protoc.sh
     - run:
-        name: Install dependencies
-        command: dep ensure -vendor-only
-    - run:
         name: Generate protobuf
         command: bash ./.circleci/scripts/generate.sh golang
     - run:
@@ -64,6 +59,7 @@ jobs:
         name: Run tests
         environment:
           MNEMOSYNED_POSTGRES_ADDRESS: "postgres://test@localhost/test?sslmode=disable"
+          GO111MODULE: "on"
         command: |
           mkdir -p /tmp/test-results/golang
           make test

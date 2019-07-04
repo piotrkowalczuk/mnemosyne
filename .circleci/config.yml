@@ -29,12 +29,12 @@ jobs:
   test_golang:
     docker:
     - image: circleci/golang
-      environment:
-        GO111MODULE: on
     - image: circleci/postgres:9.6-alpine
       environment:
         POSTGRES_USER: test
         POSTGRES_DB: test
+    environment:
+      GO111MODULE: on
     working_directory: /go/src/github.com/piotrkowalczuk/mnemosyne
     steps:
     - checkout
@@ -87,8 +87,8 @@ jobs:
   build_golang:
     docker:
     - image: circleci/golang
-      environment:
-        GO111MODULE: on
+    environment:
+      GO111MODULE: on
     working_directory: /go/src/github.com/piotrkowalczuk/mnemosyne
     steps:
     - checkout

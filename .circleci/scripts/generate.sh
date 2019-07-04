@@ -17,8 +17,8 @@ case $1 in
         ${PROTOC} ${PROTO_INCLUDE} --go_out=plugins=grpc:${GOPATH}/src ./mnemosynerpc/*.proto
         goimports -w ./mnemosynerpc
         ;;
-	*)
-	    echo "code generation failure due to unknown language: ${1}"
+    *)
+        echo "code generation failure due to unknown language: ${1}"
         exit 1
         ;;
 esac

@@ -28,3 +28,4 @@ _test
 *.pyc
 VERSION.txt
 .DS_Store
+*.zip

@@ -43,11 +43,10 @@ jobs:
     - run:
         name: Install tools
         command: |
-          go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
-          go get -u google.golang.org/grpc
+          go get -u github.com/golang/protobuf/proto
+          go get -u github.com/golang/protobuf/protoc-gen-go
           go get -u golang.org/x/tools/cmd/goimports
           go get -u github.com/codeclimate/test-reporter
-          go get -u github.com/golang/dep/cmd/dep
           bash ./.circleci/scripts/install_protoc.sh
     - run:
         name: Install dependencies

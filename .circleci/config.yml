@@ -37,19 +37,15 @@ jobs:
     steps:
     - checkout
     - restore_cache:
-        key: v1-golang-dependency-{{ checksum "Gopkg.lock" }}
+        key: v1-golang-dependency-{{ checksum "go.sum" }}
     - run:
         name: Install tools
         command: |
-          go get -u github.com/golang/protobuf/{proto,protoc-gen-go}
-          go get -u google.golang.org/grpc
+          go get -u github.com/golang/protobuf/proto
+          go get -u github.com/golang/protobuf/protoc-gen-go
           go get -u golang.org/x/tools/cmd/goimports
           go get -u github.com/codeclimate/test-reporter
-          go get -u github.com/golang/dep/cmd/dep
           bash ./.circleci/scripts/install_protoc.sh
-    - run:
-        name: Install dependencies
-        command: dep ensure -vendor-only
     - run:
         name: Generate protobuf
         command: bash ./.circleci/scripts/generate.sh golang
@@ -63,6 +59,7 @@ jobs:
         name: Run tests
         environment:
           MNEMOSYNED_POSTGRES_ADDRESS: "postgres://test@localhost/test?sslmode=disable"
+          GO111MODULE: "on"
         command: |
           mkdir -p /tmp/test-results/golang
           make test
@@ -79,17 +76,19 @@ jobs:
     - store_artifacts:
         path: /tmp/test-results
     - save_cache:
-        key: v1-golang-dependency-{{ checksum "Gopkg.lock" }}
+        key: v1-golang-dependency-{{ checksum "go.sum" }}
         paths:
         - "vendor"
   build_golang:
     docker:
     - image: circleci/golang
+      environment:
+        GO111MODULE: "on"
     working_directory: /go/src/github.com/piotrkowalczuk/mnemosyne
     steps:
     - checkout
     - restore_cache:
-        key: v1-golang-dependency-{{ checksum "Gopkg.lock" }}
+        key: v1-golang-dependency-{{ checksum "go.sum" }}
     - run:
         name: Build
         command: |

@@ -46,7 +46,7 @@ message ContextResponse {
 message ListRequest {
     // Offset tells how many sessions should be skipped.
     int64 offset = 1;
-    // Limit tells how many entries shuld be returned.
+    // Limit tells how many entries should be returned.
     // By default it's 10.
     int64 limit = 2;
     reserved 3 to 10;

@@ -13,6 +13,8 @@ import (
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	wrappers "github.com/golang/protobuf/ptypes/wrappers"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -24,7 +26,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type Session struct {
 	AccessToken          string               `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
@@ -225,7 +227,7 @@ func (m *ContextResponse) GetSession() *Session {
 type ListRequest struct {
 	// Offset tells how many sessions should be skipped.
 	Offset int64 `protobuf:"varint,1,opt,name=offset,proto3" json:"offset,omitempty"`
-	// Limit tells how many entries shuld be returned.
+	// Limit tells how many entries should be returned.
 	// By default it's 10.
 	Limit                int64    `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 	Query                *Query   `protobuf:"bytes,11,opt,name=query,proto3" json:"query,omitempty"`
@@ -888,6 +890,35 @@ type SessionManagerServer interface {
 	Abandon(context.Context, *AbandonRequest) (*wrappers.BoolValue, error)
 	SetValue(context.Context, *SetValueRequest) (*SetValueResponse, error)
 	Delete(context.Context, *DeleteRequest) (*wrappers.Int64Value, error)
+}
+
+// UnimplementedSessionManagerServer can be embedded to have forward compatible implementations.
+type UnimplementedSessionManagerServer struct {
+}
+
+func (*UnimplementedSessionManagerServer) Get(ctx context.Context, req *GetRequest) (*GetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (*UnimplementedSessionManagerServer) Context(ctx context.Context, req *empty.Empty) (*ContextResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Context not implemented")
+}
+func (*UnimplementedSessionManagerServer) List(ctx context.Context, req *ListRequest) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+func (*UnimplementedSessionManagerServer) Exists(ctx context.Context, req *ExistsRequest) (*wrappers.BoolValue, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Exists not implemented")
+}
+func (*UnimplementedSessionManagerServer) Start(ctx context.Context, req *StartRequest) (*StartResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
+}
+func (*UnimplementedSessionManagerServer) Abandon(ctx context.Context, req *AbandonRequest) (*wrappers.BoolValue, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Abandon not implemented")
+}
+func (*UnimplementedSessionManagerServer) SetValue(ctx context.Context, req *SetValueRequest) (*SetValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetValue not implemented")
+}
+func (*UnimplementedSessionManagerServer) Delete(ctx context.Context, req *DeleteRequest) (*wrappers.Int64Value, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
 
 func RegisterSessionManagerServer(s *grpc.Server, srv SessionManagerServer) {

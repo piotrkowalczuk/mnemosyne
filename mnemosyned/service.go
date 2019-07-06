@@ -32,6 +32,7 @@ func initCluster(l *zap.Logger, addr string, seeds ...string) (*cluster.Cluster,
 // initJaeger returns an instance of Jaeger Tracer that samples 100% of traces and logs all spans to stdout.
 func initJaeger(service, node, agentAddress string, log *zap.Logger) (opentracing.Tracer, io.Closer, error) {
 	cfg := &config.Configuration{
+		ServiceName: service,
 		Sampler: &config.SamplerConfig{
 			Type:  "const",
 			Param: 1,
@@ -46,7 +47,7 @@ func initJaeger(service, node, agentAddress string, log *zap.Logger) (opentracin
 		},
 	}
 
-	tracer, closer, err := cfg.New(service, config.Logger(zapjaeger.NewLogger(log)))
+	tracer, closer, err := cfg.NewTracer(config.Logger(zapjaeger.NewLogger(log)))
 	if err != nil {
 		return nil, nil, err
 	}

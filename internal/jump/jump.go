@@ -16,7 +16,6 @@ var hasher = sync.Pool{
 // Hash consistently chooses a hash bucket number in the range [0, numBuckets) for the given key.
 // numBuckets must be >= 1.
 func Hash(key uint64, numBuckets int) int32 {
-
 	var b int64 = -1
 	var j int64
 

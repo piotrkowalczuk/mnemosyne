@@ -47,7 +47,6 @@ func unaryClientInterceptors(interceptors ...grpc.UnaryClientInterceptor) grpc.U
 	}
 }
 
-
 func errorInterceptor(log *zap.Logger) func(context.Context, interface{}, *grpc.UnaryServerInfo, grpc.UnaryHandler) (interface{}, error) {
 	{
 		return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {

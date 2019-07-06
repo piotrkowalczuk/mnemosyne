@@ -370,7 +370,7 @@ func (s *Storage) Delete(ctx context.Context, subjectID, accessToken, refreshTok
 	labels := prometheus.Labels{"query": "delete"}
 	start := time.Now()
 
-	result, err := s.db.Exec(query, args...)
+	result, err := s.db.ExecContext(ctx, query, args...)
 	s.incQueries(labels, start)
 	if err != nil {
 		s.incError(labels)

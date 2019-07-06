@@ -11,7 +11,6 @@ import (
 	"net/http/pprof"
 	"net/url"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
@@ -75,8 +74,6 @@ type Daemon struct {
 	rpcListener   net.Listener
 	debugListener net.Listener
 	tracerCloser  io.Closer
-
-	lock sync.Mutex
 }
 
 // NewDaemon allocates new daemon instance using given options.

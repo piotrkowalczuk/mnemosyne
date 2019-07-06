@@ -48,7 +48,7 @@ func TestReadinessHandler_ServeHTTP(t *testing.T) {
 	//if res.StatusCode != http.StatusServiceUnavailable {
 	//	t.Fatalf("wrong status code, expected %d but got %d", http.StatusServiceUnavailable, res.StatusCode)
 	//}
-	if pay, err = ioutil.ReadAll(res.Body); err != nil {
+	if _, err = ioutil.ReadAll(res.Body); err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
 	//if string(pay) != "postgres ping failure\n" {

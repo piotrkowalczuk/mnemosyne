@@ -11,7 +11,7 @@ require (
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/piotrkowalczuk/promgrpc/v3 v3.2.3
 	github.com/pkg/errors v0.8.1 // indirect
-	github.com/prometheus/client_golang v0.9.1
+	github.com/prometheus/client_golang v0.9.4
 	github.com/smartystreets/assertions v1.0.0 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20170602164621-9e8dc3f972df
 	github.com/stretchr/objx v0.2.0 // indirect

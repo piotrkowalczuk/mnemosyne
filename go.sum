@@ -34,6 +34,8 @@ github.com/opentracing/opentracing-go v1.1.0 h1:pWlfV3Bxv7k65HYwkikxat0+s3pV4bsq
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
 github.com/piotrkowalczuk/promgrpc/v3 v3.2.3 h1:+a1sgo1Sp6DD9Yl0riZ9EpdoTO1auZmSihrG/ObQSvM=
 github.com/piotrkowalczuk/promgrpc/v3 v3.2.3/go.mod h1:0Pt44Zr3zaFxctnDHDWsmiQ413ZAt2+Zh32VRRfgpWA=
+github.com/piotrkowalczuk/promgrpc/v3 v3.2.4 h1:32D5mbsU99jy/a6+F7+POMH6YL4i98z5DiRlw0mK1ak=
+github.com/piotrkowalczuk/promgrpc/v3 v3.2.4/go.mod h1:0Pt44Zr3zaFxctnDHDWsmiQ413ZAt2+Zh32VRRfgpWA=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

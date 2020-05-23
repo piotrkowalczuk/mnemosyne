@@ -3,7 +3,7 @@ module github.com/piotrkowalczuk/mnemosyne
 require (
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/protobuf v1.4.2
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/lib/pq v1.1.1

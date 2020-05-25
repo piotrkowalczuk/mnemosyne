@@ -6,7 +6,7 @@ require (
 	github.com/golang/protobuf v1.3.1
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/lib/pq v1.1.1
+	github.com/lib/pq v1.5.2
 	github.com/opentracing-contrib/go-grpc v0.0.0-20180928155321-4b5a12d3ff02
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/piotrkowalczuk/promgrpc/v3 v3.2.3

@@ -8,7 +8,7 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/lib/pq v1.1.1
 	github.com/opentracing-contrib/go-grpc v0.0.0-20180928155321-4b5a12d3ff02
-	github.com/opentracing/opentracing-go v1.1.0
+	github.com/opentracing/opentracing-go v1.2.0
 	github.com/piotrkowalczuk/promgrpc/v3 v3.2.3
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/prometheus/client_golang v0.9.1

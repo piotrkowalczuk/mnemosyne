@@ -3,7 +3,7 @@ module github.com/piotrkowalczuk/mnemosyne
 require (
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/gogo/protobuf v1.2.1 // indirect
-	github.com/golang/protobuf v1.3.1
+	github.com/golang/protobuf v1.3.3
 	github.com/gopherjs/gopherjs v0.0.0-20190430165422-3e4dfb77656c // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/lib/pq v1.1.1
@@ -25,5 +25,5 @@ require (
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/net v0.0.0-20190311183353-d8887717615a
 	golang.org/x/oauth2 v0.0.0-20181102170140-232e45548389
-	google.golang.org/grpc v1.22.0
+	google.golang.org/grpc v1.32.0
 )

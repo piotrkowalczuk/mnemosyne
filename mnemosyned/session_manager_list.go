@@ -3,10 +3,10 @@ package mnemosyned
 import (
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
+	"golang.org/x/net/context"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"golang.org/x/net/context"
 )
 
 type sessionManagerList struct {
@@ -19,21 +19,13 @@ func (sml *sessionManagerList) List(ctx context.Context, req *mnemosynerpc.ListR
 	span, ctx := sml.span(ctx, "session-manager.list")
 	defer span.Finish()
 
-	var (
-		expireAtFrom, expireAtTo *time.Time
-	)
+	var expireAtFrom, expireAtTo *time.Time
 	if req.GetQuery().GetExpireAtFrom() != nil {
-		eaf, err := ptypes.Timestamp(req.GetQuery().GetExpireAtFrom())
-		if err != nil {
-			return nil, err
-		}
+		eaf := req.GetQuery().GetExpireAtFrom().AsTime()
 		expireAtFrom = &eaf
 	}
 	if req.GetQuery().GetExpireAtTo() != nil {
-		eat, err := ptypes.Timestamp(req.GetQuery().GetExpireAtTo())
-		if err != nil {
-			return nil, err
-		}
+		eat := req.GetQuery().GetExpireAtTo().AsTime()
 		expireAtTo = &eat
 	}
 	if req.Limit == 0 {

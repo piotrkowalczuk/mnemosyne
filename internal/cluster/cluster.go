@@ -9,12 +9,13 @@ import (
 
 	"github.com/piotrkowalczuk/mnemosyne/internal/constant"
 
-	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/metadata"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
 // Node ...

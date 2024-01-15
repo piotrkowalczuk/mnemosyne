@@ -4,18 +4,16 @@ import (
 	"flag"
 	"os"
 	"testing"
+	"time"
 
 	"go.uber.org/zap"
 
-	"time"
-
 	_ "github.com/lib/pq"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 )
 
-var (
-	testPostgresAddress string
-)
+var testPostgresAddress string
 
 func TestMain(m *testing.M) {
 	flag.StringVar(&testPostgresAddress, "postgres.address", getStringEnvOr("MNEMOSYNED_POSTGRES_ADDRESS", "postgres://localhost/test?sslmode=disable"), "")
@@ -55,6 +53,7 @@ func TestInit_timeout(t *testing.T) {
 		t.Fatal("error expected, got nil")
 	}
 }
+
 func TestInit_empty(t *testing.T) {
 	_, err := postgres.Init(testPostgresAddress, postgres.Opts{
 		Logger: zap.L(),

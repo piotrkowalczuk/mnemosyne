@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/golang/protobuf/ptypes"
 	"github.com/piotrkowalczuk/mnemosyne/internal/model"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var monitoringPostgresLabels = []string{
@@ -160,7 +160,6 @@ func (s *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Se
 		return nil, err
 	}
 
-	expireAt, err := ptypes.TimestampProto(entity.ExpireAt)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +169,7 @@ func (s *Storage) Get(ctx context.Context, accessToken string) (*mnemosynerpc.Se
 		SubjectId:     entity.SubjectID,
 		SubjectClient: entity.SubjectClient,
 		Bag:           entity.Bag,
-		ExpireAt:      expireAt,
+		ExpireAt:      timestamppb.New(entity.ExpireAt),
 	}, nil
 }
 
@@ -229,7 +228,6 @@ func (s *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom, 
 			return nil, err
 		}
 
-		expireAt, err := ptypes.TimestampProto(ent.ExpireAt)
 		if err != nil {
 			return nil, err
 		}
@@ -239,7 +237,7 @@ func (s *Storage) List(ctx context.Context, offset, limit int64, expiredAtFrom, 
 			SubjectId:     ent.SubjectID,
 			SubjectClient: ent.SubjectClient,
 			Bag:           ent.Bag,
-			ExpireAt:      expireAt,
+			ExpireAt:      timestamppb.New(ent.ExpireAt),
 		})
 	}
 	if rows.Err() != nil {
@@ -489,16 +487,12 @@ type sessionEntity struct {
 }
 
 func (se *sessionEntity) session() (*mnemosynerpc.Session, error) {
-	expireAt, err := ptypes.TimestampProto(se.ExpireAt)
-	if err != nil {
-		return nil, err
-	}
 	return &mnemosynerpc.Session{
 		AccessToken:   se.AccessToken,
 		RefreshToken:  se.RefreshToken,
 		SubjectId:     se.SubjectID,
 		SubjectClient: se.SubjectClient,
 		Bag:           se.Bag,
-		ExpireAt:      expireAt,
+		ExpireAt:      timestamppb.New(se.ExpireAt),
 	}, nil
 }

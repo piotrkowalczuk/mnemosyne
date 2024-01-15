@@ -3,11 +3,10 @@ package mnemosyned
 import (
 	"time"
 
-	"github.com/opentracing/opentracing-go/log"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/opentracing/opentracing-go"
-
-	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
@@ -20,6 +19,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var (
@@ -45,6 +45,8 @@ type sessionManager struct {
 	tracer  opentracing.Tracer
 	// monitoring
 	cleanupErrorsTotal prometheus.Counter
+
+	mnemosynerpc.UnimplementedSessionManagerServer
 
 	sessionManagerList
 	sessionManagerGet
@@ -120,7 +122,7 @@ func newSessionManager(opts sessionManagerOpts) (*sessionManager, error) {
 }
 
 // Context gets implements RPCServer interface.
-func (sm *sessionManager) Context(ctx context.Context, req *empty.Empty) (*mnemosynerpc.ContextResponse, error) {
+func (sm *sessionManager) Context(ctx context.Context, req *emptypb.Empty) (*mnemosynerpc.ContextResponse, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		return nil, status.Errorf(codes.InvalidArgument, "missing metadata in context, access token cannot be retrieved")
@@ -132,13 +134,48 @@ func (sm *sessionManager) Context(ctx context.Context, req *empty.Empty) (*mnemo
 
 	at := md[mnemosyne.AccessTokenMetadataKey][0]
 
-	res, err := sm.Get(ctx, &mnemosynerpc.GetRequest{AccessToken: at})
+	res, err := sm.sessionManagerGet.Get(ctx, &mnemosynerpc.GetRequest{AccessToken: at})
 	if err != nil {
 		return nil, err
 	}
 	return &mnemosynerpc.ContextResponse{
 		Session: res.Session,
 	}, nil
+}
+
+// List implements mnemosynerpc.SessionManagerServer interface.
+func (sm *sessionManager) List(ctx context.Context, req *mnemosynerpc.ListRequest) (*mnemosynerpc.ListResponse, error) {
+	return sm.sessionManagerList.List(ctx, req)
+}
+
+// Get implements mnemosynerpc.SessionManagerServer interface.
+func (sm *sessionManager) Get(ctx context.Context, req *mnemosynerpc.GetRequest) (*mnemosynerpc.GetResponse, error) {
+	return sm.sessionManagerGet.Get(ctx, req)
+}
+
+// Delete implements mnemosynerpc.SessionManagerServer interface.
+func (sm *sessionManager) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (*wrapperspb.Int64Value, error) {
+	return sm.sessionManagerDelete.Delete(ctx, req)
+}
+
+// Start implements mnemosynerpc.SessionManagerServer interface.
+func (sm *sessionManager) Start(ctx context.Context, req *mnemosynerpc.StartRequest) (*mnemosynerpc.StartResponse, error) {
+	return sm.sessionManagerStart.Start(ctx, req)
+}
+
+// Abandon implements mnemosynerpc.SessionManagerServer interface.
+func (sm *sessionManager) Abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest) (*wrapperspb.BoolValue, error) {
+	return sm.sessionManagerAbandon.Abandon(ctx, req)
+}
+
+// Exists implements mnemosynerpc.SessionManagerServer interface.
+func (sm *sessionManager) Exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (*wrapperspb.BoolValue, error) {
+	return sm.sessionManagerExists.Exists(ctx, req)
+}
+
+// SetValue implements mnemosynerpc.SessionManagerServer interface.
+func (sm *sessionManager) SetValue(ctx context.Context, req *mnemosynerpc.SetValueRequest) (*mnemosynerpc.SetValueResponse, error) {
+	return sm.sessionManagerSetValue.SetValue(ctx, req)
 }
 
 func (sm *sessionManager) cleanup(done chan struct{}) {

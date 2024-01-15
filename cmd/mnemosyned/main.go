@@ -7,11 +7,12 @@ import (
 	"strconv"
 
 	_ "github.com/lib/pq"
-	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapgrpc"
 	"google.golang.org/grpc/grpclog"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
 )
 
 func main() {

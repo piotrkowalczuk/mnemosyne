@@ -6,21 +6,19 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"testing"
 
 	"go.uber.org/zap"
 
-	"strings"
-
 	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosyned"
-	"google.golang.org/grpc"
 )
 
-var (
-	testPostgresAddress string
-)
+var testPostgresAddress string
 
 func TestMain(m *testing.M) {
 	flag.StringVar(&testPostgresAddress, "postgres.address", getStringEnvOr("MNEMOSYNED_POSTGRES_ADDRESS", "postgres://localhost/test?sslmode=disable"), "")

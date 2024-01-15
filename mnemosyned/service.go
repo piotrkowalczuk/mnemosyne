@@ -4,11 +4,12 @@ import (
 	"io"
 
 	"github.com/opentracing/opentracing-go"
-	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
-	"github.com/piotrkowalczuk/mnemosyne/internal/constant"
 	"github.com/uber/jaeger-client-go/config"
 	zapjaeger "github.com/uber/jaeger-client-go/log/zap"
 	"go.uber.org/zap"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
+	"github.com/piotrkowalczuk/mnemosyne/internal/constant"
 )
 
 func initCluster(l *zap.Logger, addr string, seeds ...string) (*cluster.Cluster, error) {

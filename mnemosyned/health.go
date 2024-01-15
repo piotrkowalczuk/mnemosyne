@@ -3,17 +3,16 @@ package mnemosyned
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
-	"encoding/json"
-
-	"sync"
-
-	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/health/grpc_health_v1"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 )
 
 type livenessResponse struct {

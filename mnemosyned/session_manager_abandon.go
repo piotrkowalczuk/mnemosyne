@@ -1,16 +1,17 @@
 package mnemosyned
 
 import (
-	"github.com/golang/protobuf/ptypes/wrappers"
+	"go.uber.org/zap"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"go.uber.org/zap"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type sessionManagerAbandon struct {
@@ -22,7 +23,7 @@ type sessionManagerAbandon struct {
 	logger  *zap.Logger
 }
 
-func (sma *sessionManagerAbandon) Abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest) (*wrappers.BoolValue, error) {
+func (sma *sessionManagerAbandon) Abandon(ctx context.Context, req *mnemosynerpc.AbandonRequest) (*wrapperspb.BoolValue, error) {
 	span, ctx := sma.span(ctx, "session-manager.abandon")
 	defer span.Finish()
 
@@ -48,5 +49,5 @@ func (sma *sessionManagerAbandon) Abandon(ctx context.Context, req *mnemosynerpc
 		return nil, err
 	}
 
-	return &wrappers.BoolValue{Value: abandoned}, nil
+	return &wrapperspb.BoolValue{Value: abandoned}, nil
 }

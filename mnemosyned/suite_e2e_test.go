@@ -1,6 +1,7 @@
 package mnemosyned
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"testing"
@@ -8,12 +9,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"context"
+	. "github.com/smartystreets/goconvey/convey"
+	"google.golang.org/grpc"
 
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	. "github.com/smartystreets/goconvey/convey"
-	"google.golang.org/grpc"
 )
 
 type e2eSuites []*e2eSuite

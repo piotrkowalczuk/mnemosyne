@@ -8,14 +8,13 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/smartystreets/goconvey/convey"
 	"google.golang.org/grpc/status"
+
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
-var (
-	testPostgresAddress string
-)
+var testPostgresAddress string
 
 func TestMain(m *testing.M) {
 	flag.StringVar(&testPostgresAddress, "postgres.address", getStringEnvOr("MNEMOSYNED_POSTGRES_ADDRESS", "postgres://localhost/test?sslmode=disable"), "")

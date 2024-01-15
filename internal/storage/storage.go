@@ -1,13 +1,13 @@
 package storage
 
 import (
+	"context"
 	"errors"
 	"time"
 
-	"context"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (

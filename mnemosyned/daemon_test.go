@@ -6,12 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
 func TestDaemon_Run(t *testing.T) {

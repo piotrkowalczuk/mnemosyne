@@ -5,9 +5,6 @@ import (
 	"time"
 
 	"github.com/lib/pq"
-	"github.com/piotrkowalczuk/mnemosyne"
-	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
-	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/net/context"
@@ -15,6 +12,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/piotrkowalczuk/mnemosyne"
+	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 )
 
 func unaryServerInterceptors(interceptors ...grpc.UnaryServerInterceptor) grpc.UnaryServerInterceptor {

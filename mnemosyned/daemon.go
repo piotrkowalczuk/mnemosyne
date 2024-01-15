@@ -16,6 +16,14 @@ import (
 
 	otgrpc "github.com/opentracing-contrib/go-grpc"
 	"github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/constant"
@@ -24,13 +32,6 @@ import (
 	storagepq "github.com/piotrkowalczuk/mnemosyne/internal/storage/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/piotrkowalczuk/promgrpc/v3"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/health"
-	"google.golang.org/grpc/health/grpc_health_v1"
 )
 
 // DaemonOpts it is constructor argument that can be passed to

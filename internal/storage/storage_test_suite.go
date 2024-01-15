@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/piotrkowalczuk/mnemosyne"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/piotrkowalczuk/mnemosyne"
 )
 
 func TestStorageStart(t *testing.T, s Storage) {
@@ -107,16 +107,10 @@ func TestStorageListBetween(t *testing.T, s Storage) {
 			t.Fatalf("unexpected error on session start: %s", err.Error())
 		}
 		if i == 1 {
-			if from, err = ptypes.Timestamp(res.ExpireAt); err != nil {
-				t.Fatalf("timestamp conversion unexpected error: %s", err.Error())
-			}
-			from = from.Add(-1 * time.Second)
+			from = res.GetExpireAt().AsTime().Add(-1 * time.Second)
 		}
 		if i == nb {
-			if to, err = ptypes.Timestamp(res.ExpireAt); err != nil {
-				t.Fatalf("timestamp conversion unexpected error: %s", err.Error())
-			}
-			to = to.Add(1 * time.Second)
+			to = res.GetExpireAt().AsTime().Add(1 * time.Second)
 		}
 	}
 
@@ -357,19 +351,11 @@ DataLoop:
 			refreshToken = ses.RefreshToken
 		}
 		if args.expiredAtFrom {
-			expireAtFrom, err := ptypes.Timestamp(ses.ExpireAt)
-			if assert.NoError(t, err) {
-				continue DataLoop
-			}
-			eaf := expireAtFrom.Add(-29 * time.Minute)
+			eaf := ses.GetExpireAt().AsTime().Add(-29 * time.Minute)
 			expiredAtFrom = &eaf
 		}
 		if args.expiredAtTo {
-			expireAtTo, err := ptypes.Timestamp(ses.ExpireAt)
-			if assert.NoError(t, err) {
-				continue DataLoop
-			}
-			eat := expireAtTo.Add(29 * time.Minute)
+			eat := ses.GetExpireAt().AsTime().Add(29 * time.Minute)
 			expiredAtTo = &eat
 		}
 

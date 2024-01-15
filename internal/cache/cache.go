@@ -4,8 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
 // DefaultSize determines how big cache should be at the beginning.

@@ -3,15 +3,16 @@ package mnemosyned
 import (
 	"time"
 
+	"go.uber.org/zap"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/jump"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"go.uber.org/zap"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type sessionManagerGet struct {

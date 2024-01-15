@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
 	"time"
 
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 )
 
-var (
-	version string
-)
+var version string
 
 type configuration struct {
 	host string

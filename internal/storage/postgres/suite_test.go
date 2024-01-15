@@ -7,10 +7,11 @@ import (
 	"testing"
 
 	_ "github.com/lib/pq"
+	"go.uber.org/zap"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	storagepq "github.com/piotrkowalczuk/mnemosyne/internal/storage/postgres"
-	"go.uber.org/zap"
 )
 
 var testPostgresAddress string

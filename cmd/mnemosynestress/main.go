@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-
 	"time"
 
-	"github.com/piotrkowalczuk/mnemosyne/internal/discovery"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/discovery"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
 var config configuration
@@ -41,7 +41,6 @@ func main() {
 							SubjectId: strconv.FormatInt(j, 10),
 						},
 					})
-
 					if err != nil {
 						fmt.Printf("session creation error: %s\n", err.Error())
 						os.Exit(1)

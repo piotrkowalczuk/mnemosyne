@@ -3,16 +3,17 @@ package mnemosyned
 import (
 	"time"
 
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
-	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
-	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
-	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
+	"google.golang.org/protobuf/types/known/wrapperspb"
+
 	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
+	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
+	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
+	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
 )
 
 type sessionManagerDelete struct {
@@ -24,7 +25,7 @@ type sessionManagerDelete struct {
 	logger  *zap.Logger
 }
 
-func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (*wrappers.Int64Value, error) {
+func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.DeleteRequest) (*wrapperspb.Int64Value, error) {
 	span, ctx := smd.span(ctx, "session-manager.delete")
 	defer span.Finish()
 
@@ -35,17 +36,11 @@ func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.D
 	var expireAtFrom, expireAtTo *time.Time
 
 	if req.ExpireAtFrom != nil {
-		eaf, err := ptypes.Timestamp(req.ExpireAtFrom)
-		if err != nil {
-			return nil, err
-		}
+		eaf := req.ExpireAtFrom.AsTime()
 		expireAtFrom = &eaf
 	}
 	if req.ExpireAtTo != nil {
-		eat, err := ptypes.Timestamp(req.ExpireAtTo)
-		if err != nil {
-			return nil, err
-		}
+		eat := req.ExpireAtTo.AsTime()
 		expireAtTo = &eat
 	}
 
@@ -54,5 +49,5 @@ func (smd *sessionManagerDelete) Delete(ctx context.Context, req *mnemosynerpc.D
 		return nil, err
 	}
 
-	return &wrappers.Int64Value{Value: aff}, nil
+	return &wrapperspb.Int64Value{Value: aff}, nil
 }

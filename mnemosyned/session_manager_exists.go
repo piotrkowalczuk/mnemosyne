@@ -1,7 +1,6 @@
 package mnemosyned
 
 import (
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cache"
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
@@ -10,6 +9,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type sessionManagerExists struct {
@@ -21,7 +21,7 @@ type sessionManagerExists struct {
 	logger  *zap.Logger
 }
 
-func (sme *sessionManagerExists) Exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (*wrappers.BoolValue, error) {
+func (sme *sessionManagerExists) Exists(ctx context.Context, req *mnemosynerpc.ExistsRequest) (*wrapperspb.BoolValue, error) {
 	span, ctx := sme.span(ctx, "session-manager.exists")
 	defer span.Finish()
 
@@ -45,5 +45,5 @@ func (sme *sessionManagerExists) Exists(ctx context.Context, req *mnemosynerpc.E
 		return nil, err
 	}
 
-	return &wrappers.BoolValue{Value: exists}, nil
+	return &wrapperspb.BoolValue{Value: exists}, nil
 }

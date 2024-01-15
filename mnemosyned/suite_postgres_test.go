@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"testing"
 
+	"go.uber.org/zap"
+
 	"github.com/piotrkowalczuk/mnemosyne/internal/service/postgres"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	storagepq "github.com/piotrkowalczuk/mnemosyne/internal/storage/postgres"
-	"go.uber.org/zap"
 )
 
 type postgresSuite struct {
@@ -24,7 +25,7 @@ func (ps *postgresSuite) setup(t *testing.T) {
 	var err error
 
 	ps.logger = zap.L()
-	//ps.logger = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
+	// ps.logger = sklog.NewHumaneLogger(os.Stdout, sklog.DefaultHTTPFormatter)
 	ps.db, err = postgres.Init(testPostgresAddress, postgres.Opts{
 		Logger: ps.logger,
 	})

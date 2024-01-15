@@ -1,0 +1,10 @@
+version: v1
+name: github.com/piotrkowalczuk/mnemosyne
+lint:
+  use:
+    - DEFAULT
+  ignore:
+    - google
+breaking:
+  use:
+    - FILE

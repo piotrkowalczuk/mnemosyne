@@ -1,19 +1,19 @@
 package mnemosyned
 
 import (
+	"context"
 	"net"
 	"testing"
 	"time"
 
 	"go.uber.org/zap"
 
-	"context"
+	"google.golang.org/grpc"
 
 	"github.com/piotrkowalczuk/mnemosyne/internal/cluster"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage"
 	"github.com/piotrkowalczuk/mnemosyne/internal/storage/storagemock"
 	"github.com/piotrkowalczuk/mnemosyne/mnemosynerpc"
-	"google.golang.org/grpc"
 )
 
 type integrationSuite struct {

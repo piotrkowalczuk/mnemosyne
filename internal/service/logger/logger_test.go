@@ -2,14 +2,14 @@ package logger_test
 
 import (
 	"context"
+	"net"
 	"testing"
 
-	"net"
-
-	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
+
+	"github.com/piotrkowalczuk/mnemosyne/internal/service/logger"
 )
 
 func TestInit(t *testing.T) {

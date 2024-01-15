@@ -21,7 +21,6 @@ func TestNewAccessTokenContext(t *testing.T) {
 
 func TestRandomToken(t *testing.T) {
 	token, err := mnemosyne.RandomAccessToken()
-
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err.Error())
 	}
@@ -30,9 +29,7 @@ func TestRandomToken(t *testing.T) {
 	}
 }
 
-var (
-	benchAccessToken string
-)
+var benchAccessToken string
 
 func BenchmarkRandomAccessToken(b *testing.B) {
 	bn := int32(b.N)

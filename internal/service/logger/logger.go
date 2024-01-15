@@ -123,6 +123,7 @@ func (e *Encoder) Clone() zapcore.Encoder {
 		Encoder: e.Encoder.Clone(),
 	}
 }
+
 func (e *Encoder) EncodeEntry(ent zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
 	if ent.Caller.Defined {
 		for i, f := range fields {
